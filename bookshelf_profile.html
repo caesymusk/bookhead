@@ -187,7 +187,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .review-star{font-size:.85rem;color:var(--text-muted);}
 .review-star.filled{color:var(--amber);}
 
-/* ══ MODAL (bottom sheet) ══ */
+/* ══ MODAL (bottom sheet on mobile, centered on desktop) ══ */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;z-index:400;backdrop-filter:blur(4px);}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface2);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:1.6rem 1.5rem calc(1.6rem + env(safe-area-inset-bottom));width:100%;max-width:520px;box-shadow:0 -12px 50px rgba(0,0,0,.7);animation:slideUp .26s ease;}
@@ -203,6 +203,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .modal-actions{display:flex;justify-content:flex-end;gap:.65rem;margin-top:1.3rem;}
 .btn-cancel{background:rgba(255,255,255,.06);border:1px solid var(--border);padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);}
 .btn-confirm{background:var(--amber);border:none;padding:.5rem 1.3rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:var(--bg);}
+
+/* On desktop: center the modal, give it a proper dialog style */
+@media(min-width:681px){
+  .modal-overlay{align-items:center;}
+  .modal{border-radius:18px;max-height:90vh;overflow-y:auto;animation:modalIn .25s ease;box-shadow:0 20px 60px rgba(0,0,0,.8);}
+  @keyframes modalIn{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal-handle{display:none;}
+  .so-modal-inner{border-radius:18px;max-height:90vh;overflow-y:auto;animation:modalIn .25s ease;box-shadow:0 20px 60px rgba(0,0,0,.8);width:100%;max-width:400px;}
+}
 
 /* ══ BOTTOM NAV ══ */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;height:var(--bnav-h);background:rgba(13,9,6,.97);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around;}
@@ -330,7 +339,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="profile-bio">Wandering through pages, one story at a time. Lover of dark academia, bittersweet endings &amp; tea-stained afternoons.</div>
     </div>
     <div class="profile-actions">
-      <button class="btn-edit" onclick="openEditModal()">✏️ Edit Profile</button>
+      <button class="btn-edit" onclick="openEditModal()">✏️ <span data-i18n="edit_profile">Edit Profile</span></button>
       <button class="btn-settings" onclick="openModal('settings-modal')">⚙️ <span data-i18n="settings">Settings</span></button>
     </div>
   </div>
@@ -542,7 +551,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="modal-overlay" id="settings-modal" onclick="closeModalOutside(event,'settings-modal')">
   <div class="modal" style="max-height:92vh;overflow-y:auto;">
     <div class="modal-handle"></div>
-    <div class="modal-title" data-i18n="settings_title">⚙️ Settings</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
+      <div class="modal-title" style="margin-bottom:0" data-i18n="settings_title">⚙️ Settings</div>
+      <button onclick="closeModal('settings-modal')" style="background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text-dim);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.14)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">✕</button>
+    </div>
 
     <!-- LANGUAGE -->
     <div class="settings-section">
@@ -1288,11 +1300,11 @@ function applyTranslations() {
   if(friendsCard) friendsCard.innerHTML = `${LANG.reading_friends} <span style="font-size:.7rem;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-weight:400;margin-left:auto">${LANG.see_all}</span>`;
   // filter buttons (re-render to pick up new labels)
   updateBookCount();
-  // edit profile button
-  const editBtn = document.querySelector('.btn-edit');
-  if(editBtn) editBtn.innerHTML = `✏️ <span data-i18n="edit_profile">${LANG.edit_profile}</span>`;
-  const settingsBtn = document.querySelector('.btn-settings');
-  if(settingsBtn) settingsBtn.innerHTML = `⚙️ <span data-i18n="settings">${LANG.settings}</span>`;
+  // edit profile button — only update the inner span, never replace onclick
+  const editSpan = document.querySelector('.btn-edit span[data-i18n]');
+  if(editSpan) editSpan.textContent = LANG.edit_profile;
+  const settingsSpan = document.querySelector('.btn-settings span[data-i18n]');
+  if(settingsSpan) settingsSpan.textContent = LANG.settings;
   // add book button
   const addBookBtn = document.querySelector('.add-book-btn');
   if(addBookBtn) addBookBtn.textContent = LANG.add_book;
@@ -1319,7 +1331,7 @@ function confirmSignOut() {
   setTimeout(() => {
     document.body.style.transition = 'opacity .5s';
     document.body.style.opacity = '0';
-    setTimeout(() => { window.location.href = 'index.html'; }, 500);
+    setTimeout(() => { window.location.href = 'login.html'; }, 500);
   }, 800);
 }
 
