@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pagebound — Find Friends</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0906; --surface:#16100a; --surface2:#1e160e;
+  --amber:#d4893c; --amber-light:#f0a84e; --amber-glow:rgba(212,137,60,.18);
+  --cream:#f5ede0; --tan:#b89468; --tan-dim:#6e5434;
+  --text:#e8ddd0; --text-dim:#8a7258; --text-muted:#5a4830;
+  --rust:#9b3f2a; --green:#5a9e6f;
+  --border:rgba(184,148,104,.2);
+  --nav-h:56px; --bnav-h:62px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* NAV */
+.navbar{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(13,9,6,.97);border-bottom:1px solid var(--border);backdrop-filter:blur(14px);}
+.nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:var(--amber-light);text-decoration:none;line-height:1;}
+.nav-logo em{font-style:normal;font-size:.56rem;display:block;color:var(--tan-dim);letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
+.nav-center{display:flex;gap:1.8rem;}
+.nav-center a{color:var(--tan);text-decoration:none;font-size:.84rem;font-weight:500;opacity:.7;transition:opacity .2s,color .2s;}
+.nav-center a:hover{opacity:1;color:var(--cream);}
+.nav-center a.active{opacity:1;color:var(--amber-light);}
+.nav-right{display:flex;align-items:center;gap:.9rem;}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--rust));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.9rem;color:#fff;font-weight:700;cursor:pointer;border:2px solid var(--tan-dim);}
+.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;cursor:pointer;background:none;border:none;padding:4px;}
+.hamburger span{display:block;height:2px;background:var(--cream);border-radius:2px;transition:transform .3s,opacity .3s;}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+.mobile-menu{position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,9,6,.98);backdrop-filter:blur(14px);z-index:190;padding:1rem 1.5rem 2rem;display:none;flex-direction:column;border-bottom:1px solid var(--border);}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{color:var(--tan);text-decoration:none;font-size:.98rem;font-weight:500;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.06);transition:color .2s;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu a.active,.mobile-menu a:hover{color:var(--amber-light);}
+
+/* PAGE */
+.page{max-width:860px;margin:0 auto;padding:2.4rem 1.4rem 6rem;}
+
+/* PAGE HEADER */
+.page-header{margin-bottom:2rem;}
+.page-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--cream);line-height:1.15;margin-bottom:.4rem;}
+.page-sub{font-size:.88rem;color:var(--text-dim);line-height:1.6;}
+
+/* SEARCH BAR */
+.search-bar{display:flex;gap:.7rem;margin-bottom:2rem;position:relative;}
+.search-input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;padding:.72rem 1.1rem .72rem 2.8rem;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;}
+.search-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-glow);}
+.search-input::placeholder{color:var(--text-muted);}
+.search-icon{position:absolute;left:.95rem;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;opacity:.5;}
+.search-btn{background:var(--amber);color:var(--bg);border:none;padding:.72rem 1.5rem;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s,transform .1s;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.search-btn:hover{background:var(--amber-light);}
+.search-btn:active{transform:scale(.97);}
+
+/* SECTION LABEL */
+.section-label{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--cream);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;}
+.section-label .count{font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;background:rgba(184,148,104,.15);color:var(--tan);border:1px solid var(--border);border-radius:20px;padding:.16rem .6rem;}
+
+/* USER CARD */
+.users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:2.5rem;}
+.user-card{background:rgba(22,16,10,.9);border:1px solid var(--border);border-radius:14px;padding:1.2rem;display:flex;flex-direction:column;gap:.9rem;transition:border-color .2s,transform .2s;backdrop-filter:blur(6px);}
+.user-card:hover{border-color:rgba(184,148,104,.4);transform:translateY(-2px);}
+.user-card-top{display:flex;align-items:center;gap:.9rem;}
+.user-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:#fff;flex-shrink:0;position:relative;}
+.user-avatar-status{position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--green);border-radius:50%;border:2.5px solid var(--surface2);}
+.user-info{flex:1;min-width:0;}
+.user-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--cream);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-handle{font-size:.72rem;color:var(--amber);margin-top:.1rem;}
+.user-bio{font-size:.76rem;color:var(--text-dim);font-style:italic;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.user-stats{display:flex;gap:1rem;}
+.user-stat{text-align:center;}
+.user-stat-num{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;color:var(--cream);}
+.user-stat-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);}
+.user-genres{display:flex;gap:.35rem;flex-wrap:wrap;}
+.user-genre-tag{background:rgba(184,148,104,.1);color:var(--tan);padding:.18rem .55rem;border-radius:20px;font-size:.65rem;font-weight:600;border:1px solid var(--border);}
+.user-actions{display:flex;gap:.6rem;}
+.btn-add-friend{flex:1;background:var(--amber);border:none;border-radius:9px;padding:.52rem;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:700;color:var(--bg);cursor:pointer;transition:background .15s,transform .1s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:.4rem;}
+.btn-add-friend:hover{background:var(--amber-light);}
+.btn-add-friend:active{transform:scale(.97);}
+.btn-add-friend.pending{background:rgba(184,148,104,.18);color:var(--tan);border:1px solid var(--border);cursor:default;}
+.btn-add-friend.friends{background:rgba(90,158,111,.18);color:var(--green);border:1px solid rgba(90,158,111,.3);cursor:default;}
+.btn-view-profile{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;padding:.52rem .9rem;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;color:var(--text-dim);cursor:pointer;transition:background .2s;text-decoration:none;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+.btn-view-profile:hover{background:rgba(255,255,255,.1);color:var(--cream);}
+
+/* TABS */
+.friend-tabs{display:flex;gap:0;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:.25rem;margin-bottom:1.6rem;width:fit-content;}
+.ftab{background:none;border:none;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;padding:.5rem 1.2rem;border-radius:8px;cursor:pointer;transition:background .18s,color .18s;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
+.ftab.active{background:var(--amber);color:var(--bg);}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:3.5rem 1rem;color:var(--text-muted);}
+.empty-icon{font-size:3rem;margin-bottom:1rem;opacity:.6;}
+.empty-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--text-dim);margin-bottom:.4rem;}
+.empty-sub{font-size:.84rem;line-height:1.6;}
+
+/* LOADING */
+.loading-row{display:flex;gap:1rem;justify-content:center;padding:2rem;color:var(--text-muted);font-size:.86rem;align-items:center;}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--bnav-h) + 1rem);left:50%;transform:translateX(-50%) translateY(10px);background:var(--amber);color:var(--bg);border-radius:10px;padding:.52rem 1.4rem;font-size:.8rem;font-weight:700;font-family:'DM Sans',sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .28s,transform .28s;pointer-events:none;z-index:600;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* BOTTOM NAV */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;height:var(--bnav-h);background:rgba(13,9,6,.97);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around;}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:var(--text-muted);font-size:.57rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.4rem .5rem;min-width:54px;-webkit-tap-highlight-color:transparent;transition:color .2s;}
+.bnav-icon{font-size:1.25rem;line-height:1;}
+.bnav-item.active{color:var(--amber-light);}
+
+@media(max-width:860px){.nav-center{display:none;}.hamburger{display:flex;}}
+@media(max-width:600px){
+  body{padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom));}
+  .bottom-nav{display:flex;}
+  .page{padding:1.6rem .9rem 6rem;}
+  .page-title{font-size:1.6rem;}
+  .users-grid{grid-template-columns:1fr;}
+  .search-btn{padding:.72rem 1rem;}
+}
+
+  /* ══ SHARED NAV ══ */
+  :root{--nav-h:56px;--bnav-h:62px;}
+  .navbar{position:sticky;top:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(13,9,6,.97);border-bottom:1px solid rgba(184,148,104,.2);backdrop-filter:blur(16px);box-shadow:0 1px 18px rgba(0,0,0,.5);}
+  .nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:#f0a84e;text-decoration:none;line-height:1;cursor:pointer;user-select:none;}
+  .nav-logo em{font-style:normal;font-size:.56rem;display:block;color:#6e5030;letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
+  .nav-center{display:flex;gap:1.6rem;align-items:center;}
+  .nav-center a{color:#b89468;text-decoration:none;font-size:.84rem;font-weight:500;opacity:.75;transition:opacity .2s,color .2s;white-space:nowrap;}
+  .nav-center a:hover{opacity:1;color:#f5ede0;}
+  .nav-center a.active{opacity:1;color:#f0a84e;}
+  .nav-right{display:flex;align-items:center;gap:.85rem;}
+  /* profile pill */
+  .profile-dropdown-wrap{position:relative;}
+  .profile-pill{display:flex;align-items:center;gap:.55rem;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:28px;padding:.28rem .75rem .28rem .32rem;cursor:pointer;transition:background .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}
+  .profile-pill:hover{background:rgba(212,137,60,.14);border-color:#d4893c;}
+  .pp-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;border:none;cursor:pointer;}
+  .pp-info{line-height:1.15;}
+  .pp-name{font-size:.76rem;font-weight:600;color:#f5ede0;}
+  .pp-sub{font-size:.62rem;color:#6e5030;}
+  .pp-arrow{color:#6e5030;font-size:.7rem;margin-left:.1rem;transition:transform .2s;}
+  .profile-pill:hover .pp-arrow{transform:translateX(3px);}
+  /* dropdown */
+  .profile-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(20,13,8,.97);border:1px solid rgba(184,148,104,.22);border-radius:14px;width:230px;box-shadow:0 16px 48px rgba(0,0,0,.7);backdrop-filter:blur(18px);overflow:hidden;opacity:0;pointer-events:none;transform:translateY(-8px) scale(.97);transform-origin:top right;transition:opacity .2s,transform .2s;z-index:400;}
+  .profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
+  .dd-header{padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(184,148,104,.15);}
+  .dd-uname{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#f5ede0;line-height:1.2;}
+  .dd-uhandle{font-size:.68rem;color:#d4893c;margin-top:.1rem;}
+  .dd-section{padding:.35rem 0;}
+  .dd-section+.dd-section{border-top:1px solid rgba(184,148,104,.1);}
+  .dd-item{display:flex;align-items:center;gap:.65rem;width:100%;background:none;border:none;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;color:#8a7258;cursor:pointer;text-decoration:none;transition:background .15s,color .15s;text-align:left;-webkit-tap-highlight-color:transparent;}
+  .dd-item:hover{background:rgba(184,148,104,.1);color:#f5ede0;}
+  .dd-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0;}
+  .dd-item.danger{color:#e07060;}
+  .dd-item.danger:hover{background:rgba(155,63,42,.15);color:#e08070;}
+  .dd-item.highlight{color:#d4893c;}
+  .dd-item.highlight:hover{background:rgba(212,137,60,.12);color:#f0a84e;}
+  .dd-lang-row{display:flex;align-items:center;justify-content:space-between;padding:.52rem 1rem;}
+  .dd-lang-label{font-size:.78rem;color:#8a7258;display:flex;align-items:center;gap:.5rem;}
+  .dd-lang-toggle{display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:7px;overflow:hidden;}
+  .dd-lang-btn{background:none;border:none;padding:.28rem .65rem;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;color:#8a7258;cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+  .dd-lang-btn.active{background:#d4893c;color:#060408;}
+  .dd-lang-btn:not(.active):hover{background:rgba(255,255,255,.08);color:#f5ede0;}
+  /* hamburger */
+  .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;cursor:pointer;background:none;border:none;padding:4px;-webkit-tap-highlight-color:transparent;}
+  .hamburger span{display:block;height:2px;background:#f5ede0;border-radius:2px;transition:transform .3s,opacity .3s;}
+  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  /* mobile drawer */
+  .mobile-menu{position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,9,6,.98);backdrop-filter:blur(16px);z-index:250;padding:1rem 1.5rem 2rem;display:none;flex-direction:column;border-bottom:1px solid rgba(184,148,104,.2);}
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{color:#b89468;text-decoration:none;font-size:.98rem;font-weight:500;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.06);transition:color .2s;display:flex;align-items:center;gap:.6rem;}
+  .mobile-menu a:last-child{border-bottom:none;}
+  .mobile-menu a.active,.mobile-menu a:hover{color:#f0a84e;}
+  .mobile-menu-lang{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.06);}
+  .mobile-menu-lang-label{font-size:.82rem;color:#8a7258;display:flex;align-items:center;gap:.5rem;}
+  /* bottom nav */
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;height:var(--bnav-h);background:rgba(13,9,6,.97);border-top:1px solid rgba(184,148,104,.2);padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around;}
+  .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:#5a4a30;font-size:.57rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.4rem .5rem;min-width:54px;-webkit-tap-highlight-color:transparent;transition:color .2s;}
+  .bnav-icon{font-size:1.25rem;line-height:1;}
+  .bnav-item.active{color:#f0a84e;}
+  .bnav-item:hover{color:#d4893c;}
+  /* settings/signout modals */
+  .nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(6px);padding:1rem;}
+  .nav-overlay.open{display:flex;}
+  .nav-modal{background:#1e160e;border:1px solid rgba(184,148,104,.22);border-radius:18px;width:100%;max-width:400px;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.85);animation:navModalIn .24s ease;position:relative;overflow:hidden;max-height:90vh;overflow-y:auto;}
+  @keyframes navModalIn{from{transform:translateY(18px);opacity:0;}to{transform:none;opacity:1;}}
+  .nav-modal-x{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);color:#8a7258;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;}
+  .nav-modal-x:hover{background:rgba(255,255,255,.14);}
+  .nav-modal-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:#f5ede0;margin-bottom:1.3rem;display:flex;align-items:center;justify-content:space-between;}
+  .settings-sec{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#5a4a30;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid rgba(184,148,104,.15);}
+  .settings-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid rgba(184,148,104,.07);}
+  .settings-row:last-of-type{border-bottom:none;}
+  .settings-label{font-size:.82rem;color:#e8ddd0;display:flex;align-items:center;gap:.5rem;}
+  .settings-desc{font-size:.68rem;color:#8a7258;padding-left:1.5rem;margin-top:.05rem;}
+  .tog-wrap{position:relative;width:38px;height:21px;flex-shrink:0;cursor:pointer;}
+  .tog-wrap input{opacity:0;width:0;height:0;position:absolute;}
+  .tog-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid rgba(184,148,104,.2);border-radius:21px;transition:background .25s;}
+  .tog-wrap input:checked~.tog-track{background:#d4893c;}
+  .tog-thumb{position:absolute;top:2px;left:2px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .25s;pointer-events:none;}
+  .tog-wrap input:checked~.tog-thumb{transform:translateX(17px);}
+  .btn-nav-cancel{background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;color:#e8ddd0;}
+  .btn-nav-save{background:#d4893c;border:none;padding:.5rem 1.3rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:#060408;}
+  .btn-nav-signout{display:flex;align-items:center;gap:.6rem;width:100%;background:rgba(155,63,42,.1);border:1px solid rgba(155,63,42,.28);color:#e07060;padding:.62rem 1rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;margin-top:.5rem;-webkit-tap-highlight-color:transparent;}
+  .btn-nav-signout:hover{background:rgba(155,63,42,.2);}
+  /* sign out confirm */
+  .so-inner{text-align:center;}
+  .so-emoji{font-size:2.3rem;margin-bottom:.75rem;}
+  .so-ttl{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#f5ede0;margin-bottom:.38rem;}
+  .so-sub{font-size:.82rem;color:#8a7258;line-height:1.55;margin-bottom:1.4rem;}
+  .so-btns{display:flex;gap:.7rem;}
+  .so-cancel{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.58rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;color:#e8ddd0;}
+  .so-confirm{flex:1;background:#9b3f2a;border:none;padding:.58rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;color:#fff;}
+  /* toast */
+  .nav-toast{position:fixed;bottom:calc(var(--bnav-h) + 1rem);left:50%;transform:translateX(-50%) translateY(10px);background:#d4893c;color:#060408;border-radius:10px;padding:.52rem 1.4rem;font-size:.8rem;font-weight:700;font-family:'DM Sans',sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .28s,transform .28s;pointer-events:none;z-index:600;white-space:nowrap;}
+  .nav-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media(max-width:860px){.nav-center,.nav-search{display:none;}.hamburger{display:flex;}.pp-info,.pp-arrow{display:none;}.profile-pill{padding:.28rem;border-radius:50%;}}
+
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<!-- ══ NAVBAR ══ -->
+<nav class="navbar" id="_navbar">
+  <a class="nav-logo" href="index.html">Pagebound<em>Social for Readers</em></a>
+  <div class="nav-center">
+    <a href="index.html">Home</a>
+    <a href="discover.html">Discover</a>
+    <a href="#">Clubs</a>
+    <a href="friends.html" class="active">👥 Friends</a>
+    <a href="seasonpass.html">⚡ Season Pass</a>
+  </div>
+  <div class="nav-right">
+    <div class="profile-dropdown-wrap" id="_dd-wrap">
+      <button class="profile-pill" id="_pp-btn" onclick="_toggleDD(event)">
+        <div class="pp-avatar" id="_pp-avatar">?</div>
+        <div class="pp-info" id="_pp-info">
+          <div class="pp-name" id="_pp-name">Loading…</div>
+          <div class="pp-sub" id="_pp-sub"></div>
+        </div>
+        <span class="pp-arrow">›</span>
+      </button>
+      <div class="profile-dropdown" id="_dd">
+        <!-- LOGGED-IN -->
+        <div id="_dd-in">
+          <div class="dd-header">
+            <div class="dd-uname" id="_dd-name"></div>
+            <div class="dd-uhandle" id="_dd-handle"></div>
+          </div>
+          <div class="dd-section">
+            <a class="dd-item" href="bookshelf_profile.html"><span class="dd-icon">👤</span> My Profile</a>
+            <a class="dd-item" href="friends.html"><span class="dd-icon">👥</span> Find Friends</a>
+            <a class="dd-item" href="seasonpass.html"><span class="dd-icon">⚡</span> Season Pass</a>
+          </div>
+          <div class="dd-section">
+            <div class="dd-lang-row">
+              <span class="dd-lang-label">🌐 Language</span>
+              <div class="dd-lang-toggle">
+                <button class="dd-lang-btn active" id="_lang-en" onclick="_setLang('en',event)">🇬🇧 EN</button>
+                <button class="dd-lang-btn" id="_lang-es" onclick="_setLang('es',event)">🇪🇸 ES</button>
+              </div>
+            </div>
+          </div>
+          <div class="dd-section">
+            <button class="dd-item" onclick="_openSettings();_closeDD()"><span class="dd-icon">⚙️</span> Settings</button>
+            <button class="dd-item danger" onclick="_openSignOut();_closeDD()"><span class="dd-icon">🚪</span> Sign Out</button>
+          </div>
+        </div>
+        <!-- LOGGED-OUT -->
+        <div id="_dd-out" style="display:none">
+          <div class="dd-section">
+            <a class="dd-item highlight" href="login.html"><span class="dd-icon">🔑</span> Sign In</a>
+          </div>
+          <div class="dd-section">
+            <div class="dd-lang-row">
+              <span class="dd-lang-label">🌐 Language</span>
+              <div class="dd-lang-toggle">
+                <button class="dd-lang-btn active" id="_lang-en-lo" onclick="_setLang('en',event)">🇬🇧 EN</button>
+                <button class="dd-lang-btn" id="_lang-es-lo" onclick="_setLang('es',event)">🇪🇸 ES</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="hamburger" id="_hbg" onclick="_toggleMenu()"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-menu" id="_mob">
+  <a href="index.html">Home</a>
+  <a href="discover.html">Discover</a>
+  <a href="#">Clubs</a>
+  <a href="friends.html" class="active">👥 Friends</a>
+  <a href="seasonpass.html">⚡ Season Pass</a>
+  <div class="mobile-menu-lang">
+    <span class="mobile-menu-lang-label">🌐 Language</span>
+    <div class="dd-lang-toggle">
+      <button class="dd-lang-btn active" id="_mlang-en" onclick="_setLang('en',event)">🇬🇧 EN</button>
+      <button class="dd-lang-btn" id="_mlang-es" onclick="_setLang('es',event)">🇪🇸 ES</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="nav-overlay" id="_settings-overlay" onclick="if(event.target===this)_closeSettings()">
+  <div class="nav-modal">
+    <div class="nav-modal-title">
+      ⚙️ Settings
+      <button class="nav-modal-x" onclick="_closeSettings()">✕</button>
+    </div>
+    <div class="settings-sec">Language</div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">🌐 Display Language</div>
+        <div class="settings-desc">Choose the language for the interface</div>
+      </div>
+      <div class="dd-lang-toggle">
+        <button class="dd-lang-btn active" id="_slang-en" onclick="_setLang('en',event)" style="padding:.36rem .8rem;font-size:.76rem;">🇬🇧 EN</button>
+        <button class="dd-lang-btn" id="_slang-es" onclick="_setLang('es',event)" style="padding:.36rem .8rem;font-size:.76rem;">🇪🇸 ES</button>
+      </div>
+    </div>
+    <div class="settings-sec" style="margin-top:1.2rem;">Notifications</div>
+    <div class="settings-row">
+      <div><div class="settings-label">🔔 Comments on posts</div></div>
+      <label class="tog-wrap"><input type="checkbox" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">❤️ Likes on posts</div></div>
+      <label class="tog-wrap"><input type="checkbox" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">👥 New followers</div></div>
+      <label class="tog-wrap"><input type="checkbox"><div class="tog-track"></div><div class="tog-thumb"></div></label>
+    </div>
+    <div class="settings-sec" style="margin-top:1.2rem;">Privacy</div>
+    <div class="settings-row">
+      <div><div class="settings-label">🔒 Private profile</div><div class="settings-desc">Only followers see your posts</div></div>
+      <label class="tog-wrap"><input type="checkbox"><div class="tog-track"></div><div class="tog-thumb"></div></label>
+    </div>
+    <button class="btn-nav-signout" onclick="_closeSettings();_openSignOut()">🚪 Sign Out</button>
+    <div style="display:flex;justify-content:flex-end;gap:.65rem;margin-top:1.2rem;">
+      <button class="btn-nav-cancel" onclick="_closeSettings()">Cancel</button>
+      <button class="btn-nav-save" onclick="_saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGN OUT CONFIRM -->
+<div class="nav-overlay" id="_so-overlay" onclick="if(event.target===this)_closeSignOut()">
+  <div class="nav-modal" style="max-width:360px;">
+    <div class="so-inner">
+      <div class="so-emoji">👋</div>
+      <div class="so-ttl">Sign out of Pagebound?</div>
+      <div class="so-sub">You'll need to sign back in to access your library and reading progress.</div>
+      <div class="so-btns">
+        <button class="so-cancel" onclick="_closeSignOut()">Cancel</button>
+        <button class="so-confirm" onclick="_doSignOut()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="nav-toast" id="_toast"></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="_bnav">
+  <a class="bnav-item " href="index.html"><span class="bnav-icon">🏠</span>Home</a>
+  <a class="bnav-item active" href="friends.html"><span class="bnav-icon">👥</span>Friends</a>
+  <a class="bnav-item " href="seasonpass.html"><span class="bnav-icon">⚡</span>Pass</a>
+  <a class="bnav-item " href="bookshelf_profile.html"><span class="bnav-icon">👤</span>Profile</a>
+</nav>
+
+
+<div class="page">
+
+  <div class="page-header">
+    <h1 class="page-title">👥 Find Friends</h1>
+    <p class="page-sub">Search for other Pagebound readers, add friends, and discover what they're reading.</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="text" id="search-input" placeholder="Search by username or name…" oninput="onSearchInput()" onkeydown="if(event.key==='Enter')doSearch()">
+    <button class="search-btn" onclick="doSearch()">Search</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="friend-tabs">
+    <button class="ftab active" onclick="switchFtab(this,'discover')" id="ftab-discover">🌍 Discover</button>
+    <button class="ftab" onclick="switchFtab(this,'friends')" id="ftab-friends">✓ My Friends <span id="friends-count" style="font-size:.7rem;opacity:.7">(0)</span></button>
+    <button class="ftab" onclick="switchFtab(this,'requests')" id="ftab-requests">📨 Requests <span id="requests-count" style="font-size:.7rem;opacity:.7;display:none"></span></button>
+  </div>
+
+  <!-- DISCOVER TAB -->
+  <div id="tab-discover">
+    <div class="section-label">✨ Readers you might like <span class="count" id="discover-count">0</span></div>
+    <div class="users-grid" id="discover-grid">
+      <div class="loading-row"><div class="spinner"></div> Loading readers…</div>
+    </div>
+  </div>
+
+  <!-- MY FRIENDS TAB -->
+  <div id="tab-friends" style="display:none">
+    <div class="section-label">✓ Your Reading Friends <span class="count" id="my-friends-count">0</span></div>
+    <div class="users-grid" id="friends-grid">
+      <div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No friends yet</div><div class="empty-sub">Search for readers above or check out the Discover tab to find people who read like you.</div></div>
+    </div>
+  </div>
+
+  <!-- REQUESTS TAB -->
+  <div id="tab-requests" style="display:none">
+    <div class="section-label">📨 Friend Requests <span class="count" id="req-count-label">0</span></div>
+    <div class="users-grid" id="requests-grid">
+      <div class="empty-state"><div class="empty-icon">💌</div><div class="empty-title">No pending requests</div><div class="empty-sub">When someone sends you a friend request it will appear here.</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   FIREBASE
+══════════════════════════════════════════ */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",
+  authDomain:        "casey-80b19.firebaseapp.com",
+  databaseURL:       "https://casey-80b19-default-rtdb.firebaseio.com",
+  projectId:         "casey-80b19",
+  storageBucket:     "casey-80b19.firebasestorage.app",
+  messagingSenderId: "1084195161725",
+  appId:             "1:1084195161725:web:c4db255376c0aaf25d5314"
+};
+let db = null;
+try { firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database(); }
+catch(e) { console.warn('Firebase init failed', e); }
+
+/* ══════════════════════════════════════════
+   SESSION GUARD
+══════════════════════════════════════════ */
+function getSession(){ try{ return JSON.parse(localStorage.getItem('pb_session')||'null'); }catch{ return null; } }
+const SESSION = getSession();
+if(!SESSION){ window.location.replace('login.html'); }
+
+const ME = {
+  username: SESSION ? SESSION.username : '',
+  name:     SESSION ? SESSION.name     : 'Guest',
+  initial:  SESSION ? (SESSION.name||SESSION.username).charAt(0).toUpperCase() : '?'
+};
+
+// Set nav avatar
+const navAvatar = document.getElementById('nav-avatar-btn');
+if(navAvatar) navAvatar.textContent = ME.initial;
+
+/* ══════════════════════════════════════════
+   FIREBASE PATH HELPERS
+══════════════════════════════════════════ */
+function uKey(u){ return u.replace(/\./g,'_'); }
+function friendsPath(u) { return 'pb_friends/' + uKey(u); }
+function requestsPath(u){ return 'pb_friend_requests/' + uKey(u); }
+function profilePath(u) { return 'pb_profile/' + uKey(u); }
+function libPath(u)     { return 'pb_libraries/' + uKey(u); }
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let allUsers      = [];   // all registered users from pb_users
+let myFriends     = {};   // { username: true }
+let myRequests    = {};   // outgoing: { username: true }
+let incomingReqs  = {};   // incoming: { senderUsername: { name, username, sentAt } }
+let currentTab    = 'discover';
+let searchQuery   = '';
+
+const AVATAR_PALETTES = [
+  'linear-gradient(135deg,#3e6e52,#1e4030)','linear-gradient(135deg,#6e3e2e,#3a1a10)',
+  'linear-gradient(135deg,#3e4e6e,#1e2838)','linear-gradient(135deg,#6e5e2e,#3a3010)',
+  'linear-gradient(135deg,#4e2e6e,#281638)','linear-gradient(135deg,#6e3e4e,#381624)',
+  'linear-gradient(135deg,#2e5e5e,#1a3838)','linear-gradient(135deg,#5e4e2e,#382e10)',
+];
+function avatarColor(username){
+  let h=0; for(let c of username) h=(h*31+c.charCodeAt(0))%AVATAR_PALETTES.length;
+  return AVATAR_PALETTES[h];
+}
+
+/* ══════════════════════════════════════════
+   LOAD DATA
+══════════════════════════════════════════ */
+function loadAll(){
+  if(!db) return;
+
+  // 1. Load all users
+  db.ref('pb_users').once('value').then(snap=>{
+    const all = snap.val()||{};
+    allUsers = Object.values(all).filter(u => u.username !== ME.username);
+    renderDiscover();
+  }).catch(()=>{});
+
+  // 2. Load my friends list
+  db.ref(friendsPath(ME.username)).once('value').then(snap=>{
+    myFriends = snap.val()||{};
+    renderFriends();
+    updateFriendsCount();
+  }).catch(()=>{});
+
+  // 3. Load my outgoing requests
+  db.ref(requestsPath(ME.username)).once('value').then(snap=>{
+    myRequests = snap.val()||{};
+    renderDiscover();
+  }).catch(()=>{});
+
+  // 4. Load incoming requests sent TO me
+  db.ref('pb_friend_requests').once('value').then(snap=>{
+    const allReqs = snap.val()||{};
+    incomingReqs = {};
+    // Look for any user who has sent ME a request
+    Object.entries(allReqs).forEach(([senderKey, requests])=>{
+      if(requests && requests[uKey(ME.username)]){
+        const senderUsername = senderKey.replace(/_/g, '.');
+        // But we need the real username — look it up
+        const sender = allUsers.find(u=>uKey(u.username)===senderKey);
+        if(sender && !myFriends[uKey(sender.username)]){
+          incomingReqs[senderKey] = { username: sender.username, name: sender.name, sentAt: requests[uKey(ME.username)] };
+        }
+      }
+    });
+    renderRequests();
+    updateRequestsBadge();
+  }).catch(()=>{});
+}
+
+/* ══════════════════════════════════════════
+   RENDER HELPERS
+══════════════════════════════════════════ */
+function friendStatus(username){
+  const k = uKey(username);
+  if(myFriends[k]) return 'friends';
+  if(myRequests[k]) return 'pending';
+  return 'none';
+}
+
+function buildUserCard(user, extraActions){
+  const status = friendStatus(user.username);
+  const color  = avatarColor(user.username);
+  const libCount = user._libCount || 0;
+  const bio = user._profile?.bio || '';
+
+  let actionBtn = '';
+  if(extraActions){
+    actionBtn = extraActions;
+  } else if(status === 'friends'){
+    actionBtn = `<button class="btn-add-friend friends" disabled>✓ Friends</button>`;
+  } else if(status === 'pending'){
+    actionBtn = `<button class="btn-add-friend pending" disabled>📨 Request Sent</button>`;
+  } else {
+    actionBtn = `<button class="btn-add-friend" onclick="sendFriendRequest('${user.username}',this)">➕ Add Friend</button>`;
+  }
+
+  return `<div class="user-card" id="ucard-${uKey(user.username)}">
+    <div class="user-card-top">
+      <div class="user-avatar" style="background:${color}">${(user.name||user.username).charAt(0).toUpperCase()}</div>
+      <div class="user-info">
+        <div class="user-name">${user.name||user.username}</div>
+        <div class="user-handle">@${user.username}</div>
+        ${bio?`<div class="user-bio">${bio}</div>`:''}
+      </div>
+    </div>
+    ${libCount>0?`<div class="user-stats">
+      <div class="user-stat"><div class="user-stat-num">${libCount}</div><div class="user-stat-label">Books</div></div>
+    </div>`:''}
+    <div class="user-actions">
+      ${actionBtn}
+      <a href="bookshelf_profile.html" class="btn-view-profile" title="View profile">👤</a>
+    </div>
+  </div>`;
+}
+
+/* ── Discover tab ── */
+function renderDiscover(){
+  const grid = document.getElementById('discover-grid');
+  let users = allUsers;
+
+  // Filter by search
+  if(searchQuery){
+    const q = searchQuery.toLowerCase();
+    users = users.filter(u=>
+      (u.username||'').toLowerCase().includes(q) ||
+      (u.name||'').toLowerCase().includes(q)
+    );
+  }
+
+  document.getElementById('discover-count').textContent = users.length;
+
+  if(users.length===0){
+    grid.innerHTML = searchQuery
+      ? `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No users found</div><div class="empty-sub">No one with that username or name. Try a different search.</div></div>`
+      : `<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No other readers yet</div><div class="empty-sub">Be the first to invite friends to Pagebound!</div></div>`;
+    return;
+  }
+
+  // Load profiles for richer cards (non-blocking)
+  grid.innerHTML = users.map(u=>buildUserCard(u,null)).join('');
+
+  // Enrich with profile data
+  users.forEach(u=>{
+    if(db){
+      Promise.all([
+        db.ref(profilePath(u.username)).once('value'),
+        db.ref(libPath(u.username)).once('value')
+      ]).then(([profSnap, libSnap])=>{
+        const profile = profSnap.val()||{};
+        const lib = libSnap.val()||[];
+        u._profile  = profile;
+        u._libCount = Array.isArray(lib)?lib.length:0;
+        const card = document.getElementById('ucard-'+uKey(u.username));
+        if(card) card.outerHTML = buildUserCard(u, null);
+      }).catch(()=>{});
+    }
+  });
+}
+
+/* ── Friends tab ── */
+function renderFriends(){
+  const grid = document.getElementById('friends-grid');
+  const friendKeys = Object.keys(myFriends).filter(k=>myFriends[k]);
+  const friendUsers = friendKeys.map(k=>allUsers.find(u=>uKey(u.username)===k)).filter(Boolean);
+
+  document.getElementById('my-friends-count').textContent = friendUsers.length;
+
+  if(friendUsers.length===0){
+    grid.innerHTML='<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No friends yet</div><div class="empty-sub">Discover readers in the Discover tab and send them a friend request!</div></div>';
+    return;
+  }
+  grid.innerHTML = friendUsers.map(u=>{
+    return buildUserCard(u, `
+      <button class="btn-add-friend friends" style="cursor:default" disabled>✓ Friends</button>
+      <button onclick="removeFriend('${u.username}')" style="background:rgba(155,63,42,.12);border:1px solid rgba(155,63,42,.3);color:#e07060;border-radius:9px;padding:.52rem .7rem;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;transition:background .18s;" onmouseover="this.style.background='rgba(155,63,42,.25)'" onmouseout="this.style.background='rgba(155,63,42,.12)'">✕</button>
+    `);
+  }).join('');
+}
+
+/* ── Requests tab ── */
+function renderRequests(){
+  const grid = document.getElementById('requests-grid');
+  const reqs  = Object.values(incomingReqs);
+
+  document.getElementById('req-count-label').textContent = reqs.length;
+
+  if(reqs.length===0){
+    grid.innerHTML='<div class="empty-state"><div class="empty-icon">💌</div><div class="empty-title">No pending requests</div><div class="empty-sub">When someone sends you a friend request it will appear here.</div></div>';
+    return;
+  }
+  grid.innerHTML = reqs.map(req=>{
+    const u = { username: req.username, name: req.name, _profile:{}, _libCount:0 };
+    const actions = `
+      <button class="btn-add-friend" onclick="acceptRequest('${req.username}',this)" style="background:var(--green)">✓ Accept</button>
+      <button onclick="declineRequest('${req.username}')" style="background:rgba(155,63,42,.12);border:1px solid rgba(155,63,42,.3);color:#e07060;border-radius:9px;padding:.52rem .7rem;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;">✕ Decline</button>
+    `;
+    return buildUserCard(u, actions);
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   FRIEND ACTIONS
+══════════════════════════════════════════ */
+function sendFriendRequest(targetUsername, btn){
+  if(!db){ showToast('No connection.'); return; }
+  const k = uKey(targetUsername);
+
+  // Save outgoing request under MY path
+  db.ref(requestsPath(ME.username)+'/'+k).set(Date.now())
+    .then(()=>{
+      myRequests[k]=Date.now();
+      if(btn){ btn.textContent='📨 Request Sent'; btn.className='btn-add-friend pending'; btn.disabled=true; }
+      showToast(`📨 Friend request sent to @${targetUsername}!`);
+    })
+    .catch(()=>showToast('Failed to send request. Check your connection.'));
+}
+
+function acceptRequest(senderUsername, btn){
+  if(!db) return;
+  const sk = uKey(senderUsername);
+  const mk = uKey(ME.username);
+
+  // Add each other to friends lists
+  const updates = {};
+  updates[`pb_friends/${mk}/${sk}`]  = true;
+  updates[`pb_friends/${sk}/${mk}`]  = true;
+  // Remove the incoming request
+  updates[`pb_friend_requests/${sk}/${mk}`] = null;
+
+  db.ref().update(updates).then(()=>{
+    myFriends[sk] = true;
+    delete incomingReqs[sk];
+    renderFriends();
+    renderRequests();
+    renderDiscover();
+    updateFriendsCount();
+    updateRequestsBadge();
+    showToast(`✓ You and @${senderUsername} are now friends!`);
+  }).catch(()=>showToast('Failed. Check your connection.'));
+}
+
+function declineRequest(senderUsername){
+  if(!db) return;
+  const sk = uKey(senderUsername);
+  const mk = uKey(ME.username);
+  db.ref(`pb_friend_requests/${sk}/${mk}`).remove().then(()=>{
+    delete incomingReqs[sk];
+    renderRequests();
+    updateRequestsBadge();
+    showToast('Request declined.');
+  });
+}
+
+function removeFriend(targetUsername){
+  if(!confirm(`Remove @${targetUsername} from your friends?`)) return;
+  if(!db) return;
+  const tk = uKey(targetUsername);
+  const mk = uKey(ME.username);
+  const updates = {};
+  updates[`pb_friends/${mk}/${tk}`] = null;
+  updates[`pb_friends/${tk}/${mk}`] = null;
+  db.ref().update(updates).then(()=>{
+    delete myFriends[tk];
+    renderFriends(); renderDiscover(); updateFriendsCount();
+    showToast(`@${targetUsername} removed from friends.`);
+  });
+}
+
+/* ══════════════════════════════════════════
+   SEARCH
+══════════════════════════════════════════ */
+function onSearchInput(){
+  searchQuery = document.getElementById('search-input').value.trim();
+  if(currentTab==='discover') renderDiscover();
+}
+function doSearch(){
+  searchQuery = document.getElementById('search-input').value.trim();
+  switchFtab(document.getElementById('ftab-discover'), 'discover');
+  renderDiscover();
+}
+
+/* ══════════════════════════════════════════
+   TABS
+══════════════════════════════════════════ */
+function switchFtab(btn, tab){
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['discover','friends','requests'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el) el.style.display = t===tab ? '' : 'none';
+  });
+  currentTab = tab;
+  if(tab==='discover') renderDiscover();
+  if(tab==='friends')  renderFriends();
+  if(tab==='requests') renderRequests();
+}
+
+/* ══════════════════════════════════════════
+   COUNTS / BADGES
+══════════════════════════════════════════ */
+function updateFriendsCount(){
+  const n = Object.keys(myFriends).filter(k=>myFriends[k]).length;
+  const el = document.getElementById('friends-count');
+  if(el) el.textContent = `(${n})`;
+  document.getElementById('my-friends-count').textContent = n;
+}
+function updateRequestsBadge(){
+  const n = Object.keys(incomingReqs).length;
+  const el = document.getElementById('requests-count');
+  if(el){ el.textContent = n>0?`(${n})`:''; el.style.display=n>0?'':'none'; }
+  document.getElementById('req-count-label').textContent = n;
+}
+
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
+function toggleMenu(){
+  const m=document.getElementById('mobile-menu'), b=document.getElementById('hamburger');
+  const open=m.classList.toggle('open'); b.classList.toggle('open',open); document.body.style.overflow=open?'hidden':'';
+}
+document.addEventListener('click',e=>{
+  const m=document.getElementById('mobile-menu'), b=document.getElementById('hamburger');
+  if(m&&m.classList.contains('open')&&!m.contains(e.target)&&!b.contains(e.target)){ m.classList.remove('open'); b.classList.remove('open'); document.body.style.overflow=''; }
+});
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+loadAll();
+</script>
+<script>
+
+/* ══ SHARED NAV JS ══ */
+(function(){
+  // helpers
+  function gs(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
+  function el(id){ return document.getElementById(id); }
+
+  const SESSION = gs();
+  const isLoggedIn = !!SESSION;
+  const ME = isLoggedIn ? {
+    name:    SESSION.name||SESSION.username,
+    handle:  '@'+SESSION.username,
+    initial: (SESSION.name||SESSION.username).charAt(0).toUpperCase(),
+    username: SESSION.username
+  } : null;
+
+  // Init avatar / pill
+  function initPill(){
+    if(isLoggedIn){
+      el('_dd-in').style.display=''; el('_dd-out').style.display='none';
+      el('_pp-info').style.display='';
+      const av=el('_pp-avatar'); av.textContent=ME.initial;
+      av.style.cssText='width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;';
+      el('_pp-name').textContent=ME.name;
+      el('_pp-sub').textContent='';
+      el('_dd-name').textContent=ME.name;
+      el('_dd-handle').textContent=ME.handle;
+    } else {
+      el('_dd-in').style.display='none'; el('_dd-out').style.display='';
+      el('_pp-info').style.display='none';
+      const av=el('_pp-avatar'); av.textContent='👤';
+      av.style.cssText='width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';
+    }
+    // Load name from Firebase for pill
+    if(isLoggedIn && typeof firebase !== 'undefined'){
+      try{
+        const fdb = firebase.database();
+        fdb.ref('pb_profile/'+ME.username.replace(/\./g,'_')).once('value').then(s=>{
+          const p=s.val(); if(p&&p.name){ el('_pp-name').textContent=p.name; el('_dd-name').textContent=p.name; }
+        }).catch(()=>{});
+        // books read count for sub
+        fdb.ref('pb_libraries/'+ME.username.replace(/\./g,'_')).once('value').then(s=>{
+          const lib=s.val(); const cnt=lib&&Array.isArray(lib)?lib.filter(b=>b.status==='read').length:0;
+          if(cnt>0) el('_pp-sub').textContent=cnt+' books read';
+        }).catch(()=>{});
+      }catch(e){}
+    }
+  }
+
+  // Dropdown
+  window._toggleDD = function(e){
+    e.stopPropagation();
+    const dd=el('_dd'); dd.classList.toggle('open');
+    _closeMob();
+  };
+  window._closeDD = function(){ el('_dd').classList.remove('open'); };
+  document.addEventListener('click',function(e){
+    const wrap=el('_dd-wrap'); if(wrap&&!wrap.contains(e.target)) _closeDD();
+  });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ _closeDD(); _closeMob(); } });
+
+  // Mobile menu
+  window._toggleMenu = function(){
+    const m=el('_mob'),b=el('_hbg');
+    const open=m.classList.toggle('open'); b.classList.toggle('open',open);
+    document.body.style.overflow=open?'hidden':'';
+    _closeDD();
+  };
+  window._closeMob = function(){
+    const m=el('_mob'),b=el('_hbg');
+    if(m){m.classList.remove('open');} if(b){b.classList.remove('open');}
+    document.body.style.overflow='';
+  };
+
+  // Language
+  let _lang = localStorage.getItem('pb_lang')||'en';
+  window._setLang = function(lang, e){
+    if(e) e.stopPropagation();
+    _lang=lang; localStorage.setItem('pb_lang',lang);
+    ['_lang-en','_lang-es','_lang-en-lo','_lang-es-lo','_slang-en','_slang-es','_mlang-en','_mlang-es'].forEach(id=>{
+      const btn=el(id); if(btn) btn.classList.toggle('active',id.endsWith(lang));
+    });
+    _showToast(lang==='es'?'🇪🇸 Idioma: Español':'🇬🇧 Language: English');
+    // Let each page know if it cares
+    if(typeof window.applyTranslations==='function') window.applyTranslations();
+  };
+  // Apply saved language on load
+  if(_lang==='es') _setLang('es',null);
+
+  // Settings
+  window._openSettings = function(){ el('_settings-overlay').classList.add('open'); document.body.style.overflow='hidden'; };
+  window._closeSettings = function(){ el('_settings-overlay').classList.remove('open'); document.body.style.overflow=''; };
+  window._saveSettings = function(){ _closeSettings(); _showToast('✓ Settings saved'); };
+
+  // Sign out
+  window._openSignOut = function(){ el('_so-overlay').classList.add('open'); document.body.style.overflow='hidden'; };
+  window._closeSignOut = function(){ el('_so-overlay').classList.remove('open'); document.body.style.overflow=''; };
+  window._doSignOut = function(){
+    localStorage.removeItem('pb_session');
+    _closeSignOut(); _showToast('Signed out…');
+    initPill();
+    setTimeout(()=>{ window.location.href='login.html'; },900);
+  };
+
+  // Toast
+  window._showToast = function(msg){
+    const t=el('_toast'); if(!t)return;
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),3000);
+  };
+
+  // Navbar scroll solidify (for index hero)
+  const nb=el('_navbar');
+  if(nb){
+    window.addEventListener('scroll',()=>nb.classList.toggle('solid',window.scrollY>60),{passive:true});
+  }
+
+  initPill();
+})();
+
+</script>
+</body>
+</html>
