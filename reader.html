@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pagebound — Reader</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600&family=Merriweather:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0906;--surface:#16100a;--amber:#d4893c;--amber-light:#f0a84e;
+  --cream:#f5ede0;--text:#e8ddd0;--text-dim:#8a7258;--border:rgba(184,148,104,.2);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:'DM Sans',sans-serif;color:var(--text);display:flex;flex-direction:column;}
+
+/* TOP BAR */
+.reader-bar{height:52px;background:rgba(13,9,6,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1rem;gap:.8rem;flex-shrink:0;backdrop-filter:blur(12px);z-index:100;}
+.rb-back{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:.35rem .8rem;font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--text-dim);cursor:pointer;text-decoration:none;transition:background .15s;display:flex;align-items:center;gap:.4rem;}
+.rb-back:hover{background:rgba(255,255,255,.12);color:var(--cream);}
+.rb-title{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;color:var(--cream);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rb-author{font-size:.72rem;color:var(--text-dim);margin-left:-.4rem;}
+.rb-controls{display:flex;align-items:center;gap:.5rem;margin-left:auto;}
+.rb-btn{background:none;border:1px solid var(--border);border-radius:7px;padding:.3rem .65rem;font-size:.78rem;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;}
+.rb-btn:hover{background:rgba(255,255,255,.08);color:var(--cream);}
+.rb-btn.active{background:var(--amber);color:#060408;border-color:var(--amber);}
+.rb-sep{width:1px;height:20px;background:var(--border);}
+.font-size-btn{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1px solid var(--border);cursor:pointer;font-size:.85rem;color:var(--text-dim);transition:background .15s;}
+.font-size-btn:hover{background:rgba(255,255,255,.12);color:var(--cream);}
+
+/* MAIN AREA */
+.reader-main{flex:1;display:flex;overflow:hidden;}
+.reader-sidebar{width:0;overflow:hidden;background:var(--surface);border-right:1px solid var(--border);transition:width .3s;flex-shrink:0;}
+.reader-sidebar.open{width:260px;}
+.sidebar-inner{width:260px;padding:1rem;overflow-y:auto;height:100%;}
+.sidebar-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.8rem;}
+.toc-item{display:block;padding:.5rem .6rem;font-size:.8rem;color:var(--text-dim);text-decoration:none;border-radius:7px;transition:background .15s,color .15s;cursor:pointer;line-height:1.4;}
+.toc-item:hover{background:rgba(255,255,255,.06);color:var(--cream);}
+.toc-item.active{background:rgba(212,137,60,.12);color:var(--amber);}
+.toc-item.sub{padding-left:1.2rem;font-size:.75rem;}
+
+/* EPUB VIEWER */
+.epub-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+#epub-viewer{flex:1;overflow:hidden;position:relative;}
+#epub-viewer iframe{border:none !important;}
+
+/* PAGE NAV */
+.page-nav{display:flex;align-items:center;justify-content:center;gap:1.2rem;padding:.7rem 1rem;background:rgba(13,9,6,.7);border-top:1px solid var(--border);flex-shrink:0;}
+.nav-arrow{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text-dim);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+.nav-arrow:hover{background:rgba(255,255,255,.12);color:var(--cream);}
+.progress-info{display:flex;flex-direction:column;align-items:center;gap:.3rem;min-width:120px;}
+.progress-bar-wrap{width:120px;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:var(--amber);border-radius:4px;transition:width .3s;}
+.progress-pct{font-size:.68rem;color:var(--text-dim);}
+
+/* LOADING STATE */
+.reader-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:var(--bg);z-index:50;}
+.reader-loading-book{width:60px;height:90px;border-radius:3px 8px 8px 3px;animation:loadFloat 2s ease-in-out infinite;box-shadow:4px 6px 20px rgba(0,0,0,.7);}
+@keyframes loadFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.reader-loading p{font-size:.84rem;color:var(--text-dim);text-align:center;line-height:1.6;}
+.reader-loading .loading-bar{width:160px;height:3px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
+.reader-loading .loading-fill{height:100%;background:var(--amber);border-radius:3px;animation:loadBar 1.8s ease-in-out infinite;}
+@keyframes loadBar{0%{width:0%;margin-left:0;}50%{width:60%;margin-left:20%;}100%{width:0%;margin-left:100%;}}
+
+/* ERROR STATE */
+.reader-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;background:var(--bg);z-index:50;padding:2rem;text-align:center;}
+.reader-error .err-icon{font-size:3rem;opacity:.5;}
+.reader-error h2{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--cream);}
+.reader-error p{font-size:.84rem;color:var(--text-dim);line-height:1.6;max-width:400px;}
+.reader-error a{color:var(--amber);text-decoration:none;}
+
+/* THEMES */
+body.theme-sepia #epub-viewer{background:#f4ecd8 !important;}
+body.theme-night #epub-viewer{background:#111 !important;}
+body.theme-sepia .reader-bar,body.theme-sepia .page-nav{background:rgba(42,28,10,.95);}
+body.theme-night .reader-bar,body.theme-night .page-nav{background:rgba(5,5,5,.97);}
+
+/* TOAST */
+.toast{position:fixed;bottom:5rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--amber);color:#060408;border-radius:10px;padding:.48rem 1.2rem;font-size:.78rem;font-weight:700;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:600px){
+  .rb-author,.rb-sep,.rb-btn:not(.rb-toc-btn){display:none;}
+  .reader-bar{padding:0 .6rem;gap:.5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="reader-bar">
+  <a class="rb-back" href="index.html">← Library</a>
+  <div>
+    <div class="rb-title" id="rb-title">Loading…</div>
+    <div class="rb-author" id="rb-author"></div>
+  </div>
+  <div class="rb-controls">
+    <!-- TOC toggle -->
+    <button class="rb-btn rb-toc-btn" onclick="toggleToc()" title="Table of Contents">☰ Contents</button>
+    <div class="rb-sep"></div>
+    <!-- Font size -->
+    <button class="font-size-btn" onclick="changeFontSize(-1)" title="Smaller">A−</button>
+    <button class="font-size-btn" onclick="changeFontSize(1)" title="Larger">A+</button>
+    <div class="rb-sep"></div>
+    <!-- Themes -->
+    <button class="rb-btn" onclick="setTheme('default')" id="theme-default" title="Default">🌙</button>
+    <button class="rb-btn" onclick="setTheme('sepia')" id="theme-sepia" title="Sepia">📜</button>
+    <button class="rb-btn" onclick="setTheme('night')" id="theme-night" title="Night">⬛</button>
+    <div class="rb-sep"></div>
+    <!-- Bookmark -->
+    <button class="rb-btn" onclick="bookmarkCurrent()" title="Bookmark">🔖</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="reader-main">
+
+  <!-- TOC SIDEBAR -->
+  <div class="reader-sidebar" id="toc-sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-title">Contents</div>
+      <div id="toc-list"></div>
+    </div>
+  </div>
+
+  <!-- EPUB VIEWER -->
+  <div class="epub-wrap">
+
+    <!-- Loading -->
+    <div class="reader-loading" id="reader-loading">
+      <div class="reader-loading-book" id="loading-cover-preview" style="background:linear-gradient(160deg,#3d2810,#6e4820)"></div>
+      <div class="loading-bar"><div class="loading-fill"></div></div>
+      <p id="loading-msg">Loading book…<br><span style="font-size:.72rem;opacity:.6">Assembling from database</span></p>
+    </div>
+
+    <!-- Error -->
+    <div class="reader-error" id="reader-error" style="display:none">
+      <div class="err-icon">📚</div>
+      <h2>Book not available</h2>
+      <p id="err-msg">This book doesn't have an epub file attached yet. Ask the admin to upload one.</p>
+      <a href="index.html">← Back to Library</a>
+    </div>
+
+    <!-- Viewer -->
+    <div id="epub-viewer"></div>
+
+    <!-- Page navigation -->
+    <div class="page-nav" id="page-nav" style="display:none">
+      <button class="nav-arrow" onclick="prevPage()" title="Previous page">‹</button>
+      <div class="progress-info">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-pct" id="progress-pct">0%</div>
+      </div>
+      <button class="nav-arrow" onclick="nextPage()" title="Next page">›</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   FIREBASE
+═══════════════════════════════════════ */
+const FB = {
+  apiKey:            "AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",
+  authDomain:        "casey-80b19.firebaseapp.com",
+  databaseURL:       "https://casey-80b19-default-rtdb.firebaseio.com",
+  projectId:         "casey-80b19",
+  storageBucket:     "casey-80b19.firebasestorage.app",
+  messagingSenderId: "1084195161725",
+  appId:             "1:1084195161725:web:c4db255376c0aaf25d5314"
+};
+firebase.initializeApp(FB);
+const db = firebase.database();
+
+function getSession(){ try{ return JSON.parse(localStorage.getItem('pb_session')||'null'); }catch{ return null; } }
+const SESSION = getSession();
+
+/* ═══════════════════════════════════════
+   URL PARAMS
+═══════════════════════════════════════ */
+const params    = new URLSearchParams(window.location.search);
+const EPUB_KEY  = params.get('key');       // Firebase key under pb_books_epub
+const BOOK_TITLE  = params.get('title')||'';
+const BOOK_AUTHOR = params.get('author')||'';
+const BOOK_COLOR  = params.get('color')||'linear-gradient(160deg,#3d2810,#6e4820)';
+
+document.getElementById('rb-title').textContent  = BOOK_TITLE  || 'Loading…';
+document.getElementById('rb-author').textContent = BOOK_AUTHOR || '';
+document.getElementById('loading-cover-preview').style.background = BOOK_COLOR;
+document.title = BOOK_TITLE ? `Pagebound — ${BOOK_TITLE}` : 'Pagebound Reader';
+
+/* ═══════════════════════════════════════
+   EPUB READER STATE
+═══════════════════════════════════════ */
+let book    = null;
+let rendition = null;
+let fontSize  = 100;
+let currentTheme = 'default';
+let currentCfi   = null;
+const PROGRESS_KEY = 'pb_progress_'+(EPUB_KEY||'');
+
+function showError(msg){
+  document.getElementById('reader-loading').style.display='none';
+  const errDiv = document.getElementById('reader-error');
+  errDiv.style.display='flex';
+  const msgEl = document.getElementById('err-msg');
+  if(msgEl){
+    // Show each line as a paragraph
+    msgEl.innerHTML = msg.split('\\n').map(l=>`<div>${l}</div>`).join('');
+  }
+  // Add retry button if not already there
+  if(!document.getElementById('err-retry')){
+    const btn = document.createElement('button');
+    btn.id='err-retry';
+    btn.textContent='↺ Retry';
+    btn.style.cssText='margin-top:.8rem;background:var(--amber);border:none;border-radius:8px;padding:.5rem 1.4rem;font-family:DM Sans,sans-serif;font-size:.84rem;font-weight:700;color:#060408;cursor:pointer;';
+    btn.onclick=()=>{ errDiv.style.display='none'; document.getElementById('reader-loading').style.display='flex'; loadEpub(); };
+    errDiv.appendChild(btn);
+  }
+}
+
+/* ═══════════════════════════════════════
+   LOAD EPUB FROM FIREBASE
+═══════════════════════════════════════ */
+async function loadEpub(){
+  if(!EPUB_KEY){
+    showError('No book key provided.');
+    return;
+  }
+
+  try {
+    setLoadMsg('Connecting…');
+
+    // ── 1. Load metadata ──
+    let meta;
+    try {
+      const snap = await db.ref('pb_books_epub/'+EPUB_KEY+'/meta').once('value');
+      meta = snap.val();
+    } catch(e){
+      showError('Could not reach Firebase: '+e.message);
+      return;
+    }
+    if(!meta){
+      showError('No epub uploaded for this book yet.\nAsk the admin to upload the epub file.');
+      return;
+    }
+
+    const totalChunks = meta.chunks || 1;
+    const totalSizeKB = Math.round((meta.totalSize||0) * 0.75 / 1024);
+    setLoadMsg('Loading book ('+totalSizeKB+' KB) in '+totalChunks+' parts…');
+
+    // ── 2. Load chunks → Uint8Array slices (never one giant string) ──
+    // Each base64 chunk decodes independently, accumulate as binary arrays
+    const byteArrays = [];
+    let totalBytes = 0;
+
+    for(let i = 0; i < totalChunks; i++){
+      setLoadMsg('Downloading part '+(i+1)+' of '+totalChunks+'…');
+      let chunkB64;
+      try {
+        const snap = await db.ref('pb_books_epub/'+EPUB_KEY+'/chunk_'+i).once('value');
+        chunkB64 = snap.val();
+        if(!chunkB64) throw new Error('chunk_'+i+' missing');
+      } catch(e){
+        showError('Failed on chunk '+(i+1)+': '+e.message);
+        return;
+      }
+
+      // Decode this chunk immediately — avoids one giant concatenated string
+      try {
+        const binary = atob(chunkB64);
+        const bytes  = new Uint8Array(binary.length);
+        for(let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+        byteArrays.push(bytes);
+        totalBytes += bytes.length;
+      } catch(e){
+        showError('Decode error on chunk '+(i+1)+': '+e.message);
+        return;
+      }
+    }
+
+    setLoadMsg('Assembling '+(Math.round(totalBytes/1024))+' KB…');
+
+    // Merge all Uint8Array slices into one ArrayBuffer (no base64 in memory)
+    const merged = new Uint8Array(totalBytes);
+    let offset = 0;
+    for(const arr of byteArrays){
+      merged.set(arr, offset);
+      offset += arr.length;
+    }
+    const arrayBuffer = merged.buffer;
+
+    setLoadMsg('Initialising reader…');
+
+    // ── 3. epub.js needs JSZip on window ──
+    if(typeof JSZip !== 'undefined') window.JSZip = JSZip;
+
+    // ── 4. Create a Blob URL — much friendlier to epub.js than raw ArrayBuffer ──
+    let epubUrl;
+    try {
+      const blob = new Blob([arrayBuffer], {type: 'application/epub+zip'});
+      epubUrl = URL.createObjectURL(blob);
+      book = ePub(epubUrl);
+    } catch(e){
+      // Fallback: try passing ArrayBuffer directly
+      try {
+        book = ePub(arrayBuffer);
+      } catch(e2){
+        showError('epub.js failed to parse: '+e2.message);
+        return;
+      }
+    }
+
+    setLoadMsg('Rendering…');
+
+    try {
+      rendition = book.renderTo('epub-viewer', {
+        width:  '100%',
+        height: '100%',
+        spread: 'none',
+        flow:   'paginated',
+        manager: 'default',
+      });
+      const savedCfi = localStorage.getItem(PROGRESS_KEY);
+      if(savedCfi){
+        await rendition.display(savedCfi).catch(()=>rendition.display());
+      } else {
+        await rendition.display();
+      }
+    } catch(e){
+      showError('Render failed: '+e.message);
+      return;
+    }
+
+    // ── 5. Wire UI ──
+    book.loaded.navigation.then(nav=>{
+      if(nav && nav.toc) buildToc(nav.toc);
+    }).catch(()=>{});
+
+    rendition.on('relocated', loc=>{
+      if(!loc||!loc.start) return;
+      currentCfi = loc.start.cfi;
+      let pct = 0;
+      try {
+        if(book.locations && book.locations.total > 0)
+          pct = Math.round(book.locations.percentageFromCfi(currentCfi)*100)||0;
+      } catch(e){}
+      document.getElementById('progress-fill').style.width = pct+'%';
+      document.getElementById('progress-pct').textContent  = pct ? pct+'%' : '';
+      localStorage.setItem(PROGRESS_KEY, currentCfi);
+      if(SESSION && db){
+        db.ref('pb_reading_progress/'+SESSION.username.replace(/\./g,'_')+'/'+EPUB_KEY)
+          .set({cfi:currentCfi,pct,updatedAt:Date.now()}).catch(()=>{});
+      }
+    });
+
+    book.locations.generate(1024).catch(()=>{});
+
+    document.addEventListener('keydown', e=>{
+      if(e.key==='ArrowRight'||e.key==='ArrowDown') nextPage();
+      if(e.key==='ArrowLeft' ||e.key==='ArrowUp')   prevPage();
+    });
+
+    document.getElementById('reader-loading').style.display = 'none';
+    document.getElementById('page-nav').style.display = 'flex';
+    applyTheme(currentTheme);
+    applyFontSize();
+
+  } catch(err){
+    console.error('Reader error:', err);
+    showError('Unexpected error: '+(err.message||String(err)));
+  }
+}
+
+function setLoadMsg(msg){
+  const el = document.getElementById('loading-msg');
+  if(el) el.innerHTML = msg+'<br><span style="font-size:.72rem;opacity:.5">'+BOOK_TITLE+'</span>';
+}
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+function prevPage(){ if(rendition) rendition.prev(); }
+function nextPage(){ if(rendition) rendition.next(); }
+
+function toggleToc(){
+  document.getElementById('toc-sidebar').classList.toggle('open');
+}
+
+function buildToc(toc){
+  const list = document.getElementById('toc-list');
+  list.innerHTML='';
+  function addItems(items, depth){
+    items.forEach(item=>{
+      const el = document.createElement('a');
+      el.className = 'toc-item'+(depth>0?' sub':'');
+      el.textContent = item.label.trim();
+      el.onclick = ()=>{
+        rendition.display(item.href);
+        document.querySelectorAll('.toc-item').forEach(i=>i.classList.remove('active'));
+        el.classList.add('active');
+        if(window.innerWidth<700) document.getElementById('toc-sidebar').classList.remove('open');
+      };
+      list.appendChild(el);
+      if(item.subitems&&item.subitems.length) addItems(item.subitems, depth+1);
+    });
+  }
+  addItems(toc,0);
+}
+
+/* ═══════════════════════════════════════
+   FONT SIZE
+═══════════════════════════════════════ */
+function changeFontSize(dir){
+  fontSize = Math.max(70, Math.min(150, fontSize+(dir*10)));
+  applyFontSize();
+  showToast('Font size: '+fontSize+'%');
+}
+function applyFontSize(){
+  if(!rendition) return;
+  rendition.themes.fontSize(fontSize+'%');
+}
+
+/* ═══════════════════════════════════════
+   THEMES
+═══════════════════════════════════════ */
+const THEMES = {
+  default:{ body:{ background:'#1a120a', color:'#e8ddd0' } },
+  sepia:  { body:{ background:'#f4ecd8', color:'#3a2a14' } },
+  night:  { body:{ background:'#111111', color:'#cccccc' } },
+};
+function setTheme(name){
+  currentTheme=name;
+  document.querySelectorAll('[id^="theme-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('theme-'+name).classList.add('active');
+  applyTheme(name);
+}
+function applyTheme(name){
+  document.body.className = name==='default'?'':'theme-'+name;
+  if(!rendition) return;
+  rendition.themes.register(name, THEMES[name]);
+  rendition.themes.select(name);
+}
+
+/* ═══════════════════════════════════════
+   BOOKMARK
+═══════════════════════════════════════ */
+function bookmarkCurrent(){
+  if(!currentCfi) return;
+  const bms = JSON.parse(localStorage.getItem('pb_bookmarks_'+EPUB_KEY)||'[]');
+  if(!bms.includes(currentCfi)){
+    bms.push(currentCfi);
+    localStorage.setItem('pb_bookmarks_'+EPUB_KEY, JSON.stringify(bms));
+    showToast('🔖 Page bookmarked!');
+  } else {
+    showToast('Already bookmarked.');
+  }
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+/* ═══════════════════════════════════════
+   SWIPE (mobile)
+═══════════════════════════════════════ */
+let touchStartX=0;
+document.addEventListener('touchstart',e=>{ touchStartX=e.touches[0].clientX; },{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-touchStartX;
+  if(Math.abs(dx)>50){ if(dx<0)nextPage(); else prevPage(); }
+},{passive:true});
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+loadEpub();
+</script>
+</body>
+</html>
