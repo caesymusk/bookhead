@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pagebound — Admin</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0906;--surface:#16100a;--surface2:#1e160e;--surface3:#261a10;
+  --amber:#d4893c;--amber-light:#f0a84e;--green:#5a9e6f;--red:#c0392b;
+  --cream:#f5ede0;--text:#e8ddd0;--text-dim:#8a7258;--text-muted:#5a4a30;
+  --border:rgba(184,148,104,.2);--border-hi:rgba(184,148,104,.4);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* AUTH SCREEN */
+.auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem;}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:2.5rem 2rem;width:100%;max-width:380px;text-align:center;}
+.auth-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.6rem;color:var(--amber-light);margin-bottom:.3rem;}
+.auth-sub{font-size:.82rem;color:var(--text-dim);margin-bottom:2rem;}
+.auth-badge{display:inline-block;background:rgba(212,137,60,.15);color:var(--amber);border:1px solid rgba(212,137,60,.3);border-radius:20px;padding:.3rem .9rem;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1.5rem;}
+.auth-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:.72rem 1rem;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;margin-bottom:.75rem;transition:border-color .2s;}
+.auth-input:focus{border-color:var(--amber);}
+.auth-btn{width:100%;background:var(--amber);border:none;border-radius:10px;padding:.72rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;color:#060408;cursor:pointer;transition:background .15s;}
+.auth-btn:hover{background:var(--amber-light);}
+.auth-error{color:#e07060;font-size:.8rem;margin-bottom:.75rem;display:none;}
+
+/* MAIN LAYOUT */
+.admin-wrap{display:none;min-height:100vh;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:.8rem;}
+.topbar-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.2rem;color:var(--amber-light);}
+.topbar-badge{background:rgba(212,137,60,.15);color:var(--amber);border:1px solid rgba(212,137,60,.3);border-radius:20px;padding:.22rem .7rem;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.topbar-user{font-size:.8rem;color:var(--text-dim);display:flex;align-items:center;gap:.6rem;}
+.btn-logout{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:.35rem .85rem;font-family:'DM Sans',sans-serif;font-size:.75rem;color:var(--text-dim);cursor:pointer;transition:background .15s;}
+.btn-logout:hover{background:rgba(255,255,255,.12);}
+
+.admin-body{display:grid;grid-template-columns:1fr 400px;gap:0;min-height:calc(100vh - 56px);}
+
+/* CATALOGUE TABLE */
+.catalogue-panel{border-right:1px solid var(--border);padding:1.5rem;}
+.panel-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:.3rem;display:flex;align-items:center;justify-content:space-between;}
+.panel-sub{font-size:.78rem;color:var(--text-dim);margin-bottom:1.2rem;}
+.stats-strip{display:flex;gap:1rem;margin-bottom:1.3rem;flex-wrap:wrap;}
+.stat-chip{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.45rem .9rem;font-size:.76rem;color:var(--text-dim);}
+.stat-chip strong{color:var(--cream);font-size:.88rem;display:block;}
+
+/* FILTERS */
+.filter-row{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap;}
+.filter-btn{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:.3rem .8rem;font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;}
+.filter-btn.active{background:var(--amber);color:#060408;border-color:var(--amber);}
+.search-bar{display:flex;gap:.5rem;margin-bottom:1.1rem;}
+.search-bar input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;padding:.5rem .9rem;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);outline:none;}
+.search-bar input:focus{border-color:var(--amber);}
+
+/* BOOK TABLE */
+.book-table{width:100%;border-collapse:collapse;}
+.book-table th{text-align:left;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding:.5rem .6rem;border-bottom:1px solid var(--border);}
+.book-table td{padding:.7rem .6rem;border-bottom:1px solid rgba(184,148,104,.08);font-size:.8rem;vertical-align:middle;}
+.book-table tr:hover td{background:rgba(255,255,255,.03);}
+.book-cover-swatch{width:28px;height:40px;border-radius:2px 5px 5px 2px;flex-shrink:0;box-shadow:2px 2px 8px rgba(0,0,0,.5);}
+.book-title-cell{font-weight:600;color:var(--cream);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.book-author-cell{color:var(--text-dim);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.section-tag{display:inline-block;background:rgba(184,148,104,.1);color:var(--text-dim);border:1px solid var(--border);border-radius:4px;padding:.08rem .4rem;font-size:.65rem;font-weight:600;}
+.section-tag.trending{background:rgba(255,100,60,.1);color:#f08060;border-color:rgba(255,100,60,.2);}
+.section-tag.new{background:rgba(60,180,100,.1);color:#70c880;border-color:rgba(60,180,100,.2);}
+.section-tag.classics{background:rgba(100,130,220,.1);color:#8aabdf;border-color:rgba(100,130,220,.2);}
+.section-tag.friends{background:rgba(180,100,220,.1);color:#c880e8;border-color:rgba(180,100,220,.2);}
+.section-tag.recommended{background:rgba(220,180,60,.1);color:#d4c060;border-color:rgba(220,180,60,.2);}
+.star-mini{color:var(--amber);font-size:.75rem;}
+.row-actions{display:flex;gap:.35rem;}
+.btn-edit-row{background:rgba(184,148,104,.1);border:1px solid rgba(184,148,104,.2);border-radius:6px;padding:.25rem .55rem;font-size:.7rem;color:var(--tan);cursor:pointer;transition:background .15s;}
+.btn-edit-row:hover{background:rgba(184,148,104,.22);}
+.btn-del-row{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.2);border-radius:6px;padding:.25rem .55rem;font-size:.7rem;color:#e07060;cursor:pointer;transition:background .15s;}
+.btn-del-row:hover{background:rgba(192,57,43,.22);}
+.empty-table{text-align:center;padding:3rem;color:var(--text-muted);font-size:.86rem;font-style:italic;}
+
+/* ADD / EDIT PANEL */
+.form-panel{background:var(--surface);padding:1.5rem;overflow-y:auto;max-height:calc(100vh - 56px);position:sticky;top:56px;}
+.form-panel-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:.25rem;}
+.form-panel-sub{font-size:.75rem;color:var(--text-dim);margin-bottom:1.4rem;}
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:.38rem;}
+.field input,.field select,.field textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;padding:.58rem .9rem;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--text);outline:none;transition:border-color .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--amber);}
+.field textarea{min-height:70px;resize:vertical;line-height:1.5;}
+.field select option{background:var(--surface2);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+
+/* COLOUR PICKER */
+.colour-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;margin-top:.4rem;}
+.colour-swatch{width:100%;aspect-ratio:1;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .15s,transform .15s;}
+.colour-swatch.active{border-color:var(--amber) !important;transform:scale(1.1);}
+.custom-colour-row{display:flex;gap:.5rem;align-items:center;margin-top:.5rem;}
+.custom-colour-row input[type=color]{width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:4px;}
+.custom-colour-row span{font-size:.75rem;color:var(--text-dim);}
+
+/* PREVIEW CARD */
+.preview-wrap{margin:1.2rem 0;padding:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:12px;}
+.preview-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:.7rem;}
+.preview-card{width:100px;margin:0 auto;}
+.preview-cover{width:100px;height:150px;border-radius:3px 8px 8px 3px;display:flex;flex-direction:column;justify-content:flex-end;padding:.6rem;position:relative;overflow:hidden;box-shadow:4px 6px 20px rgba(0,0,0,.7);}
+.preview-cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:8px;background:rgba(0,0,0,.3);}
+.preview-cover-title{font-family:'Playfair Display',serif;font-size:.68rem;font-weight:700;color:rgba(245,237,224,.9);line-height:1.2;position:relative;z-index:1;}
+.preview-cover-author{font-size:.58rem;color:rgba(245,237,224,.55);margin-top:.15rem;position:relative;z-index:1;}
+.preview-info{margin-top:.5rem;text-align:center;}
+.preview-info-title{font-size:.72rem;font-weight:600;color:var(--cream);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.preview-stars{font-size:.65rem;color:var(--amber);}
+
+/* SUBMIT BUTTONS */
+.form-btns{display:flex;gap:.6rem;margin-top:1.4rem;}
+.btn-submit-book{flex:2;background:var(--amber);border:none;border-radius:10px;padding:.62rem;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:700;color:#060408;cursor:pointer;transition:background .15s;}
+.btn-submit-book:hover{background:var(--amber-light);}
+.btn-clear-form{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:.62rem;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--text-dim);cursor:pointer;}
+.btn-clear-form:hover{background:rgba(255,255,255,.1);}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--amber);color:#060408;border-radius:10px;padding:.52rem 1.4rem;font-size:.82rem;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .28s,transform .28s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#c0392b;color:#fff;}
+
+/* SPINNER */
+.loading-cover{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:1rem;}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-cover p{font-size:.82rem;color:var(--text-dim);}
+
+/* DANGER CONFIRM */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:400;backdrop-filter:blur(6px);}
+.confirm-overlay.show{display:flex;}
+.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;max-width:360px;width:100%;text-align:center;}
+.confirm-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:.4rem;}
+.confirm-sub{font-size:.82rem;color:var(--text-dim);margin-bottom:1.4rem;line-height:1.55;}
+.confirm-btns{display:flex;gap:.7rem;}
+.btn-confirm-cancel{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;padding:.6rem;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--text);cursor:pointer;}
+.btn-confirm-delete{flex:1;background:#c0392b;border:none;border-radius:9px;padding:.6rem;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;color:#fff;cursor:pointer;}
+
+/* COVER TABS */
+.cover-tabs{display:flex;gap:0;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:.22rem;margin-bottom:.7rem;}
+.cover-tab{flex:1;background:none;border:none;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.74rem;font-weight:600;padding:.4rem .5rem;border-radius:6px;cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+.cover-tab.active{background:var(--amber);color:var(--bg);}
+.cover-panel{margin-top:.1rem;}
+
+/* EPUB DROP ZONE */
+.epub-drop-zone{border:2px dashed var(--border);border-radius:10px;padding:1.2rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+.epub-drop-zone:hover,.epub-drop-zone.drag-over{border-color:var(--amber);background:rgba(212,137,60,.06);}
+#epub-drop-icon{font-size:1.8rem;margin-bottom:.4rem;}
+#epub-drop-label{font-size:.82rem;font-weight:600;color:var(--text-dim);}
+#epub-drop-sub{font-size:.7rem;color:var(--text-muted);margin-top:.2rem;}
+
+@media(max-width:900px){
+  .admin-body{grid-template-columns:1fr;}
+  .form-panel{position:static;border-top:1px solid var(--border);max-height:none;}
+  .catalogue-panel{border-right:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-cover" id="loading-cover">
+  <div class="spinner"></div>
+  <p>Checking admin access…</p>
+</div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen" style="display:none">
+  <div class="auth-card">
+    <div class="auth-logo">Pagebound</div>
+    <div class="auth-sub">Admin Panel</div>
+    <div class="auth-badge">🔐 Admin Access Only</div>
+    <div class="auth-error" id="auth-error">You don't have admin access.</div>
+    <p style="font-size:.82rem;color:var(--text-dim);line-height:1.6;">You need to be logged in as an admin account to access this page.</p>
+    <br>
+    <a href="login.html" style="display:block;background:var(--amber);border:none;border-radius:10px;padding:.72rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;color:#060408;cursor:pointer;text-decoration:none;text-align:center;">Go to Login →</a>
+  </div>
+</div>
+
+<!-- MAIN ADMIN UI -->
+<div class="admin-wrap" id="admin-wrap">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-logo">Pagebound</span>
+      <span class="topbar-badge">⚙️ Admin</span>
+    </div>
+    <div class="topbar-user">
+      <span id="admin-username-display">casey</span>
+      <button class="btn-logout" onclick="goToSite()">← Back to Site</button>
+      <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- LEFT: CATALOGUE TABLE -->
+    <div class="catalogue-panel">
+      <div class="panel-title">
+        📚 Book Catalogue
+        <span id="total-count" style="font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;color:var(--text-dim);background:rgba(255,255,255,.06);border-radius:20px;padding:.2rem .7rem;">0 books</span>
+      </div>
+      <div class="panel-sub">All books in the Pagebound catalogue — shown on the homepage rows.</div>
+
+      <!-- Stats -->
+      <div class="stats-strip" id="stats-strip">
+        <div class="stat-chip"><strong id="stat-trending">0</strong>Trending</div>
+        <div class="stat-chip"><strong id="stat-new">0</strong>New Releases</div>
+        <div class="stat-chip"><strong id="stat-classics">0</strong>Classics</div>
+        <div class="stat-chip"><strong id="stat-recommended">0</strong>Recommended</div>
+        <div class="stat-chip"><strong id="stat-friends">0</strong>Friends</div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="search-bar">
+        <input type="text" id="table-search" placeholder="Search title or author…" oninput="renderTable()">
+      </div>
+      <div class="filter-row" id="section-filters">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('trending',this)">🔥 Trending</button>
+        <button class="filter-btn" onclick="setFilter('new',this)">✨ New</button>
+        <button class="filter-btn" onclick="setFilter('classics',this)">🏛️ Classics</button>
+        <button class="filter-btn" onclick="setFilter('recommended',this)">💡 Recommended</button>
+        <button class="filter-btn" onclick="setFilter('friends',this)">👥 Friends</button>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto;">
+        <table class="book-table">
+          <thead>
+            <tr>
+              <th>Cover</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Section</th>
+              <th>Genre</th>
+              <th>★</th>
+              <th>📖</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="books-tbody"></tbody>
+        </table>
+        <div class="empty-table" id="empty-table" style="display:none">No books yet. Add your first book using the form →</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: ADD / EDIT FORM -->
+    <div class="form-panel">
+      <div class="form-panel-title" id="form-title">➕ Add New Book</div>
+      <div class="form-panel-sub" id="form-sub">Fill in the details to add a book to the catalogue.</div>
+
+      <input type="hidden" id="edit-key">
+
+      <div class="field">
+        <label>Title *</label>
+        <input type="text" id="f-title" placeholder="e.g. The Name of the Rose" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <label>Author *</label>
+        <input type="text" id="f-author" placeholder="e.g. Umberto Eco" oninput="updatePreview()">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Section *</label>
+          <select id="f-section" onchange="updatePreview()">
+            <option value="trending">🔥 Trending</option>
+            <option value="new">✨ New Releases</option>
+            <option value="classics">🏛️ Classics</option>
+            <option value="recommended">💡 Recommended</option>
+            <option value="friends">👥 Friends Are Reading</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Rating (1–5)</label>
+          <select id="f-rating" onchange="updatePreview()">
+            <option value="5">★★★★★ 5</option>
+            <option value="4">★★★★☆ 4</option>
+            <option value="3">★★★☆☆ 3</option>
+            <option value="2">★★☆☆☆ 2</option>
+            <option value="1">★☆☆☆☆ 1</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Genre</label>
+        <select id="f-genre" onchange="updatePreview()">
+          <option value="">— None —</option>
+          <option value="dark-academia">🦉 Dark Academia</option>
+          <option value="literary-fiction">✒️ Literary Fiction</option>
+          <option value="mystery">🔍 Mystery & Thriller</option>
+          <option value="magical-realism">✨ Magical Realism</option>
+          <option value="sci-fi">🚀 Sci-Fi</option>
+          <option value="fantasy">🐉 Fantasy</option>
+          <option value="classics">🏛️ Classics</option>
+          <option value="romance">🌹 Romance</option>
+          <option value="biography">🧑‍💼 Biography</option>
+          <option value="history">📜 History</option>
+          <option value="poetry">🎭 Poetry</option>
+          <option value="horror">👁️ Horror</option>
+          <option value="non-fiction">💡 Non-Fiction</option>
+          <option value="graphic-novel">🎨 Graphic Novel</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Description (optional)</label>
+        <textarea id="f-desc" placeholder="Short description shown on hover or in detail view…"></textarea>
+      </div>
+
+      <!-- EPUB UPLOAD -->
+      <div class="field">
+        <label>📖 Epub File (optional)</label>
+        <div class="epub-drop-zone" id="epub-drop-zone" onclick="document.getElementById('f-epub').click()" ondragover="epubDragOver(event)" ondragleave="epubDragLeave(event)" ondrop="epubDrop(event)">
+          <div id="epub-drop-icon">📄</div>
+          <div id="epub-drop-label">Click or drag & drop an .epub file</div>
+          <div id="epub-drop-sub">Max recommended: 5 MB · Stored in Firebase</div>
+        </div>
+        <input type="file" id="f-epub" accept=".epub" style="display:none" onchange="handleEpubSelect(this)">
+        <!-- Progress -->
+        <div id="epub-progress-wrap" style="display:none;margin-top:.7rem;">
+          <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-dim);margin-bottom:.3rem;">
+            <span id="epub-progress-label">Uploading…</span>
+            <span id="epub-progress-pct">0%</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,.08);border-radius:20px;overflow:hidden;">
+            <div id="epub-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--amber),var(--amber-light));border-radius:20px;transition:width .3s;"></div>
+          </div>
+        </div>
+        <!-- Current epub status -->
+        <div id="epub-current" style="display:none;margin-top:.6rem;background:rgba(90,158,111,.1);border:1px solid rgba(90,158,111,.25);border-radius:8px;padding:.5rem .8rem;font-size:.76rem;color:#7dcea0;display:flex;align-items:center;justify-content:space-between;gap:.5rem;">
+          <span>📖 <span id="epub-current-name"></span></span>
+          <button onclick="removeEpub()" style="background:none;border:none;color:#e07060;cursor:pointer;font-size:.8rem;padding:.1rem .3rem;">✕ Remove</button>
+        </div>
+        <input type="hidden" id="f-epub-key">
+      </div>
+      <div class="field">
+        <label>🖼️ Book Cover</label>
+
+        <!-- Cover source tabs -->
+        <div class="cover-tabs">
+          <button class="cover-tab active" id="ctab-epub" onclick="setCoverTab('epub',this)">📖 From Epub</button>
+          <button class="cover-tab" id="ctab-upload" onclick="setCoverTab('upload',this)">📷 Upload Image</button>
+          <button class="cover-tab" id="ctab-gradient" onclick="setCoverTab('gradient',this)">🎨 Gradient</button>
+        </div>
+
+        <!-- From epub panel -->
+        <div id="cover-panel-epub" class="cover-panel">
+          <div id="epub-cover-status" style="padding:.7rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;font-size:.78rem;color:var(--text-dim);text-align:center;">
+            Upload an epub file above — the cover will be extracted automatically.
+          </div>
+        </div>
+
+        <!-- Upload image panel -->
+        <div id="cover-panel-upload" class="cover-panel" style="display:none">
+          <div class="epub-drop-zone" id="cover-drop-zone" onclick="document.getElementById('f-cover-img').click()" ondragover="epubDragOver(event)" ondragleave="epubDragLeave(event)" ondrop="coverImgDrop(event)">
+            <div>🖼️</div>
+            <div style="font-size:.8rem;font-weight:600;color:var(--text-dim);margin-top:.3rem;">Click or drag a JPG / PNG image</div>
+            <div style="font-size:.68rem;color:var(--text-muted);margin-top:.15rem;">Will be compressed and used as cover</div>
+          </div>
+          <input type="file" id="f-cover-img" accept="image/*" style="display:none" onchange="handleCoverImageSelect(this)">
+        </div>
+
+        <!-- Gradient panel -->
+        <div id="cover-panel-gradient" class="cover-panel" style="display:none">
+          <div class="colour-grid" id="colour-grid"></div>
+          <div class="custom-colour-row" style="margin-top:.6rem;">
+            <span>Custom:</span>
+            <input type="color" id="f-color-a" value="#3d2810" oninput="setCustomGradient()">
+            <span>→</span>
+            <input type="color" id="f-color-b" value="#6e4820" oninput="setCustomGradient()">
+          </div>
+        </div>
+
+        <!-- Hidden inputs -->
+        <input type="hidden" id="f-cover-type" value="gradient">
+        <input type="hidden" id="f-cover-img-data" value="">
+        <input type="hidden" id="f-color" value="linear-gradient(160deg,#3d2810,#6e4820)">
+      </div>
+
+      <!-- Live preview -->
+      <div class="preview-wrap">
+        <div class="preview-label">Preview</div>
+        <div class="preview-card">
+          <div class="preview-cover" id="prev-cover" style="position:relative;overflow:hidden;">
+            <img id="prev-cover-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;border-radius:3px 8px 8px 3px;">
+            <div id="prev-cover-gradient-overlay" style="position:absolute;inset:0;"></div>
+            <div style="position:relative;z-index:1;">
+              <div class="preview-cover-title" id="prev-title">Book Title</div>
+              <div class="preview-cover-author" id="prev-author">Author Name</div>
+            </div>
+          </div>
+          <div class="preview-info">
+            <div class="preview-info-title" id="prev-info-title">Book Title</div>
+            <div class="preview-stars" id="prev-stars">★★★★★</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-btns">
+        <button class="btn-clear-form" onclick="clearForm()">Clear</button>
+        <button class="btn-submit-book" id="submit-btn" onclick="submitBook()">➕ Add to Catalogue</button>
+      </div>
+    </div>
+
+  </div><!-- /admin-body -->
+</div><!-- /admin-wrap -->
+
+<!-- DELETE CONFIRM -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Remove from catalogue?</div>
+    <div class="confirm-sub" id="confirm-book-name">This book will be removed from the homepage.</div>
+    <div class="confirm-btns">
+      <button class="btn-confirm-cancel" onclick="cancelDelete()">Cancel</button>
+      <button class="btn-confirm-delete" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════
+   FIREBASE
+═══════════════════════════════════════ */
+const FB = {
+  apiKey:            "AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",
+  authDomain:        "casey-80b19.firebaseapp.com",
+  databaseURL:       "https://casey-80b19-default-rtdb.firebaseio.com",
+  projectId:         "casey-80b19",
+  storageBucket:     "casey-80b19.firebasestorage.app",
+  messagingSenderId: "1084195161725",
+  appId:             "1:1084195161725:web:c4db255376c0aaf25d5314"
+};
+firebase.initializeApp(FB);
+const db = firebase.database();
+
+/* ═══════════════════════════════════════
+   AUTH CHECK
+═══════════════════════════════════════ */
+function getSession(){ try{ return JSON.parse(localStorage.getItem('pb_session')||'null'); }catch{ return null; } }
+
+const SESSION = getSession();
+
+async function checkAdmin(){
+  const loading  = document.getElementById('loading-cover');
+  const authScr  = document.getElementById('auth-screen');
+  const adminWrap= document.getElementById('admin-wrap');
+  const authErr  = document.getElementById('auth-error');
+
+  if(!SESSION){
+    loading.style.display='none';
+    authErr.style.display='block';
+    authErr.textContent='You are not logged in.';
+    authScr.style.display='flex';
+    return;
+  }
+
+  try {
+    const uk = SESSION.username.replace(/\./g,'_');
+    const snap = await db.ref('pb_admin/'+uk).once('value');
+    if(snap.val()===true){
+      loading.style.display='none';
+      adminWrap.style.display='block';
+      document.getElementById('admin-username-display').textContent = SESSION.username;
+      initAdmin();
+    } else {
+      loading.style.display='none';
+      authErr.style.display='block';
+      authErr.textContent='Account "'+SESSION.username+'" does not have admin access.';
+      authScr.style.display='flex';
+    }
+  } catch(e){
+    loading.style.display='none';
+    authErr.style.display='block';
+    authErr.textContent='Could not verify admin access. Check your connection.';
+    authScr.style.display='flex';
+  }
+}
+checkAdmin();
+
+/* ═══════════════════════════════════════
+   CATALOGUE DATA
+═══════════════════════════════════════ */
+let catalogue = {}; // { firebaseKey: bookObject }
+let filterSection = 'all';
+let pendingDeleteKey = null;
+
+/* ─ SEED default books if catalogue is empty ─ */
+const DEFAULT_BOOKS = [
+  {title:"Babel",author:"R. F. Kuang",section:"trending",rating:5,genre:"fantasy",color:"linear-gradient(160deg,#3a1a2a,#5e2c4a)",desc:""},
+  {title:"Tomorrow, and Tomorrow",author:"Gabrielle Zevin",section:"trending",rating:5,genre:"literary-fiction",color:"linear-gradient(160deg,#1a2e3a,#2c4e6a)",desc:""},
+  {title:"The Atlas Six",author:"Olivie Blake",section:"trending",rating:4,genre:"dark-academia",color:"linear-gradient(160deg,#2a1a3a,#4a2e5e)",desc:""},
+  {title:"Lessons in Chemistry",author:"Bonnie Garmus",section:"trending",rating:4,genre:"literary-fiction",color:"linear-gradient(160deg,#1a3a2a,#2c5e40)",desc:""},
+  {title:"Fourth Wing",author:"Rebecca Yarros",section:"trending",rating:4,genre:"fantasy",color:"linear-gradient(160deg,#3a1a1a,#6e2c2c)",desc:""},
+  {title:"Iron Flame",author:"Rebecca Yarros",section:"trending",rating:4,genre:"fantasy",color:"linear-gradient(160deg,#3d2810,#6e4820)",desc:""},
+  {title:"Happy Place",author:"Emily Henry",section:"trending",rating:4,genre:"romance",color:"linear-gradient(160deg,#2a1a3a,#4a2e5e)",desc:""},
+  {title:"The Covenant of Water",author:"Abraham Verghese",section:"trending",rating:5,genre:"literary-fiction",color:"linear-gradient(160deg,#1a2e3a,#2c4e6a)",desc:""},
+  {title:"Holly",author:"Stephen King",section:"trending",rating:4,genre:"mystery",color:"linear-gradient(160deg,#1a1a2a,#2c2c4e)",desc:""},
+  {title:"All the Light We Cannot See",author:"Anthony Doerr",section:"trending",rating:5,genre:"history",color:"linear-gradient(160deg,#2a1a0a,#5c3a18)",desc:""},
+  {title:"If We Were Villains",author:"M. L. Rio",section:"recommended",rating:5,genre:"dark-academia",color:"linear-gradient(160deg,#2a1a3a,#4a2e5e)",desc:""},
+  {title:"The Goldfinch",author:"Donna Tartt",section:"recommended",rating:5,genre:"literary-fiction",color:"linear-gradient(160deg,#3d2810,#6e4820)",desc:""},
+  {title:"A Little Life",author:"Hanya Yanagihara",section:"recommended",rating:5,genre:"literary-fiction",color:"linear-gradient(160deg,#1a0a0a,#3a1a1a)",desc:""},
+  {title:"Bunny",author:"Mona Awad",section:"recommended",rating:4,genre:"dark-academia",color:"linear-gradient(160deg,#2a1a3a,#4a2e5e)",desc:""},
+  {title:"Never Let Me Go",author:"Kazuo Ishiguro",section:"recommended",rating:5,genre:"sci-fi",color:"linear-gradient(160deg,#1a2a3a,#2c3e5e)",desc:""},
+  {title:"The Virgin Suicides",author:"Jeffrey Eugenides",section:"recommended",rating:4,genre:"literary-fiction",color:"linear-gradient(160deg,#3a1a1a,#6e2c2c)",desc:""},
+  {title:"Special Topics in Calamity Physics",author:"Marisha Pessl",section:"recommended",rating:4,genre:"dark-academia",color:"linear-gradient(160deg,#1a3a2a,#2c5e40)",desc:""},
+  {title:"Ninth House",author:"Leigh Bardugo",section:"recommended",rating:4,genre:"dark-academia",color:"linear-gradient(160deg,#1a1a2a,#2c2c4e)",desc:""},
+  {title:"Crime and Punishment",author:"Fyodor Dostoevsky",section:"classics",rating:5,genre:"classics",color:"linear-gradient(160deg,#2a1a0a,#5c3a18)",desc:""},
+  {title:"The Count of Monte Cristo",author:"Alexandre Dumas",section:"classics",rating:5,genre:"classics",color:"linear-gradient(160deg,#1a2a1a,#2c5e2c)",desc:""},
+  {title:"Jane Eyre",author:"Charlotte Brontë",section:"classics",rating:5,genre:"classics",color:"linear-gradient(160deg,#3a1a1a,#6e2c2c)",desc:""},
+  {title:"One Hundred Years of Solitude",author:"Gabriel García Márquez",section:"classics",rating:5,genre:"magical-realism",color:"linear-gradient(160deg,#2a1a0a,#5c3a18)",desc:""},
+  {title:"Anna Karenina",author:"Leo Tolstoy",section:"classics",rating:5,genre:"classics",color:"linear-gradient(160deg,#1a1a2a,#2c2c4e)",desc:""},
+  {title:"Middlemarch",author:"George Eliot",section:"classics",rating:5,genre:"classics",color:"linear-gradient(160deg,#1a2a2a,#2c4e4e)",desc:""},
+  {title:"Wuthering Heights",author:"Emily Brontë",section:"classics",rating:4,genre:"classics",color:"linear-gradient(160deg,#2a2a1a,#4e4e2c)",desc:""},
+  {title:"The Brothers Karamazov",author:"Fyodor Dostoevsky",section:"classics",rating:5,genre:"classics",color:"linear-gradient(160deg,#1a0a0a,#3a1a1a)",desc:""},
+  {title:"Piranesi",author:"Susanna Clarke",section:"friends",rating:5,genre:"fantasy",color:"linear-gradient(160deg,#1a2e3a,#2c4e6a)",desc:""},
+  {title:"Labyrinths",author:"Jorge Luis Borges",section:"friends",rating:5,genre:"magical-realism",color:"linear-gradient(160deg,#2a1a3a,#4a2e5e)",desc:""},
+  {title:"Normal People",author:"Sally Rooney",section:"friends",rating:3,genre:"literary-fiction",color:"linear-gradient(160deg,#3a1a1a,#6e2c2c)",desc:""},
+  {title:"Cloud Atlas",author:"David Mitchell",section:"friends",rating:5,genre:"sci-fi",color:"linear-gradient(160deg,#1a2a2a,#2c4e4e)",desc:""},
+  {title:"The Master and Margarita",author:"Mikhail Bulgakov",section:"friends",rating:5,genre:"magical-realism",color:"linear-gradient(160deg,#2a1a0a,#5c3a18)",desc:""},
+  {title:"Circe",author:"Madeline Miller",section:"friends",rating:5,genre:"fantasy",color:"linear-gradient(160deg,#1a3a2a,#2c5e40)",desc:""},
+  {title:"Rebecca",author:"Daphne du Maurier",section:"friends",rating:5,genre:"mystery",color:"linear-gradient(160deg,#1a1a2a,#2c2c4e)",desc:""},
+  {title:"James",author:"Percival Everett",section:"new",rating:5,genre:"literary-fiction",color:"linear-gradient(160deg,#2a1a0a,#5c3a18)",desc:""},
+  {title:"The Women",author:"Kristin Hannah",section:"new",rating:4,genre:"literary-fiction",color:"linear-gradient(160deg,#3a1a1a,#6e2c2c)",desc:""},
+  {title:"Wind and Truth",author:"Brandon Sanderson",section:"new",rating:5,genre:"fantasy",color:"linear-gradient(160deg,#1a2a3a,#2c3e5e)",desc:""},
+  {title:"All Fours",author:"Miranda July",section:"new",rating:4,genre:"literary-fiction",color:"linear-gradient(160deg,#2a1a3a,#4a2e5e)",desc:""},
+  {title:"Intermezzo",author:"Sally Rooney",section:"new",rating:4,genre:"literary-fiction",color:"linear-gradient(160deg,#1a2a1a,#2c5e2c)",desc:""},
+  {title:"The God of the Woods",author:"Lauren Fox",section:"new",rating:4,genre:"mystery",color:"linear-gradient(160deg,#1a3a2a,#2c5e40)",desc:""},
+];
+
+async function initAdmin(){
+  // Load catalogue from Firebase
+  const snap = await db.ref('pb_catalogue').once('value');
+  const data = snap.val();
+
+  if(!data){
+    // First time: seed with default books
+    const batch = {};
+    DEFAULT_BOOKS.forEach(b => {
+      const key = db.ref('pb_catalogue').push().key;
+      batch[key] = {...b, addedAt: Date.now()};
+    });
+    await db.ref('pb_catalogue').set(batch);
+    catalogue = batch;
+    showToast('✓ Catalogue seeded with '+DEFAULT_BOOKS.length+' default books');
+  } else {
+    catalogue = data;
+  }
+
+  renderTable();
+  updateStats();
+  buildColourSwatches();
+  updatePreview();
+}
+
+/* ═══════════════════════════════════════
+   TABLE RENDERING
+═══════════════════════════════════════ */
+function renderTable(){
+  const tbody = document.getElementById('books-tbody');
+  const empty = document.getElementById('empty-table');
+  const search = document.getElementById('table-search').value.toLowerCase();
+
+  let books = Object.entries(catalogue).map(([k,v])=>({key:k,...v}));
+
+  if(filterSection !== 'all') books = books.filter(b=>b.section===filterSection);
+  if(search) books = books.filter(b=>(b.title||'').toLowerCase().includes(search)||(b.author||'').toLowerCase().includes(search));
+
+  books.sort((a,b)=>(b.addedAt||0)-(a.addedAt||0));
+
+  if(books.length===0){
+    tbody.innerHTML=''; empty.style.display='block';
+  } else {
+    empty.style.display='none';
+    tbody.innerHTML = books.map(b=>`
+      <tr>
+        <td><div class="book-cover-swatch" style="background:${b.color||'#3d2810'}"></div></td>
+        <td class="book-title-cell" title="${b.title||''}">${b.title||'—'}</td>
+        <td class="book-author-cell" title="${b.author||''}">${b.author||'—'}</td>
+        <td><span class="section-tag ${b.section||''}">${sectionLabel(b.section)}</span></td>
+        <td style="color:var(--text-dim);font-size:.72rem;">${b.genre||'—'}</td>
+        <td><span class="star-mini">${'★'.repeat(b.rating||0)}</span></td>
+        <td style="font-size:.85rem">${b.hasEpub?'📖':'—'}</td>
+        <td><div class="row-actions">
+          <button class="btn-edit-row" onclick="editBook('${b.key}')">✏️</button>
+          <button class="btn-del-row" onclick="askDelete('${b.key}','${(b.title||'').replace(/'/g,"\\'")}')">🗑️</button>
+        </div></td>
+      </tr>`).join('');
+  }
+  document.getElementById('total-count').textContent = Object.keys(catalogue).length + ' books';
+}
+
+function sectionLabel(s){
+  return {trending:'🔥 Trending',new:'✨ New',classics:'🏛️ Classics',recommended:'💡 Rec.',friends:'👥 Friends'}[s]||s||'—';
+}
+
+function updateStats(){
+  ['trending','new','classics','recommended','friends'].forEach(s=>{
+    const el = document.getElementById('stat-'+s);
+    if(el) el.textContent = Object.values(catalogue).filter(b=>b.section===s).length;
+  });
+}
+
+function setFilter(section, btn){
+  filterSection = section;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+/* ═══════════════════════════════════════
+   COVER TABS
+═══════════════════════════════════════ */
+function setCoverTab(tab, btn){
+  document.querySelectorAll('.cover-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.cover-panel').forEach(p=>p.style.display='none');
+  document.getElementById('cover-panel-'+tab).style.display='';
+  document.getElementById('f-cover-type').value=tab;
+  updatePreview();
+}
+
+/* ═══════════════════════════════════════
+   COVER IMAGE UPLOAD
+═══════════════════════════════════════ */
+function coverImgDrop(e){
+  e.preventDefault();
+  document.getElementById('cover-drop-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if(file) processCoverImage(file);
+}
+function handleCoverImageSelect(input){
+  const file = input.files[0];
+  if(file) processCoverImage(file);
+  input.value='';
+}
+function processCoverImage(file){
+  if(!file.type.startsWith('image/')){ showToast('Please select an image file.','error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      // Compress to max 300px wide, 450px tall (book cover ratio)
+      const canvas = document.createElement('canvas');
+      const maxW=300, maxH=450;
+      let w=img.width, h=img.height;
+      if(w>maxW){ h=Math.round(h*maxW/w); w=maxW; }
+      if(h>maxH){ w=Math.round(w*maxH/h); h=maxH; }
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      let quality=0.82;
+      let b64=canvas.toDataURL('image/jpeg',quality);
+      while(b64.length>200000 && quality>0.3){ quality-=0.1; b64=canvas.toDataURL('image/jpeg',quality); }
+      document.getElementById('f-cover-img-data').value=b64;
+      document.getElementById('f-cover-type').value='image';
+      updatePreview();
+      showToast('✓ Cover image set ('+Math.round(b64.length*0.75/1024)+' KB)');
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ═══════════════════════════════════════
+   EPUB COVER EXTRACTION  
+   (called automatically after epub loads)
+═══════════════════════════════════════ */
+async function extractEpubCover(arrayBuffer){
+  try {
+    const JSZip = window.JSZip || await import('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    // 1. Try to find cover via OPF manifest
+    let coverData = null;
+    const opfFile = Object.keys(zip.files).find(f=>f.endsWith('.opf'));
+    if(opfFile){
+      const opfText = await zip.files[opfFile].async('text');
+      // Look for cover image item in manifest
+      const coverMatch = opfText.match(/id=["']cover[^"']*["'][^>]*href=["']([^"']+\.(jpg|jpeg|png|gif|webp))["']/i)
+        || opfText.match(/href=["']([^"']+\.(jpg|jpeg|png|gif|webp))["'][^>]*id=["']cover/i)
+        || opfText.match(/properties=["']cover-image["'][^>]*href=["']([^"']+)["']/i)
+        || opfText.match(/href=["']([^"']+)["'][^>]*properties=["']cover-image["']/i);
+      if(coverMatch){
+        const coverPath = coverMatch[1];
+        const opfDir = opfFile.substring(0,opfFile.lastIndexOf('/')+1);
+        const fullPath = opfDir+coverPath;
+        const coverFile = zip.files[fullPath] || zip.files[coverPath];
+        if(coverFile) coverData = await coverFile.async('base64');
+      }
+    }
+
+    // 2. Fallback: look for any image named "cover"
+    if(!coverData){
+      const coverFile = Object.keys(zip.files).find(f=>
+        f.toLowerCase().includes('cover') && /\.(jpg|jpeg|png|gif|webp)$/i.test(f)
+      );
+      if(coverFile) coverData = await zip.files[coverFile].async('base64');
+    }
+
+    // 3. Fallback: first image in OEBPS/Images or similar
+    if(!coverData){
+      const imgFile = Object.keys(zip.files).find(f=>
+        /\.(jpg|jpeg|png)$/i.test(f) && !f.includes('__MACOSX')
+      );
+      if(imgFile) coverData = await zip.files[imgFile].async('base64');
+    }
+
+    if(coverData){
+      // Compress it
+      await new Promise(resolve=>{
+        const img=new Image();
+        img.onload=()=>{
+          const canvas=document.createElement('canvas');
+          const maxW=300,maxH=450;
+          let w=img.width,h=img.height;
+          if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+          if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+          canvas.width=w;canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          let q=0.85,b64=canvas.toDataURL('image/jpeg',q);
+          while(b64.length>200000&&q>0.3){q-=0.1;b64=canvas.toDataURL('image/jpeg',q);}
+          document.getElementById('f-cover-img-data').value=b64;
+          document.getElementById('f-cover-type').value='image';
+          // Switch to epub tab and show success
+          document.getElementById('epub-cover-status').innerHTML=
+            '<img src="'+b64+'" style="width:80px;border-radius:4px;display:block;margin:.4rem auto;box-shadow:0 4px 14px rgba(0,0,0,.5)"><div style="margin-top:.4rem;color:#7dcea0;font-weight:600;">✓ Cover extracted from epub</div>';
+          updatePreview();
+          resolve();
+        };
+        img.onerror=()=>resolve();
+        img.src='data:image/jpeg;base64,'+coverData;
+      });
+      return true;
+    }
+  } catch(e){ console.warn('Cover extraction failed:',e); }
+  document.getElementById('epub-cover-status').innerHTML=
+    '<div style="color:var(--text-muted);font-size:.76rem;">Could not extract cover from epub.<br>Use Upload Image or Gradient instead.</div>';
+  return false;
+}
+
+/* ═══════════════════════════════════════
+   EPUB HANDLING
+═══════════════════════════════════════ */
+let pendingEpubData = null; // { base64, name, size }
+
+function epubDragOver(e){ e.preventDefault(); document.getElementById('epub-drop-zone').classList.add('drag-over'); }
+function epubDragLeave(e){ document.getElementById('epub-drop-zone').classList.remove('drag-over'); }
+function epubDrop(e){
+  e.preventDefault();
+  document.getElementById('epub-drop-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if(file) processEpubFile(file);
+}
+function handleEpubSelect(input){
+  const file = input.files[0];
+  if(file) processEpubFile(file);
+  input.value='';
+}
+
+function processEpubFile(file){
+  if(!file.name.endsWith('.epub')){ showToast('Please select an .epub file.','error'); return; }
+  const sizeMB = file.size / (1024*1024);
+  if(sizeMB > 20){ showToast(`File too large (${sizeMB.toFixed(1)} MB). Max 20 MB.`,'error'); return; }
+  if(sizeMB > 8){
+    showToast(`Large file (${sizeMB.toFixed(1)} MB) — will take a moment to upload.`);
+  }
+
+  // Show progress
+  setEpubProgress(0, 'Reading file…');
+  document.getElementById('epub-progress-wrap').style.display='';
+
+  const reader = new FileReader();
+  reader.onprogress = e => { if(e.lengthComputable) setEpubProgress(Math.round(e.loaded/e.total*40),'Reading…'); };
+  reader.onload = e => {
+    setEpubProgress(50,'Extracting cover…');
+    const arrayBuffer = e.target.result;
+
+    // Convert ArrayBuffer → Base64
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    const chunkSize = 8192;
+    for(let i=0;i<bytes.length;i+=chunkSize){
+      binary += String.fromCharCode(...bytes.subarray(i,i+chunkSize));
+    }
+    const base64 = btoa(binary);
+    const kbSize = Math.round(base64.length * 0.75 / 1024);
+
+    // Extract cover image from epub
+    extractEpubCover(arrayBuffer).then(hasCover=>{
+      setEpubProgress(hasCover?80:70, hasCover?'Cover extracted!':'Processing…');
+      pendingEpubData = { base64, name: file.name, size: kbSize, arrayBuffer };
+      setEpubProgress(100,'✓ Ready');
+      setTimeout(()=>{
+        document.getElementById('epub-progress-wrap').style.display='none';
+        showEpubStatus(file.name, kbSize);
+      }, 600);
+    });
+  };
+  reader.onerror = ()=>{ showToast('Failed to read file.','error'); document.getElementById('epub-progress-wrap').style.display='none'; };
+  reader.readAsArrayBuffer(file);
+}
+
+function setEpubProgress(pct, label){
+  document.getElementById('epub-progress-bar').style.width = pct+'%';
+  document.getElementById('epub-progress-pct').textContent = pct+'%';
+  document.getElementById('epub-progress-label').textContent = label;
+}
+
+function showEpubStatus(name, kb){
+  document.getElementById('epub-drop-zone').style.display='none';
+  const cur = document.getElementById('epub-current');
+  cur.style.display='flex';
+  document.getElementById('epub-current-name').textContent = name+' ('+kb+' KB)';
+}
+
+function removeEpub(){
+  pendingEpubData = null;
+  document.getElementById('epub-drop-zone').style.display='';
+  document.getElementById('epub-current').style.display='none';
+  document.getElementById('f-epub-key').value='';
+  document.getElementById('epub-drop-icon').textContent='📄';
+  document.getElementById('epub-drop-label').textContent='Click or drag & drop an .epub file';
+}
+
+async function saveEpubToFirebase(title, base64, name){
+  // Use sanitized title as key so it's predictable and human-readable
+  // Format: the_martian, crime_and_punishment, etc.
+  const key = title.toLowerCase()
+    .replace(/['']/g,'')           // remove apostrophes
+    .replace(/[^a-z0-9]+/g,'_')   // non-alphanumeric → underscore
+    .replace(/^_+|_+$/g,'')       // trim underscores
+    .substring(0,40);
+  setEpubProgress(0,'Saving to Firebase…');
+  document.getElementById('epub-progress-wrap').style.display='';
+
+  // Split into chunks — 800KB each, balanced for Firebase 10MB node limit
+  const CHUNK = 600000; // chars (~450KB binary per chunk)
+  const chunks = [];
+  for(let i=0;i<base64.length;i+=CHUNK){
+    chunks.push(base64.slice(i,i+CHUNK));
+  }
+
+  const epubNode = { name, chunks: chunks.length, totalSize: base64.length, uploadedAt: Date.now() };
+  // Save metadata
+  await db.ref('pb_books_epub/'+key+'/meta').set(epubNode);
+  // Save chunks
+  for(let i=0;i<chunks.length;i++){
+    await db.ref('pb_books_epub/'+key+'/chunk_'+i).set(chunks[i]);
+    setEpubProgress(Math.round((i+1)/chunks.length*90), `Saving chunk ${i+1}/${chunks.length}…`);
+  }
+  setEpubProgress(100,'✓ Saved!');
+  setTimeout(()=>document.getElementById('epub-progress-wrap').style.display='none',800);
+  return key;
+}
+
+/* ═══════════════════════════════════════
+   FORM SUBMIT
+═══════════════════════════════════════ */
+async function submitBook(){
+  const title  = document.getElementById('f-title').value.trim();
+  const author = document.getElementById('f-author').value.trim();
+  if(!title||!author){ showToast('Title and Author are required.','error'); return; }
+
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Saving…';
+
+  let epubKey = document.getElementById('f-epub-key').value || '';
+
+  // Upload epub if one is pending
+  if(pendingEpubData){
+    try {
+      epubKey = await saveEpubToFirebase(title, pendingEpubData.base64, pendingEpubData.name);
+      pendingEpubData = null;
+    } catch(e){
+      showToast('Epub upload failed — check connection.','error');
+      submitBtn.disabled=false;
+      submitBtn.textContent = document.getElementById('edit-key').value ? '✓ Save Changes' : '➕ Add to Catalogue';
+      return;
+    }
+  }
+
+  const coverType = document.getElementById('f-cover-type').value;
+  const coverImg  = document.getElementById('f-cover-img-data').value;
+
+  const book = {
+    title,
+    author,
+    section:    document.getElementById('f-section').value,
+    rating:     parseInt(document.getElementById('f-rating').value)||5,
+    genre:      document.getElementById('f-genre').value,
+    color:      document.getElementById('f-color').value,
+    desc:       document.getElementById('f-desc').value.trim(),
+    coverImage: (coverType==='image'||coverType==='epub') ? (coverImg||'') : '',
+    epubKey:    epubKey || '',
+    hasEpub:    !!epubKey,
+    addedAt:    Date.now(),
+  };
+
+  const editKey = document.getElementById('edit-key').value;
+
+  try {
+    if(editKey){
+      await db.ref('pb_catalogue/'+editKey).update(book);
+      catalogue[editKey] = {...catalogue[editKey], ...book};
+      renderTable(); updateStats(); clearForm();
+      showToast('✓ "'+title+'" updated!');
+    } else {
+      const ref = db.ref('pb_catalogue').push();
+      await ref.set(book);
+      catalogue[ref.key] = book;
+      renderTable(); updateStats(); clearForm();
+      showToast('✓ "'+title+'" added to catalogue!');
+    }
+  } catch(e){
+    showToast('Firebase error — check connection.','error');
+  }
+  submitBtn.disabled=false;
+  submitBtn.textContent = '➕ Add to Catalogue';
+}
+
+function editBook(key){
+  const b = catalogue[key]; if(!b) return;
+  document.getElementById('edit-key').value = key;
+  document.getElementById('f-title').value  = b.title||'';
+  document.getElementById('f-author').value = b.author||'';
+  document.getElementById('f-section').value = b.section||'trending';
+  document.getElementById('f-rating').value  = b.rating||5;
+  document.getElementById('f-genre').value   = b.genre||'';
+  document.getElementById('f-color').value   = b.color||COLOURS[0];
+  document.getElementById('f-desc').value    = b.desc||'';
+  // Cover image
+  if(b.coverImage){
+    document.getElementById('f-cover-img-data').value = b.coverImage;
+    document.getElementById('f-cover-type').value = 'image';
+    document.querySelectorAll('.cover-tab').forEach(bt=>bt.classList.remove('active'));
+    document.getElementById('ctab-upload').classList.add('active');
+    document.querySelectorAll('.cover-panel').forEach(p=>p.style.display='none');
+    document.getElementById('cover-panel-upload').style.display='';
+    document.getElementById('cover-drop-zone').innerHTML='<img src="'+b.coverImage+'" style="width:80px;border-radius:4px;margin:.3rem auto;display:block;"><div style="font-size:.72rem;color:#7dcea0;text-align:center;margin-top:.3rem;">✓ Cover image set — click to replace</div>';
+  } else {
+    document.getElementById('f-cover-img-data').value='';
+    document.getElementById('f-cover-type').value='gradient';
+    document.querySelectorAll('.cover-tab').forEach(bt=>bt.classList.remove('active'));
+    document.getElementById('ctab-gradient').classList.add('active');
+    document.querySelectorAll('.cover-panel').forEach(p=>p.style.display='none');
+    document.getElementById('cover-panel-gradient').style.display='';
+  }
+  // Epub status
+  if(b.hasEpub && b.epubKey){
+    document.getElementById('f-epub-key').value = b.epubKey;
+    document.getElementById('epub-drop-zone').style.display='none';
+    document.getElementById('epub-current').style.display='flex';
+    document.getElementById('epub-current-name').textContent = (b.epubKey||'epub file')+' (already uploaded)';
+  } else {
+    removeEpub();
+  }
+  document.querySelectorAll('.colour-swatch').forEach(s=>s.classList.toggle('active',s.dataset.color===b.color));
+  document.getElementById('form-title').textContent = '✏️ Edit Book';
+  document.getElementById('form-sub').textContent   = 'Editing: '+b.title;
+  document.getElementById('submit-btn').textContent = '✓ Save Changes';
+  updatePreview();
+  document.querySelector('.form-panel').scrollTo({top:0,behavior:'smooth'});
+}
+
+function clearForm(){
+  document.getElementById('edit-key').value='';
+  document.getElementById('f-title').value='';
+  document.getElementById('f-author').value='';
+  document.getElementById('f-section').value='trending';
+  document.getElementById('f-rating').value='5';
+  document.getElementById('f-genre').value='';
+  document.getElementById('f-color').value=COLOURS[0];
+  document.getElementById('f-desc').value='';
+  document.getElementById('f-cover-type').value='gradient';
+  document.getElementById('f-cover-img-data').value='';
+  document.getElementById('epub-cover-status').innerHTML='Upload an epub file above — the cover will be extracted automatically.';
+  // Reset cover tabs
+  document.querySelectorAll('.cover-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ctab-epub').classList.add('active');
+  document.querySelectorAll('.cover-panel').forEach(p=>p.style.display='none');
+  document.getElementById('cover-panel-epub').style.display='';
+  removeEpub();
+  document.querySelectorAll('.colour-swatch').forEach((s,i)=>s.classList.toggle('active',i===0));
+  document.getElementById('form-title').textContent='➕ Add New Book';
+  document.getElementById('form-sub').textContent='Fill in the details to add a book to the catalogue.';
+  document.getElementById('submit-btn').textContent='➕ Add to Catalogue';
+  document.getElementById('submit-btn').disabled=false;
+  updatePreview();
+}
+
+/* ═══════════════════════════════════════
+   DELETE
+═══════════════════════════════════════ */
+function askDelete(key, title){
+  pendingDeleteKey = key;
+  document.getElementById('confirm-book-name').textContent = '"'+title+'" will be removed from the homepage catalogue.';
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+function cancelDelete(){ pendingDeleteKey=null; document.getElementById('confirm-overlay').classList.remove('show'); }
+function confirmDelete(){
+  if(!pendingDeleteKey) return;
+  const key = pendingDeleteKey;
+  const title = catalogue[key]?.title||'Book';
+  db.ref('pb_catalogue/'+key).remove().then(()=>{
+    delete catalogue[key];
+    renderTable(); updateStats();
+    showToast('🗑️ "'+title+'" removed.');
+  }).catch(()=>showToast('Delete failed — check connection.','error'));
+  cancelDelete();
+}
+
+/* ═══════════════════════════════════════
+   COLOUR SWATCHES
+═══════════════════════════════════════ */
+const COLOURS = [
+  'linear-gradient(160deg,#3d2810,#6e4820)',
+  'linear-gradient(160deg,#1a2e3a,#2c4e6a)',
+  'linear-gradient(160deg,#2a1a3a,#4a2e5e)',
+  'linear-gradient(160deg,#1a3a2a,#2c5e40)',
+  'linear-gradient(160deg,#3a1a1a,#6e2c2c)',
+  'linear-gradient(160deg,#2a2a1a,#4e4e2c)',
+  'linear-gradient(160deg,#1a1a2a,#2c2c4e)',
+  'linear-gradient(160deg,#2a1a0a,#5c3a18)',
+  'linear-gradient(160deg,#1a2a2a,#2c4e4e)',
+  'linear-gradient(160deg,#1a2a1a,#2c5e2c)',
+];
+
+function buildColourSwatches(){
+  const grid = document.getElementById('colour-grid');
+  grid.innerHTML = COLOURS.map((c,i)=>`
+    <div class="colour-swatch${i===0?' active':''}" style="background:${c}" data-color="${c}" onclick="selectColour('${c}',this)" title="${c}"></div>
+  `).join('');
+}
+
+function selectColour(color, el){
+  document.getElementById('f-color').value = color;
+  document.querySelectorAll('.colour-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  updatePreview();
+}
+
+function setCustomGradient(){
+  const a = document.getElementById('f-color-a').value;
+  const b = document.getElementById('f-color-b').value;
+  const gradient = `linear-gradient(160deg,${a},${b})`;
+  document.getElementById('f-color').value = gradient;
+  document.querySelectorAll('.colour-swatch').forEach(s=>s.classList.remove('active'));
+  updatePreview();
+}
+
+/* ═══════════════════════════════════════
+   LIVE PREVIEW
+═══════════════════════════════════════ */
+function updatePreview(){
+  const title  = document.getElementById('f-title').value || 'Book Title';
+  const author = document.getElementById('f-author').value || 'Author Name';
+  const rating = parseInt(document.getElementById('f-rating').value)||5;
+  const coverType  = document.getElementById('f-cover-type').value;
+  const coverImg   = document.getElementById('f-cover-img-data').value;
+  const color      = document.getElementById('f-color').value || COLOURS[0];
+
+  document.getElementById('prev-title').textContent      = title;
+  document.getElementById('prev-author').textContent     = author;
+  document.getElementById('prev-info-title').textContent = title;
+  document.getElementById('prev-stars').textContent      = '★'.repeat(rating) + '☆'.repeat(5-rating);
+
+  const prevCover   = document.getElementById('prev-cover');
+  const prevImg     = document.getElementById('prev-cover-img');
+  const prevOverlay = document.getElementById('prev-cover-gradient-overlay');
+
+  if((coverType==='image' || coverType==='epub') && coverImg){
+    prevImg.src = coverImg;
+    prevImg.style.display = 'block';
+    prevOverlay.style.background='linear-gradient(to top, rgba(0,0,0,.65) 0%, transparent 60%)';
+    prevCover.style.background = '#1a1a1a';
+  } else {
+    prevImg.style.display = 'none';
+    prevOverlay.style.background='';
+    prevCover.style.background = color;
+  }
+}
+
+/* ═══════════════════════════════════════
+   NAVIGATION & TOAST
+═══════════════════════════════════════ */
+function goToSite(){ window.location.href = 'index.html'; }
+function logout(){ localStorage.removeItem('pb_session'); window.location.href = 'login.html'; }
+
+function showToast(msg, type=''){
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(type?' '+type:'')+' show';
+  clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>
