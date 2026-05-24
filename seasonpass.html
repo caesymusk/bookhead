@@ -503,8 +503,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <!-- LOGGED-IN -->
         <div id="_dd-in">
           <div class="dd-header">
-            <div class="dd-uname" id="_dd-name"></div>
-            <div class="dd-uhandle" id="_dd-handle"></div>
+            <div id="_dd-avatar" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff;font-weight:700;flex-shrink:0;border:2px solid rgba(212,137,60,.35);overflow:hidden;"></div>
+            <div>
+              <div class="dd-uname" id="_dd-name"></div>
+              <div class="dd-uhandle" id="_dd-handle"></div>
+            </div>
           </div>
           <div class="dd-section">
             <a class="dd-item" href="bookshelf_profile.html"><span class="dd-icon">👤</span> My Profile</a>
@@ -1168,34 +1171,45 @@ setTimeout(()=>{
   } : null;
 
   // Init avatar / pill
+    function setAvatarEl(avEl,imgSrc,initial){
+    if(!avEl)return;
+    if(imgSrc){avEl.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';avEl.style.cssText='width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,137,60,.4)display:block;';}
+    else{avEl.textContent=initial;avEl.style.cssText='width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.95rem;color:#fff;font-weight:700;flex-shrink:0;';}
+  }
   function initPill(){
+    const ppav=el('_pp-avatar'), ppname=el('_pp-name'), ppsub=el('_pp-sub');
     if(isLoggedIn){
       el('_dd-in').style.display=''; el('_dd-out').style.display='none';
       el('_pp-info').style.display='';
-      const av=el('_pp-avatar'); av.textContent=ME.initial;
-      av.style.cssText='width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;';
-      el('_pp-name').textContent=ME.name;
-      el('_pp-sub').textContent='';
+      setAvatarEl(ppav,null,ME.initial);
+      if(ppname) ppname.textContent=ME.name;
+      if(ppsub)  ppsub.textContent='';
       el('_dd-name').textContent=ME.name;
       el('_dd-handle').textContent=ME.handle;
     } else {
       el('_dd-in').style.display='none'; el('_dd-out').style.display='';
       el('_pp-info').style.display='none';
-      const av=el('_pp-avatar'); av.textContent='👤';
-      av.style.cssText='width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';
+      if(ppav){ppav.textContent='👤';ppav.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';}
     }
-    // Load name from Firebase for pill
-    if(isLoggedIn && typeof firebase !== 'undefined'){
+    if(isLoggedIn && typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
       try{
-        const fdb = firebase.database();
-        fdb.ref('pb_profile/'+ME.username.replace(/\./g,'_')).once('value').then(s=>{
-          const p=s.val(); if(p&&p.name){ el('_pp-name').textContent=p.name; el('_dd-name').textContent=p.name; }
-        }).catch(()=>{});
-        // books read count for sub
-        fdb.ref('pb_libraries/'+ME.username.replace(/\./g,'_')).once('value').then(s=>{
-          const lib=s.val(); const cnt=lib&&Array.isArray(lib)?lib.filter(b=>b.status==='read').length:0;
-          if(cnt>0) el('_pp-sub').textContent=cnt+' books read';
-        }).catch(()=>{});
+        const fdb=firebase.database(), uk=ME.username.replace(/\./g,'_');
+        fdb.ref('pb_profile/'+uk).once('value').then(function(s){
+          const p=s.val(); if(!p) return;
+          if(p.name){if(ppname)ppname.textContent=p.name; el('_dd-name').textContent=p.name;}
+          if(p.avatar){
+            setAvatarEl(ppav,p.avatar,ME.initial);
+            setAvatarEl(el('_dd-avatar'),p.avatar,ME.initial);
+            const mob=el('_mob-profile-av');
+            if(mob){mob.innerHTML='<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'; mob.style.overflow='hidden';}
+            const sp=el('sp-nav-avatar');
+            if(sp){sp.innerHTML='<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'; sp.style.overflow='hidden';}
+          }
+        }).catch(function(){});
+        fdb.ref('pb_libraries/'+uk).once('value').then(function(s){
+          const lib=s.val(),cnt=lib&&Array.isArray(lib)?lib.filter(function(b){return b.status==='read';}).length:0;
+          if(cnt>0&&ppsub) ppsub.textContent=cnt+' books read';
+        }).catch(function(){});
       }catch(e){}
     }
   }
