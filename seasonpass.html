@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pagebound — Chapter I Season Pass</title>
@@ -464,22 +466,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   .nav-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   @media(max-width:860px){.nav-center,.nav-search{display:none;}.hamburger{display:flex;}.pp-info,.pp-arrow{display:none;}.profile-pill{padding:.28rem;border-radius:50%;}}
 
-
-  /* ── MOBILE BOTTOM NAV ── */
-  .mob-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:rgba(13,9,6,.97);border-top:1px solid rgba(184,148,104,.18);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:200;align-items:stretch;justify-content:space-around;padding:0 .5rem;padding-bottom:env(safe-area-inset-bottom);}
-  .mob-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;text-decoration:none;color:rgba(138,114,88,.7);font-size:.56rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:none;border:none;cursor:pointer;transition:color .15s;padding:.3rem 0;-webkit-tap-highlight-color:transparent;}
-  .mob-nav-item.active,.mob-nav-item:hover{color:var(--amber-light);}
-  .mob-nav-icon{font-size:1.25rem;line-height:1;}
-  .mob-nav-label{font-size:.55rem;}
-  .mob-profile-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.8rem;color:#fff;font-weight:700;overflow:hidden;border:2px solid rgba(212,137,60,.4);}
-  @media(max-width:700px){
-    .mob-bottom-nav{display:flex;}
-    body{padding-bottom:60px;}
-    .profile-dropdown{top:auto !important;bottom:calc(100% + 8px) !important;right:0 !important;}
-    ._hbg{display:none !important;}
-  }
-  .dd-header{display:flex;align-items:center;gap:.7rem;padding:.9rem 1rem .7rem;border-bottom:1px solid rgba(184,148,104,.12);}
-
 </style>
 </head>
 <body>
@@ -509,11 +495,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <!-- LOGGED-IN -->
         <div id="_dd-in">
           <div class="dd-header">
-            <div id="_dd-avatar" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff;font-weight:700;flex-shrink:0;border:2px solid rgba(212,137,60,.35);overflow:hidden;"></div>
-            <div>
-              <div class="dd-uname" id="_dd-name"></div>
-              <div class="dd-uhandle" id="_dd-handle"></div>
-            </div>
+            <div class="dd-uname" id="_dd-name"></div>
+            <div class="dd-uhandle" id="_dd-handle"></div>
           </div>
           <div class="dd-section">
             <a class="dd-item" href="bookshelf_profile.html"><span class="dd-icon">👤</span> My Profile</a>
@@ -1176,64 +1159,39 @@ setTimeout(()=>{
     username: SESSION.username
   } : null;
 
-  // Set avatar element — img if base64, else initial letter
-  function setAvatarEl(avEl, imgSrc, initial){
-    if(imgSrc){
-      avEl.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      avEl.style.cssText='width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,137,60,.4);';
-    } else {
-      avEl.textContent=initial;
-      avEl.style.cssText='width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.95rem;color:#fff;font-weight:700;flex-shrink:0;';
-    }
-  }
-
-  function setMobAvatar(imgSrc, initial){
-    const mobAv = document.getElementById('_mob-profile-av');
-    if(!mobAv) return;
-    if(imgSrc){
-      mobAv.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-    } else { mobAv.textContent=initial; }
-  }
-
   // Init avatar / pill
   function initPill(){
-    const av=document.getElementById('_pp-avatar');
     if(isLoggedIn){
-      document.getElementById('_dd-in').style.display='';
-      document.getElementById('_dd-out').style.display='none';
-      document.getElementById('_pp-info').style.display='';
-      setAvatarEl(av, null, ME.initial);
-      document.getElementById('_pp-name').textContent=ME.name;
-      document.getElementById('_pp-sub').textContent='';
-      document.getElementById('_dd-name').textContent=ME.name;
-      document.getElementById('_dd-handle').textContent=ME.handle;
+      el('_dd-in').style.display=''; el('_dd-out').style.display='none';
+      el('_pp-info').style.display='';
+      const av=el('_pp-avatar'); av.textContent=ME.initial;
+      av.style.cssText='width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;';
+      el('_pp-name').textContent=ME.name;
+      el('_pp-sub').textContent='';
+      el('_dd-name').textContent=ME.name;
+      el('_dd-handle').textContent=ME.handle;
     } else {
-      document.getElementById('_dd-in').style.display='none';
-      document.getElementById('_dd-out').style.display='';
-      document.getElementById('_pp-info').style.display='none';
-      av.textContent='👤';
-      av.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';
+      el('_dd-in').style.display='none'; el('_dd-out').style.display='';
+      el('_pp-info').style.display='none';
+      const av=el('_pp-avatar'); av.textContent='👤';
+      av.style.cssText='width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';
     }
+    // Load name from Firebase for pill
     if(isLoggedIn && typeof firebase !== 'undefined'){
       try{
         const fdb = firebase.database();
-        const uk = ME.username.replace(/\./g,'_');
-        fdb.ref('pb_profile/'+uk).once('value').then(s=>{
-          const p=s.val(); if(!p) return;
-          if(p.name){ document.getElementById('_pp-name').textContent=p.name; document.getElementById('_dd-name').textContent=p.name; }
-          if(p.avatar){
-            setAvatarEl(document.getElementById('_pp-avatar'), p.avatar, ME.initial);
-            setMobAvatar(p.avatar, ME.initial);
-            const ddAv=document.getElementById('_dd-avatar'); if(ddAv) setAvatarEl(ddAv,p.avatar,ME.initial);
-          }
+        fdb.ref('pb_profile/'+ME.username.replace(/\./g,'_')).once('value').then(s=>{
+          const p=s.val(); if(p&&p.name){ el('_pp-name').textContent=p.name; el('_dd-name').textContent=p.name; }
         }).catch(()=>{});
-        fdb.ref('pb_libraries/'+uk).once('value').then(s=>{
+        // books read count for sub
+        fdb.ref('pb_libraries/'+ME.username.replace(/\./g,'_')).once('value').then(s=>{
           const lib=s.val(); const cnt=lib&&Array.isArray(lib)?lib.filter(b=>b.status==='read').length:0;
-          if(cnt>0) document.getElementById('_pp-sub').textContent=cnt+' books read';
+          if(cnt>0) el('_pp-sub').textContent=cnt+' books read';
         }).catch(()=>{});
       }catch(e){}
     }
   }
+
   // Dropdown
   window._toggleDD = function(e){
     e.stopPropagation();
@@ -1303,51 +1261,32 @@ setTimeout(()=>{
   }
 
   initPill();
-
-  // Mobile bottom nav: highlight active + set avatar initial
-  (function(){
-    const path = window.location.pathname.split('/').pop() || 'index.html';
-    const map = {'index.html':'_mbn-home','discover.html':'_mbn-discover','friends.html':'_mbn-friends','seasonpass.html':'_mbn-pass','bookshelf_profile.html':'_mbn-profile','clubs.html':'_mbn-discover'};
-    const activeId = map[path];
-    if(activeId){ const a=document.getElementById(activeId); if(a) a.classList.add('active'); }
-    const mobAv=document.getElementById('_mob-profile-av');
-    if(mobAv){
-      if(isLoggedIn){
-        mobAv.textContent=ME.initial;
-        mobAv.style.cssText='width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.8rem;color:#fff;font-weight:700;overflow:hidden;border:2px solid rgba(212,137,60,.4);';
-      } else {
-        mobAv.textContent='👤';
-        mobAv.style.cssText='width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:.9rem;overflow:hidden;';
-      }
-    }
-  })();
 })();
 
 </script>
 
-<!-- MOBILE BOTTOM NAV -->
-<nav class="mob-bottom-nav" id="_mob-bottom">
-  <a href="index.html" class="mob-nav-item" id="_mbn-home">
-    <span class="mob-nav-icon">🏠</span>
-    <span class="mob-nav-label">Home</span>
-  </a>
-  <a href="discover.html" class="mob-nav-item" id="_mbn-discover">
-    <span class="mob-nav-icon">🔍</span>
-    <span class="mob-nav-label">Discover</span>
-  </a>
-  <a href="friends.html" class="mob-nav-item" id="_mbn-friends">
-    <span class="mob-nav-icon">👥</span>
-    <span class="mob-nav-label">Friends</span>
-  </a>
-  <a href="seasonpass.html" class="mob-nav-item" id="_mbn-pass">
-    <span class="mob-nav-icon">⚡</span>
-    <span class="mob-nav-label">Pass</span>
-  </a>
-  <button class="mob-nav-item mob-nav-profile" onclick="_toggleDD(event)" id="_mbn-profile">
-    <div class="mob-profile-av" id="_mob-profile-av">?</div>
-    <span class="mob-nav-label">Profile</span>
-  </button>
-</nav>
+<script>
+// Load real profile picture from Firebase
+(function(){
+  try{
+    const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
+    if(!sess) return;
+    const uk = sess.username.replace(/\./g,'_');
+    if(typeof firebase === 'undefined') return;
+    const fdb = firebase.database();
+    fdb.ref('pb_profile/'+uk).once('value').then(snap=>{
+      const p = snap.val();
+      if(!p || !p.avatar) return;
+      const img = '<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      // Update seasonpass own nav avatar + shared pill + mobile nav
+      ['sp-nav-avatar','_pp-avatar','_mob-profile-av','_dd-avatar'].forEach(function(id){
+        const el = document.getElementById(id);
+        if(el){ el.innerHTML=img; el.style.overflow='hidden'; }
+      });
+    }).catch(function(){});
+  }catch(e){}
+})();
+</script>
 
 </body>
 </html>
