@@ -551,102 +551,44 @@ textarea.cm-input{resize:vertical;min-height:80px;line-height:1.5;}
 const GENRES = ['All','Fiction','Mystery','Sci-Fi','Fantasy','Romance','Non-Fiction','History','Thriller','Horror','Literary','Poetry'];
 const EMOJIS = ['📚','🌙','⚡','🏰','🌿','🔮','🕯️','🌊','🦋','🎭','🗺️','🌸','☕','🌌','🔬','🧩'];
 
-const CLUBS_DATA = [
-  {
-    id:1, name:'Midnight Readers', emoji:'🌙', genre:'Fiction', privacy:'open',
-    tagline:'We read the books you stay up too late to finish. Dark academia, literary fiction, and the occasional ghost story.',
-    members:124, booksRead:31, meetings:28, trending:true, joined:false,
-    color:'linear-gradient(135deg,#1a1030,#0d0820)',
-    memberList:['Eleanor V.','Marcus R.','Sofia L.','James T.','Priya M.'],
-    currentBook:{title:'The Secret History',author:'Donna Tartt',color:'#2c1654',progress:62},
-    schedule:[
-      {date:'May 24',event:'Ch. 1–8 Discussion',tag:'Meeting'},
-      {date:'Jun 1',event:'Full Book Wrap-up',tag:'Meeting'},
-      {date:'Jun 8',event:'Next Book Vote',tag:'Poll'},
-    ]
-  },
-  {
-    id:2, name:'The Cosmos Club', emoji:'🌌', genre:'Sci-Fi', privacy:'open',
-    tagline:'For readers who look up at the stars and wonder what stories live there. Hard sci-fi, space opera, cyberpunk.',
-    members:89, booksRead:24, meetings:19, trending:true, joined:false,
-    color:'linear-gradient(135deg,#0a1a30,#051020)',
-    memberList:['Alex K.','Dana W.','Riku T.','Lena S.'],
-    currentBook:{title:'Piranesi',author:'Susanna Clarke',color:'#183060',progress:40},
-    schedule:[
-      {date:'May 22',event:'Part I Discussion',tag:'Meeting'},
-      {date:'Jun 5',event:'Full Wrap-up',tag:'Meeting'},
-    ]
-  },
-  {
-    id:3, name:'The Parlour Mysteries', emoji:'🕯️', genre:'Mystery', privacy:'open',
-    tagline:'Clues, red herrings, and tea. Classic and contemporary mystery with a cosy reading atmosphere.',
-    members:67, booksRead:18, meetings:22, trending:true, joined:false,
-    color:'linear-gradient(135deg,#201510,#12090a)',
-    memberList:['Beatrice H.','Colin M.','Yasmin O.','Patrick L.','Nina R.'],
-    currentBook:{title:'Rebecca',author:'Daphne du Maurier',color:'#3a1820',progress:78},
-    schedule:[
-      {date:'May 21',event:'Final Chapters',tag:'Meeting'},
-      {date:'May 28',event:'New Book Reveal',tag:'Announcement'},
-    ]
-  },
-  {
-    id:4, name:'Enchanted Pages', emoji:'🔮', genre:'Fantasy', privacy:'open',
-    tagline:'Dragons, magic systems, and world-building that makes you forget your own. Epic and urban fantasy welcome.',
-    members:211, booksRead:47, meetings:38, trending:false, joined:false,
-    color:'linear-gradient(135deg,#1a0a28,#0e0618)',
-    memberList:['Aria T.','Sam B.','Zoe C.','Felix D.','Mia R.','Hugo L.'],
-    currentBook:{title:'The Master and Margarita',author:'Mikhail Bulgakov',color:'#2a1040',progress:30},
-    schedule:[
-      {date:'May 25',event:'Chapters 1–12',tag:'Meeting'},
-      {date:'Jun 10',event:'Author Q&A',tag:'Special'},
-    ]
-  },
-  {
-    id:5, name:'Hearts & Pages', emoji:'🌸', genre:'Romance', privacy:'open',
-    tagline:'Because love stories deserve serious literary discussion. Contemporary, historical, and everything in between.',
-    members:158, booksRead:39, meetings:33, trending:false, joined:false,
-    color:'linear-gradient(135deg,#28100e,#180808)',
-    memberList:['Clara B.','Rose M.','Ellie D.','Tom N.'],
-    currentBook:{title:'Normal People',author:'Sally Rooney',color:'#6e1828',progress:55},
-    schedule:[
-      {date:'May 23',event:'Mid-book Check-in',tag:'Meeting'},
-    ]
-  },
-  {
-    id:6, name:'True Pages Society', emoji:'📰', genre:'Non-Fiction', privacy:'invite',
-    tagline:'Essays, biographies, long-form journalism. We believe non-fiction can be just as unputdownable as fiction.',
-    members:44, booksRead:12, meetings:14, trending:false, joined:false,
-    color:'linear-gradient(135deg,#1a1810,#0e0c06)',
-    memberList:['Oliver S.','Grace T.','Ivan P.'],
-    currentBook:{title:'Educated',author:'Tara Westover',color:'#3a3010',progress:88},
-    schedule:[
-      {date:'May 20',event:'Final Discussion',tag:'Meeting'},
-      {date:'Jun 1',event:'June Pick Vote',tag:'Poll'},
-    ]
-  },
-  {
-    id:7, name:'Dark Hours', emoji:'🦇', genre:'Horror', privacy:'open',
-    tagline:'We read in the dark. Psychological horror, gothic fiction, and whatever keeps you up at night (besides us).',
-    members:73, booksRead:20, meetings:17, trending:false, joined:false,
-    color:'linear-gradient(135deg,#0a0808,#080508)',
-    memberList:['Vince D.','Nora C.','Ray M.','Selene K.'],
-    currentBook:{title:'Mexican Gothic',author:'Silvia Moreno-Garcia',color:'#1a0808',progress:45},
-    schedule:[
-      {date:'May 26',event:'Ch. 15 onward',tag:'Meeting'},
-    ]
-  },
-  {
-    id:8, name:'The Expedition', emoji:'🗺️', genre:'History', privacy:'open',
-    tagline:'Historical fiction and popular history. We travel through time one book at a time.',
-    members:52, booksRead:16, meetings:20, trending:false, joined:false,
-    color:'linear-gradient(135deg,#1e1408,#120c04)',
-    memberList:['Henry A.','Ruth K.','Leo F.','Camille V.'],
-    currentBook:{title:'Wolf Hall',author:'Hilary Mantel',color:'#2e1c08',progress:20},
-    schedule:[
-      {date:'Jun 3',event:'Tudor History Deep-dive',tag:'Special'},
-    ]
-  },
-];
+// Clubs loaded dynamically from Firebase pb_clubs_catalogue
+let CLUBS_DATA = [];
+
+async function loadClubsCatalogue(){
+  if(!_clubsDb){ renderExplore(); return; }
+  try{
+    const snap = await _clubsDb.ref('pb_clubs_catalogue').once('value');
+    const data = snap.val();
+    if(data && typeof data === 'object'){
+      CLUBS_DATA = Object.entries(data).map(([key, c])=>({
+        id: key,
+        name:       c.name||'Unnamed Club',
+        emoji:      c.emoji||'📚',
+        genre:      c.genre||'General',
+        privacy:    c.privacy||'open',
+        tagline:    c.tagline||'',
+        members:    c.members||0,
+        booksRead:  c.booksRead||0,
+        meetings:   c.meetings||0,
+        trending:   c.trending||false,
+        color:      c.color||'linear-gradient(135deg,#1a1008,#0d0906)',
+        memberList: c.memberList||[],
+        currentBook:c.currentBook||null,
+        schedule:   c.schedule||[],
+        createdBy:  c.createdBy||'admin',
+        createdAt:  c.createdAt||0,
+      }));
+    } else {
+      CLUBS_DATA = [];
+    }
+    renderExplore();
+    renderMine();
+  } catch(e){
+    console.warn('Failed to load clubs:', e);
+    CLUBS_DATA = [];
+    renderExplore();
+  }
+}
 
 /* ══════════════════════════════════════════
    STATE
