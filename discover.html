@@ -3,14 +3,7 @@
 <head>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
-/* Firebase init */
-(function(){
-  const cfg={apiKey:"AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",authDomain:"casey-80b19.firebaseapp.com",databaseURL:"https://casey-80b19-default-rtdb.firebaseio.com",projectId:"casey-80b19",storageBucket:"casey-80b19.firebasestorage.app",messagingSenderId:"1084195161725",appId:"1:1084195161725:web:c4db255376c0aaf25d5314"};
-  if(typeof firebase!=='undefined'&&!firebase.apps.length) firebase.initializeApp(cfg);
-})();
-</script>
-
+<script>(function(){const c={apiKey:"AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",authDomain:"casey-80b19.firebaseapp.com",databaseURL:"https://casey-80b19-default-rtdb.firebaseio.com",projectId:"casey-80b19",storageBucket:"casey-80b19.firebasestorage.app",messagingSenderId:"1084195161725",appId:"1:1084195161725:web:c4db255376c0aaf25d5314"};if(typeof firebase!=='undefined'&&!firebase.apps.length)firebase.initializeApp(c);})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pagebound — Discover New Voices</title>
@@ -316,7 +309,7 @@
 
   /* ══ SHARED NAV ══ */
   :root{--nav-h:56px;--bnav-h:62px;}
-  .navbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(6,4,8,.97);border-bottom:1px solid rgba(184,148,104,.2);backdrop-filter:blur(16px);}
+  .navbar{position:sticky;top:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(13,9,6,.97);border-bottom:1px solid rgba(184,148,104,.2);backdrop-filter:blur(16px);box-shadow:0 1px 18px rgba(0,0,0,.5);}
   .nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:#f0a84e;text-decoration:none;line-height:1;cursor:pointer;user-select:none;}
   .nav-logo em{font-style:normal;font-size:.56rem;display:block;color:#6e5030;letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
   .nav-center{display:flex;gap:1.6rem;align-items:center;}
@@ -411,6 +404,84 @@
   .nav-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   @media(max-width:860px){.nav-center,.nav-search{display:none;}.hamburger{display:flex;}.pp-info,.pp-arrow{display:none;}.profile-pill{padding:.28rem;border-radius:50%;}}
 
+
+  /* ── MOBILE BOTTOM NAV ── */
+  .mob-bottom-nav{
+    display:none;
+    position:fixed;bottom:0;left:0;right:0;
+    height:60px;
+    background:rgba(13,9,6,.97);
+    border-top:1px solid rgba(184,148,104,.18);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    z-index:200;
+    align-items:stretch;
+    justify-content:space-around;
+    padding:0 .5rem;
+    safe-area-inset-bottom:env(safe-area-inset-bottom);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .mob-nav-item{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;flex:1;text-decoration:none;
+    color:rgba(138,114,88,.7);font-size:.56rem;font-weight:600;
+    letter-spacing:.04em;text-transform:uppercase;
+    background:none;border:none;cursor:pointer;
+    transition:color .15s;padding:.3rem 0;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mob-nav-item.active,.mob-nav-item:hover{ color:var(--amber-light); }
+  .mob-nav-icon{ font-size:1.25rem;line-height:1; }
+  .mob-nav-label{ font-size:.55rem; }
+  .mob-nav-profile{ position:relative; }
+  .mob-profile-av{
+    width:28px;height:28px;border-radius:50%;
+    background:linear-gradient(135deg,#d4893c,#9b3f2a);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Playfair Display',serif;font-size:.8rem;color:#fff;font-weight:700;
+    overflow:hidden;border:2px solid rgba(212,137,60,.4);
+    transition:border-color .15s;
+  }
+  .mob-nav-profile:hover .mob-profile-av,
+  .mob-nav-profile.active .mob-profile-av{ border-color:var(--amber-light); }
+
+  /* dropdown opens upward on mobile */
+  @media(max-width:700px){
+    .mob-bottom-nav{ display:flex; }
+    /* push page content above bottom nav */
+    body{ padding-bottom:60px; }
+    /* flip dropdown to open upward */
+    .profile-dropdown{
+      top:auto !important;
+      bottom:calc(100% + 8px) !important;
+      right:0 !important;
+    }
+    /* hide desktop hamburger on mobile */
+    ._hbg{ display:none !important; }
+  }
+
+  /* Dropdown header with avatar */
+  .dd-header{
+    display:flex;align-items:center;gap:.7rem;
+    padding:.9rem 1rem .7rem;
+    border-bottom:1px solid rgba(184,148,104,.12);
+  }
+
+
+
+  @media(max-width:700px){
+    .mob-bottom-nav{ display:flex; }
+    /* push page content above bottom nav */
+    body{ padding-bottom:60px; }
+    /* flip dropdown to open upward */
+    .profile-dropdown{
+      top:auto !important;
+      bottom:calc(100% + 8px) !important;
+      right:0 !important;
+    }
+    /* hide desktop hamburger on mobile */
+    ._hbg{ display:none !important; }
+  }
 </style>
 </head>
 <body>
@@ -946,1118 +1017,35 @@ function toggleFollow(btn){
     username: SESSION.username
   } : null;
 
-  // Init avatar / pill
-    function setAvatarEl(avEl,imgSrc,initial){
-    if(!avEl)return;
-    if(imgSrc){avEl.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';avEl.style.cssText='width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,137,60,.4)display:block;';}
-    else{avEl.textContent=initial;avEl.style.cssText='width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.95rem;color:#fff;font-weight:700;flex-shrink:0;';}
-  }
-  function initPill(){
-    const ppav=el('_pp-avatar'), ppname=el('_pp-name'), ppsub=el('_pp-sub');
-    if(isLoggedIn){
-      el('_dd-in').style.display=''; el('_dd-out').style.display='none';
-      el('_pp-info').style.display='';
-      setAvatarEl(ppav,null,ME.initial);
-      if(ppname) ppname.textContent=ME.name;
-      if(ppsub)  ppsub.textContent='';
-      el('_dd-name').textContent=ME.name;
-      el('_dd-handle').textContent=ME.handle;
+  // Set avatar element — img if base64, else initial letter
+  function setAvatarEl(avEl, imgSrc, initial){
+    if(imgSrc){
+      avEl.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      avEl.style.cssText='width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,137,60,.4);';
     } else {
-      el('_dd-in').style.display='none'; el('_dd-out').style.display='';
-      el('_pp-info').style.display='none';
-      if(ppav){ppav.textContent='👤';ppav.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';}
-    }
-    if(isLoggedIn && typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
-      try{
-        const fdb=firebase.database(), uk=ME.username.replace(/\./g,'_');
-        fdb.ref('pb_profile/'+uk).once('value').then(function(s){
-          const p=s.val(); if(!p) return;
-          if(p.name){if(ppname)ppname.textContent=p.name; el('_dd-name').textContent=p.name;}
-          if(p.avatar){
-            setAvatarEl(ppav,p.avatar,ME.initial);
-            setAvatarEl(el('_dd-avatar'),p.avatar,ME.initial);
-            const mob=el('_mob-profile-av');
-            if(mob){mob.innerHTML='<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'; mob.style.overflow='hidden';}
-            const sp=el('sp-nav-avatar');
-            if(sp){sp.innerHTML='<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'; sp.style.overflow='hidden';}
-          }
-        }).catch(function(){});
-        fdb.ref('pb_libraries/'+uk).once('value').then(function(s){
-          const lib=s.val(),cnt=lib&&Array.isArray(lib)?lib.filter(function(b){return b.status==='read';}).length:0;
-          if(cnt>0&&ppsub) ppsub.textContent=cnt+' books read';
-        }).catch(function(){});
-      }catch(e){}
+      avEl.textContent=initial;
+      avEl.style.cssText='width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.95rem;color:#fff;font-weight:700;flex-shrink:0;';
     }
   }
 
-  // Dropdown
-  window._toggleDD = function(e){
-    e.stopPropagation();
-    const dd=el('_dd'); dd.classList.toggle('open');
-    _closeMob();
-  };
-  window._closeDD = function(){ el('_dd').classList.remove('open'); };
-  document.addEventListener('click',function(e){
-    const wrap=el('_dd-wrap'); if(wrap&&!wrap.contains(e.target)) _closeDD();
-  });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ _closeDD(); _closeMob(); } });
-
-  // Mobile menu
-  window._toggleMenu = function(){
-    const m=el('_mob'),b=el('_hbg');
-    const open=m.classList.toggle('open'); b.classList.toggle('open',open);
-    document.body.style.overflow=open?'hidden':'';
-    _closeDD();
-  };
-  window._closeMob = function(){
-    const m=el('_mob'),b=el('_hbg');
-    if(m){m.classList.remove('open');} if(b){b.classList.remove('open');}
-    document.body.style.overflow='';
-  };
-
-  // Language
-  let _lang = localStorage.getItem('pb_lang')||'en';
-  window._setLang = function(lang, e){
-    if(e) e.stopPropagation();
-    _lang=lang; localStorage.setItem('pb_lang',lang);
-    ['_lang-en','_lang-es','_lang-en-lo','_lang-es-lo','_slang-en','_slang-es','_mlang-en','_mlang-es'].forEach(id=>{
-      const btn=el(id); if(btn) btn.classList.toggle('active',id.endsWith(lang));
-    });
-    _showToast(lang==='es'?'🇪🇸 Idioma: Español':'🇬🇧 Language: English');
-    // Let each page know if it cares
-    if(typeof window.applyTranslations==='function') window.applyTranslations();
-  };
-  // Apply saved language on load
-  if(_lang==='es') _setLang('es',null);
-
-  // Settings
-  window._openSettings = function(){ el('_settings-overlay').classList.add('open'); document.body.style.overflow='hidden'; };
-  window._closeSettings = function(){ el('_settings-overlay').classList.remove('open'); document.body.style.overflow=''; };
-  window._saveSettings = function(){ _closeSettings(); _showToast('✓ Settings saved'); };
-
-  // Sign out
-  window._openSignOut = function(){ el('_so-overlay').classList.add('open'); document.body.style.overflow='hidden'; };
-  window._closeSignOut = function(){ el('_so-overlay').classList.remove('open'); document.body.style.overflow=''; };
-  window._doSignOut = function(){
-    localStorage.removeItem('pb_session');
-    _closeSignOut(); _showToast('Signed out…');
-    initPill();
-    setTimeout(()=>{ window.location.href='login.html'; },900);
-  };
-
-  // Toast
-  window._showToast = function(msg){
-    const t=el('_toast'); if(!t)return;
-    t.textContent=msg; t.classList.add('show');
-    clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),3000);
-  };
-
-  // Navbar scroll solidify (for index hero)
-  const nb=el('_navbar');
-  if(nb){
-    window.addEventListener('scroll',()=>nb.classList.toggle('solid',window.scrollY>60),{passive:true});
+  // Also update the mobile bottom nav avatar
+  function setMobAvatar(imgSrc, initial){
+    const mobAv = el('_mob-profile-av');
+    if(!mobAv) return;
+    if(imgSrc){
+      mobAv.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    } else {
+      mobAv.textContent=initial;
+    }
   }
-
-  initPill();
-})();
-
-</script>
-
-<script>
-// Load real profile picture from Firebase
-(function(){
-  try{
-    const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
-    if(!sess) return;
-    const uk = sess.username.replace(/\./g,'_');
-    if(typeof firebase === 'undefined') return;
-    firebase.database().ref('pb_profile/'+uk).once('value').then(function(snap){
-      const p = snap.val();
-      if(!p || !p.avatar) return;
-      const img = '<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      ['_pp-avatar','_mob-profile-av','_dd-avatar'].forEach(function(id){
-        const el = document.getElementById(id);
-        if(el){ el.innerHTML=img; el.style.overflow='hidden'; }
-      });
-    }).catch(function(){});
-  }catch(e){}
-})();
-</script>
-
-
-<script>
-/* Load real profile picture */
-(function(){
-  try{
-    if(typeof firebase==='undefined') return;
-    const sess=JSON.parse(localStorage.getItem('pb_session')||'null');
-    if(!sess) return;
-    const uk=sess.username.replace(/\./g,'_');
-    firebase.database().ref('pb_profile/'+uk).once('value').then(function(snap){
-      const p=snap.val(); if(!p||!p.avatar) return;
-      const img='<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      ['sp-nav-avatar','_pp-avatar','_mob-profile-av','_dd-avatar'].forEach(function(id){
-        const el=document.getElementById(id);
-        if(el){el.innerHTML=img;el.style.overflow='hidden';}
-      });
-    }).catch(function(){});
-  }catch(e){}
-})();
-</script>
-
-</body>
-</html>E html>
-<html lang="en">
-<head>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
-/* Firebase init */
-(function(){
-  const cfg={apiKey:"AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",authDomain:"casey-80b19.firebaseapp.com",databaseURL:"https://casey-80b19-default-rtdb.firebaseio.com",projectId:"casey-80b19",storageBucket:"casey-80b19.firebasestorage.app",messagingSenderId:"1084195161725",appId:"1:1084195161725:web:c4db255376c0aaf25d5314"};
-  if(typeof firebase!=='undefined'&&!firebase.apps.length) firebase.initializeApp(cfg);
-})();
-</script>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pagebound — Discover New Voices</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg:#0d0906; --surface:#16100a; --surface2:#1e1409;
-    --amber:#d4893c; --amber-light:#f0a84e; --amber-glow:rgba(212,137,60,.18);
-    --cream:#f5ede0; --tan:#b89468; --tan-dim:#6e5434;
-    --text:#e8ddd0; --text-dim:#8a7258; --rust:#9b3f2a;
-    --emerald:#2d6a4f; --emerald-light:#52b788;
-    --nav-h:56px; --bnav-h:62px;
-  }
-  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
-  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-
-  /* ── NAVBAR ── */
-  .navbar{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(13,9,6,.97);box-shadow:0 1px 20px rgba(0,0,0,.55);transition:background .3s;}
-  .nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:var(--amber-light);cursor:pointer;user-select:none;line-height:1;text-decoration:none;}
-  .nav-logo em{font-style:normal;font-size:.56rem;display:block;color:var(--tan-dim);letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
-  .nav-center{display:flex;gap:1.8rem;align-items:center;}
-  .nav-center a{color:var(--tan);text-decoration:none;font-size:.84rem;font-weight:500;letter-spacing:.04em;opacity:.75;transition:opacity .2s,color .2s;}
-  .nav-center a:hover{opacity:1;color:var(--cream);}
-  .nav-center a.active{opacity:1;color:var(--amber-light);}
-  .nav-right{display:flex;align-items:center;gap:.85rem;}
-  .nav-search{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:.34rem .9rem .34rem .8rem;display:flex;align-items:center;gap:.45rem;cursor:text;transition:background .2s,border-color .2s;}
-  .nav-search:hover{background:rgba(255,255,255,.1);border-color:var(--amber);}
-  .nav-search input{background:none;border:none;outline:none;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.82rem;width:130px;}
-  .nav-search input::placeholder{color:var(--text-dim);}
-
-  /* Profile pill */
-  .profile-pill{display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:.28rem .75rem .28rem .32rem;cursor:pointer;text-decoration:none;transition:background .2s,border-color .2s,transform .15s;position:relative;}
-  .profile-pill:hover{background:rgba(212,137,60,.15);border-color:var(--amber);transform:translateY(-1px);}
-  .profile-pill-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--rust));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;}
-  .profile-pill-info{line-height:1.15;}
-  .profile-pill-name{font-size:.76rem;font-weight:600;color:var(--cream);}
-  .profile-pill-sub{font-size:.62rem;color:var(--tan-dim);}
-  .profile-pill-arrow{color:var(--tan-dim);font-size:.7rem;margin-left:.15rem;transition:transform .2s;}
-  .profile-pill:hover .profile-pill-arrow{transform:translateX(3px);}
-
-  /* ── PROFILE DROPDOWN ── */
-  .profile-dropdown-wrap{position:relative;}
-  .profile-dropdown{
-    position:absolute;top:calc(100% + 10px);right:0;
-    background:rgba(18,12,8,.97);
-    border:1px solid rgba(184,148,104,.22);
-    border-radius:14px;
-    width:230px;
-    box-shadow:0 16px 48px rgba(0,0,0,.7);
-    backdrop-filter:blur(18px);
-    overflow:hidden;
-    opacity:0;pointer-events:none;
-    transform:translateY(-8px) scale(.97);
-    transform-origin:top right;
-    transition:opacity .2s,transform .2s;
-    z-index:400;
-  }
-  .profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
-  .dd-header{padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(184,148,104,.15);}
-  .dd-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--cream);line-height:1.2;}
-  .dd-handle{font-size:.68rem;color:var(--amber);margin-top:.12rem;}
-  .dd-section{padding:.35rem 0;}
-  .dd-section+.dd-section{border-top:1px solid rgba(184,148,104,.1);}
-  .dd-item{display:flex;align-items:center;gap:.65rem;width:100%;background:none;border:none;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;color:var(--text-dim);cursor:pointer;text-decoration:none;transition:background .15s,color .15s;text-align:left;-webkit-tap-highlight-color:transparent;}
-  .dd-item:hover{background:rgba(184,148,104,.1);color:var(--cream);}
-  .dd-item .dd-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0;}
-  .dd-item.danger{color:#e07060;}
-  .dd-item.danger:hover{background:rgba(155,63,42,.15);color:#e08070;}
-  .dd-item.highlight{color:var(--amber);}
-  .dd-item.highlight:hover{background:rgba(212,137,60,.12);color:var(--amber-light);}
-  .dd-lang-row{display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;}
-  .dd-lang-label{font-size:.78rem;color:var(--text-dim);display:flex;align-items:center;gap:.5rem;}
-  .dd-lang-toggle{display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:7px;overflow:hidden;}
-  .dd-lang-btn{background:none;border:none;padding:.28rem .65rem;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
-  .dd-lang-btn.active{background:var(--amber);color:var(--bg);}
-  .dd-lang-btn:not(.active):hover{background:rgba(255,255,255,.08);color:var(--cream);}
-
-  /* Hamburger */
-  .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;cursor:pointer;background:none;border:none;padding:4px;-webkit-tap-highlight-color:transparent;}
-  .hamburger span{display:block;height:2px;background:var(--cream);border-radius:2px;transition:transform .3s,opacity .3s;}
-  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-  .hamburger.open span:nth-child(2){opacity:0;}
-  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-
-  /* Mobile drawer */
-  .mobile-menu{position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,9,6,.98);backdrop-filter:blur(14px);z-index:250;padding:1rem 1.5rem 2rem;display:none;flex-direction:column;gap:0;border-bottom:1px solid rgba(255,255,255,.08);}
-  .mobile-menu.open{display:flex;}
-  .mobile-menu a{color:var(--tan);text-decoration:none;font-size:.98rem;font-weight:500;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.06);transition:color .2s;display:flex;align-items:center;gap:.6rem;}
-  .mobile-menu a:last-of-type{border-bottom:none;}
-  .mobile-menu a.active,.mobile-menu a:hover{color:var(--amber-light);}
-
-  /* Bottom nav */
-  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;height:var(--bnav-h);background:rgba(13,9,6,.97);border-top:1px solid rgba(255,255,255,.08);padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around;}
-  .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:var(--text-dim);font-size:.58rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:color .2s;padding:.4rem .5rem;min-width:54px;-webkit-tap-highlight-color:transparent;}
-  .bnav-icon{font-size:1.3rem;line-height:1;}
-  .bnav-item.active{color:var(--amber-light);}
-
-  /* ── PAGE HEADER ── */
-  .page-header{padding:calc(var(--nav-h) + 2.8rem) 1.4rem 2.2rem;background:linear-gradient(180deg,rgba(18,10,4,1) 0%,var(--bg) 100%);position:relative;overflow:hidden;}
-  .page-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% 40%,rgba(212,137,60,.07) 0%,transparent 70%);pointer-events:none;}
-  .page-header-inner{position:relative;z-index:1;max-width:640px;}
-  .page-eyebrow{display:inline-flex;align-items:center;gap:.5rem;background:rgba(212,137,60,.1);border:1px solid rgba(212,137,60,.25);border-radius:6px;padding:.28rem .8rem;font-size:.65rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:.9rem;}
-  .page-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);font-weight:700;line-height:1.1;color:var(--cream);margin-bottom:.7rem;}
-  .page-title em{font-style:italic;color:var(--amber-light);}
-  .page-subtitle{font-size:.92rem;color:rgba(232,221,208,.6);line-height:1.65;max-width:500px;margin-bottom:1.4rem;}
-  .page-stats{display:flex;gap:2rem;flex-wrap:wrap;}
-  .stat-item{display:flex;flex-direction:column;gap:.12rem;}
-  .stat-num{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--amber-light);}
-  .stat-label{font-size:.67rem;color:var(--text-dim);font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
-
-  /* ── FILTER BAR ── */
-  .filter-bar{padding:.6rem 1.4rem 1rem;display:flex;gap:.5rem;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-  .filter-bar::-webkit-scrollbar{display:none;}
-  .filter-chip{flex-shrink:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:.34rem .9rem;font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:500;color:var(--text-dim);cursor:pointer;transition:background .18s,border-color .18s,color .18s;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
-  .filter-chip:hover{background:rgba(212,137,60,.1);border-color:rgba(212,137,60,.3);color:var(--cream);}
-  .filter-chip.active{background:var(--amber);border-color:var(--amber);color:var(--bg);font-weight:700;}
-
-  /* ── SPOTLIGHT CARD (featured new voice) ── */
-  .spotlight{margin:0 1.4rem 2.4rem;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#1e1409 0%,#2a1c0e 50%,#1a1208 100%);border:1px solid rgba(212,137,60,.15);position:relative;display:flex;min-height:200px;}
-  .spotlight::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 90% 50%,rgba(82,183,136,.08) 0%,transparent 60%),radial-gradient(ellipse 40% 50% at 10% 80%,rgba(212,137,60,.1) 0%,transparent 60%);pointer-events:none;}
-  .spotlight-content{flex:1;padding:1.6rem 1.6rem 1.4rem;position:relative;z-index:1;display:flex;flex-direction:column;justify-content:space-between;}
-  .spotlight-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(82,183,136,.15);border:1px solid rgba(82,183,136,.3);border-radius:5px;padding:.22rem .65rem;font-size:.6rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--emerald-light);margin-bottom:.8rem;align-self:flex-start;}
-  .spotlight-author-name{font-family:'Playfair Display',serif;font-size:1.45rem;font-weight:700;color:var(--cream);line-height:1.15;margin-bottom:.25rem;}
-  .spotlight-genre{font-size:.72rem;color:var(--amber);font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:.65rem;}
-  .spotlight-bio{font-size:.83rem;color:rgba(232,221,208,.65);line-height:1.6;margin-bottom:1rem;max-width:380px;}
-  .spotlight-actions{display:flex;gap:.6rem;flex-wrap:wrap;}
-  .btn-follow{background:var(--amber);color:var(--bg);border:none;padding:.52rem 1.2rem;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:.4rem;transition:background .2s,transform .15s;-webkit-tap-highlight-color:transparent;}
-  .btn-follow:hover{background:var(--amber-light);}
-  .btn-follow:active{transform:scale(.96);}
-  .btn-follow.following{background:rgba(212,137,60,.15);border:1.5px solid var(--amber);color:var(--amber);}
-  .btn-read{background:rgba(255,255,255,.07);color:var(--cream);border:1.5px solid rgba(255,255,255,.15);padding:.52rem 1.1rem;border-radius:8px;font-weight:500;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;-webkit-tap-highlight-color:transparent;}
-  .btn-read:hover{background:rgba(255,255,255,.14);}
-  .spotlight-book{width:100px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:1.4rem 1.2rem 1.4rem 0;position:relative;z-index:1;}
-  .spotlight-book-cover{width:82px;aspect-ratio:2/3;border-radius:4px 10px 10px 4px;box-shadow:-6px 8px 28px rgba(0,0,0,.7),inset -4px 0 10px rgba(0,0,0,.35);position:relative;overflow:hidden;transform:rotate(2deg);transition:transform .3s;}
-  .spotlight:hover .spotlight-book-cover{transform:rotate(0deg) scale(1.04);}
-  .spotlight-book-cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:10px;background:rgba(0,0,0,.32);}
-  .spotlight-book-inner{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:.55rem .5rem;}
-  .sb-title{font-family:'Playfair Display',serif;font-size:.62rem;font-weight:700;color:rgba(245,237,224,.9);line-height:1.2;}
-  .sb-author{font-size:.52rem;color:rgba(245,237,224,.45);margin-top:.1rem;}
-
-  /* ── SECTIONS ── */
-  .sections{padding:0 0 4rem;}
-  .section{margin-bottom:2.6rem;}
-  .section-header{display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;margin-bottom:.9rem;}
-  .section-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--cream);display:flex;align-items:center;gap:.5rem;}
-  .section-title .s-icon{font-size:1rem;flex-shrink:0;}
-  .section-title em{font-style:italic;color:var(--amber);margin-left:.25rem;}
-  .section-see-all{font-size:.72rem;font-weight:600;color:var(--amber);text-decoration:none;letter-spacing:.06em;text-transform:uppercase;opacity:.75;transition:opacity .2s;flex-shrink:0;}
-  .section-see-all:hover{opacity:1;}
-
-  /* Scroll row */
-  .scroll-row-wrap{position:relative;}
-  .scroll-row{display:flex;gap:.85rem;padding:.3rem 1.4rem;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
-  .scroll-row::-webkit-scrollbar{display:none;}
-  .scroll-btn{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:rgba(13,9,6,.88);border:1px solid rgba(255,255,255,.15);color:var(--cream);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background .2s;box-shadow:0 4px 18px rgba(0,0,0,.6);}
-  .scroll-btn:hover{background:var(--amber);color:var(--bg);}
-  .scroll-btn.left{left:.4rem;}
-  .scroll-btn.right{right:.4rem;}
-
-  /* ── AUTHOR CARD ── */
-  .author-card{flex-shrink:0;width:150px;cursor:pointer;transition:transform .22s;scroll-snap-align:start;-webkit-tap-highlight-color:transparent;position:relative;}
-  .author-card:hover{transform:translateY(-5px);}
-  .author-avatar{width:100%;aspect-ratio:1;border-radius:12px;position:relative;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.55);margin-bottom:.6rem;transition:box-shadow .22s;}
-  .author-card:hover .author-avatar{box-shadow:0 14px 38px rgba(0,0,0,.75),0 0 22px var(--amber-glow);}
-  .author-avatar-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;}
-  .author-initial{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:700;color:rgba(245,237,224,.9);}
-  .author-avatar-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s;}
-  .author-card:hover .author-avatar-overlay{opacity:1;}
-  .follow-quick-btn{background:var(--amber);border:none;border-radius:20px;padding:.35rem .85rem;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:700;color:var(--bg);cursor:pointer;transition:transform .15s;}
-  .follow-quick-btn:active{transform:scale(.93);}
-  .author-info{padding:0 .1rem;}
-  .au-name{font-size:.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .au-genre{font-size:.66rem;color:var(--text-dim);margin-top:.06rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .au-stats{display:flex;gap:.6rem;margin-top:.3rem;align-items:center;}
-  .au-stat{font-size:.62rem;color:var(--tan-dim);}
-  .au-dot{width:2px;height:2px;background:var(--tan-dim);border-radius:50%;flex-shrink:0;}
-  .au-new-badge{position:absolute;top:.55rem;left:.55rem;background:var(--emerald-light);color:#0a2a1a;font-size:.52rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:.15rem .45rem;border-radius:4px;z-index:2;}
-
-  /* ── BOOK CARD (for author's works) ── */
-  .book-card{flex-shrink:0;width:120px;cursor:pointer;transition:transform .22s;scroll-snap-align:start;-webkit-tap-highlight-color:transparent;}
-  .book-card:hover{transform:scale(1.06) translateY(-5px);z-index:5;}
-  .book-card:hover .book-cover{box-shadow:0 18px 44px rgba(0,0,0,.75),0 0 28px var(--amber-glow);}
-  .book-card:active{transform:scale(.97);}
-  .book-cover{width:100%;aspect-ratio:2/3;border-radius:4px 8px 8px 4px;position:relative;overflow:hidden;box-shadow:3px 5px 16px rgba(0,0,0,.6),inset -3px 0 8px rgba(0,0,0,.35);transition:box-shadow .22s;}
-  .book-cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:8px;background:rgba(0,0,0,.3);}
-  .book-cover-inner{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:.55rem .5rem;}
-  .bc-title{font-family:'Playfair Display',serif;font-size:.65rem;font-weight:700;color:rgba(245,237,224,.9);line-height:1.25;position:relative;z-index:1;}
-  .bc-author{font-size:.55rem;color:rgba(245,237,224,.5);margin-top:.12rem;}
-  .book-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;gap:.45rem;opacity:0;transition:opacity .18s;}
-  .book-card:hover .book-overlay{opacity:1;}
-  .overlay-btn{width:30px;height:30px;border-radius:50%;background:var(--amber);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.78rem;transition:transform .15s;}
-  .overlay-btn:active{transform:scale(.9);}
-  .overlay-btn.ghost{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.4);}
-  .book-info{margin-top:.45rem;padding:0 .05rem;}
-  .bi-title{font-size:.72rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .bi-author{font-size:.63rem;color:var(--text-dim);margin-top:.08rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .bi-rating{font-size:.63rem;color:var(--amber);margin-top:.18rem;}
-
-  /* ── GENRE CARDS ── */
-  .genre-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;padding:0 1.4rem;}
-  .genre-card{border-radius:12px;overflow:hidden;position:relative;height:110px;cursor:pointer;transition:transform .2s;-webkit-tap-highlight-color:transparent;}
-  .genre-card:active{transform:scale(.97);}
-  .genre-card:hover{transform:scale(1.03);}
-  .genre-bg{position:absolute;inset:0;}
-  .genre-vignette{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.7) 0%,rgba(0,0,0,.15) 100%);}
-  .genre-content{position:relative;z-index:1;padding:.85rem;height:100%;display:flex;flex-direction:column;justify-content:flex-end;}
-  .genre-icon{font-size:1.3rem;margin-bottom:.28rem;}
-  .genre-name{font-family:'Playfair Display',serif;font-size:.88rem;font-weight:700;color:var(--cream);line-height:1.2;}
-  .genre-count{font-size:.62rem;color:rgba(232,221,208,.5);margin-top:.12rem;}
-
-  /* ── BECOME AN AUTHOR CTA ── */
-  .author-cta{margin:2.4rem 1.4rem;border-radius:20px;overflow:hidden;position:relative;padding:2.8rem 2rem;background:linear-gradient(135deg,#1a1208 0%,#251808 40%,#1e1506 100%);border:1px solid rgba(212,137,60,.2);}
-  .author-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 65% 55% at 100% 0%,rgba(212,137,60,.12) 0%,transparent 65%),radial-gradient(ellipse 45% 40% at 0% 100%,rgba(82,183,136,.07) 0%,transparent 60%);pointer-events:none;}
-  .cta-deco{position:absolute;top:0;right:0;width:220px;height:220px;opacity:.06;font-size:13rem;line-height:1;pointer-events:none;user-select:none;overflow:hidden;}
-  .cta-inner{position:relative;z-index:1;max-width:520px;}
-  .cta-eyebrow{display:inline-flex;align-items:center;gap:.4rem;background:rgba(212,137,60,.12);border:1px solid rgba(212,137,60,.28);border-radius:6px;padding:.24rem .75rem;font-size:.62rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:.9rem;}
-  .cta-title{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,4vw,2.1rem);font-weight:700;color:var(--cream);line-height:1.15;margin-bottom:.75rem;}
-  .cta-title em{font-style:italic;color:var(--amber-light);}
-  .cta-desc{font-size:.88rem;color:rgba(232,221,208,.6);line-height:1.7;margin-bottom:1.5rem;}
-  .cta-perks{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.7rem;}
-  .cta-perk{display:flex;align-items:flex-start;gap:.7rem;font-size:.83rem;color:rgba(232,221,208,.75);}
-  .cta-perk-icon{font-size:1rem;flex-shrink:0;margin-top:.06rem;}
-  .cta-perk strong{color:var(--cream);font-weight:600;}
-  .cta-btns{display:flex;gap:.7rem;flex-wrap:wrap;}
-  .btn-cta-primary{background:linear-gradient(135deg,var(--amber),#c47828);color:var(--bg);border:none;padding:.7rem 1.7rem;border-radius:10px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:.45rem;transition:transform .15s,box-shadow .2s;box-shadow:0 4px 20px rgba(212,137,60,.35);-webkit-tap-highlight-color:transparent;}
-  .btn-cta-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(212,137,60,.5);}
-  .btn-cta-primary:active{transform:scale(.96);}
-  .btn-cta-ghost{background:rgba(255,255,255,.06);color:var(--cream);border:1.5px solid rgba(255,255,255,.18);padding:.7rem 1.4rem;border-radius:10px;font-weight:500;font-size:.9rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;-webkit-tap-highlight-color:transparent;}
-  .btn-cta-ghost:hover{background:rgba(255,255,255,.12);}
-
-  /* ── TESTIMONIAL STRIP ── */
-  .testimonial-strip{padding:0 1.4rem;margin-bottom:2.4rem;}
-  .testimonial-label{font-size:.64rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem;}
-  .testimonial-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07);}
-  .testimonials-row{display:flex;gap:.85rem;overflow-x:auto;scrollbar-width:none;padding-bottom:.3rem;}
-  .testimonials-row::-webkit-scrollbar{display:none;}
-  .testimonial-card{flex-shrink:0;width:240px;background:var(--surface2);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:1rem 1.1rem;transition:border-color .2s;}
-  .testimonial-card:hover{border-color:rgba(212,137,60,.2);}
-  .tc-quote{font-size:.8rem;color:rgba(232,221,208,.7);line-height:1.6;margin-bottom:.75rem;font-style:italic;}
-  .tc-author{display:flex;align-items:center;gap:.55rem;}
-  .tc-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.8rem;font-weight:700;color:#fff;flex-shrink:0;}
-  .tc-name{font-size:.72rem;font-weight:600;color:var(--cream);}
-  .tc-books{font-size:.62rem;color:var(--text-dim);margin-top:.06rem;}
-
-  /* ── TRENDING TAGS ── */
-  .tags-row{display:flex;flex-wrap:wrap;gap:.5rem;padding:0 1.4rem;margin-bottom:2.4rem;}
-  .tag{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:.3rem .8rem;font-size:.72rem;color:var(--text-dim);cursor:pointer;transition:background .18s,color .18s,border-color .18s;-webkit-tap-highlight-color:transparent;}
-  .tag:hover{background:rgba(212,137,60,.1);border-color:rgba(212,137,60,.3);color:var(--amber-light);}
-
-  /* ── FOOTER ── */
-  footer{background:var(--surface);border-top:1px solid rgba(255,255,255,.05);padding:2rem 1.4rem;display:flex;flex-direction:column;align-items:center;gap:.85rem;text-align:center;}
-  .footer-logo{font-family:'Playfair Display',serif;font-style:italic;color:var(--amber);font-size:1.15rem;}
-  .footer-links{display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center;}
-  .footer-links a{color:var(--text-dim);font-size:.76rem;text-decoration:none;transition:color .2s;}
-  .footer-links a:hover{color:var(--amber);}
-  .footer-copy{font-size:.72rem;color:var(--text-dim);}
-
-  /* Animations */
-  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
-  .fade-up{animation:fadeUp .5s ease both;}
-  .fade-up-1{animation-delay:.06s;}.fade-up-2{animation-delay:.14s;}.fade-up-3{animation-delay:.24s;}.fade-up-4{animation-delay:.36s;}
-
-  /* ── TABLET (≤860px) ── */
-  @media(max-width:860px){
-    .nav-center,.nav-search{display:none;}
-    .hamburger{display:flex;}
-    .profile-pill-info,.profile-pill-arrow{display:none;}
-    .profile-pill{padding:.28rem;border-radius:50%;}
-    .scroll-btn{display:none;}
-    .genre-grid{grid-template-columns:repeat(2,1fr);}
-    .author-cta{margin:2rem .9rem;padding:2rem 1.5rem;}
-  }
-
-  /* ── MOBILE (≤600px) ── */
-  @media(max-width:600px){
-    body{padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom));}
-    .bottom-nav{display:flex;}
-    .page-header{padding:calc(var(--nav-h) + 1.6rem) 1.1rem 1.6rem;}
-    .page-title{font-size:1.9rem;}
-    .page-stats{gap:1.2rem;}
-    .spotlight{flex-direction:column;}
-    .spotlight-book{width:100%;padding:.3rem 1.4rem 1.4rem;justify-content:flex-start;}
-    .spotlight-book-cover{width:72px;}
-    .filter-bar{padding:.5rem .9rem .8rem;}
-    .section-header{padding:0 .9rem;}
-    .section-title{font-size:.98rem;}
-    .scroll-row{padding:.25rem .9rem;gap:.65rem;}
-    .author-card{width:128px;}
-    .book-card{width:100px;}
-    .genre-grid{padding:0 .9rem;gap:.6rem;}
-    .genre-card{height:88px;}
-    .author-cta{margin:1.8rem .9rem;padding:1.6rem 1.2rem;}
-    .cta-title{font-size:1.4rem;}
-    .tags-row{padding:0 .9rem;}
-    .testimonial-strip{padding:0 .9rem;}
-  }
-
-  @media(hover:none){
-    .book-overlay{opacity:1;background:rgba(0,0,0,.3);}
-    .author-avatar-overlay{opacity:1;}
-  }
-
-  /* ══ SHARED NAV ══ */
-  :root{--nav-h:56px;--bnav-h:62px;}
-  .navbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(6,4,8,.97);border-bottom:1px solid rgba(184,148,104,.2);backdrop-filter:blur(16px);}
-  .nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:#f0a84e;text-decoration:none;line-height:1;cursor:pointer;user-select:none;}
-  .nav-logo em{font-style:normal;font-size:.56rem;display:block;color:#6e5030;letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
-  .nav-center{display:flex;gap:1.6rem;align-items:center;}
-  .nav-center a{color:#b89468;text-decoration:none;font-size:.84rem;font-weight:500;opacity:.75;transition:opacity .2s,color .2s;white-space:nowrap;}
-  .nav-center a:hover{opacity:1;color:#f5ede0;}
-  .nav-center a.active{opacity:1;color:#f0a84e;}
-  .nav-right{display:flex;align-items:center;gap:.85rem;}
-  /* profile pill */
-  .profile-dropdown-wrap{position:relative;}
-  .profile-pill{display:flex;align-items:center;gap:.55rem;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:28px;padding:.28rem .75rem .28rem .32rem;cursor:pointer;transition:background .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}
-  .profile-pill:hover{background:rgba(212,137,60,.14);border-color:#d4893c;}
-  .pp-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;border:none;cursor:pointer;}
-  .pp-info{line-height:1.15;}
-  .pp-name{font-size:.76rem;font-weight:600;color:#f5ede0;}
-  .pp-sub{font-size:.62rem;color:#6e5030;}
-  .pp-arrow{color:#6e5030;font-size:.7rem;margin-left:.1rem;transition:transform .2s;}
-  .profile-pill:hover .pp-arrow{transform:translateX(3px);}
-  /* dropdown */
-  .profile-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(20,13,8,.97);border:1px solid rgba(184,148,104,.22);border-radius:14px;width:230px;box-shadow:0 16px 48px rgba(0,0,0,.7);backdrop-filter:blur(18px);overflow:hidden;opacity:0;pointer-events:none;transform:translateY(-8px) scale(.97);transform-origin:top right;transition:opacity .2s,transform .2s;z-index:400;}
-  .profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
-  .dd-header{padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(184,148,104,.15);}
-  .dd-uname{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#f5ede0;line-height:1.2;}
-  .dd-uhandle{font-size:.68rem;color:#d4893c;margin-top:.1rem;}
-  .dd-section{padding:.35rem 0;}
-  .dd-section+.dd-section{border-top:1px solid rgba(184,148,104,.1);}
-  .dd-item{display:flex;align-items:center;gap:.65rem;width:100%;background:none;border:none;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;color:#8a7258;cursor:pointer;text-decoration:none;transition:background .15s,color .15s;text-align:left;-webkit-tap-highlight-color:transparent;}
-  .dd-item:hover{background:rgba(184,148,104,.1);color:#f5ede0;}
-  .dd-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0;}
-  .dd-item.danger{color:#e07060;}
-  .dd-item.danger:hover{background:rgba(155,63,42,.15);color:#e08070;}
-  .dd-item.highlight{color:#d4893c;}
-  .dd-item.highlight:hover{background:rgba(212,137,60,.12);color:#f0a84e;}
-  .dd-lang-row{display:flex;align-items:center;justify-content:space-between;padding:.52rem 1rem;}
-  .dd-lang-label{font-size:.78rem;color:#8a7258;display:flex;align-items:center;gap:.5rem;}
-  .dd-lang-toggle{display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:7px;overflow:hidden;}
-  .dd-lang-btn{background:none;border:none;padding:.28rem .65rem;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;color:#8a7258;cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
-  .dd-lang-btn.active{background:#d4893c;color:#060408;}
-  .dd-lang-btn:not(.active):hover{background:rgba(255,255,255,.08);color:#f5ede0;}
-  /* hamburger */
-  .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;cursor:pointer;background:none;border:none;padding:4px;-webkit-tap-highlight-color:transparent;}
-  .hamburger span{display:block;height:2px;background:#f5ede0;border-radius:2px;transition:transform .3s,opacity .3s;}
-  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-  .hamburger.open span:nth-child(2){opacity:0;}
-  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-  /* mobile drawer */
-  .mobile-menu{position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,9,6,.98);backdrop-filter:blur(16px);z-index:250;padding:1rem 1.5rem 2rem;display:none;flex-direction:column;border-bottom:1px solid rgba(184,148,104,.2);}
-  .mobile-menu.open{display:flex;}
-  .mobile-menu a{color:#b89468;text-decoration:none;font-size:.98rem;font-weight:500;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.06);transition:color .2s;display:flex;align-items:center;gap:.6rem;}
-  .mobile-menu a:last-child{border-bottom:none;}
-  .mobile-menu a.active,.mobile-menu a:hover{color:#f0a84e;}
-  .mobile-menu-lang{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.06);}
-  .mobile-menu-lang-label{font-size:.82rem;color:#8a7258;display:flex;align-items:center;gap:.5rem;}
-  /* bottom nav */
-  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;height:var(--bnav-h);background:rgba(13,9,6,.97);border-top:1px solid rgba(184,148,104,.2);padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around;}
-  .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:#5a4a30;font-size:.57rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.4rem .5rem;min-width:54px;-webkit-tap-highlight-color:transparent;transition:color .2s;}
-  .bnav-icon{font-size:1.25rem;line-height:1;}
-  .bnav-item.active{color:#f0a84e;}
-  .bnav-item:hover{color:#d4893c;}
-  /* settings/signout modals */
-  .nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(6px);padding:1rem;}
-  .nav-overlay.open{display:flex;}
-  .nav-modal{background:#1e160e;border:1px solid rgba(184,148,104,.22);border-radius:18px;width:100%;max-width:400px;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.85);animation:navModalIn .24s ease;position:relative;overflow:hidden;max-height:90vh;overflow-y:auto;}
-  @keyframes navModalIn{from{transform:translateY(18px);opacity:0;}to{transform:none;opacity:1;}}
-  .nav-modal-x{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);color:#8a7258;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;}
-  .nav-modal-x:hover{background:rgba(255,255,255,.14);}
-  .nav-modal-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:#f5ede0;margin-bottom:1.3rem;display:flex;align-items:center;justify-content:space-between;}
-  .settings-sec{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#5a4a30;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid rgba(184,148,104,.15);}
-  .settings-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid rgba(184,148,104,.07);}
-  .settings-row:last-of-type{border-bottom:none;}
-  .settings-label{font-size:.82rem;color:#e8ddd0;display:flex;align-items:center;gap:.5rem;}
-  .settings-desc{font-size:.68rem;color:#8a7258;padding-left:1.5rem;margin-top:.05rem;}
-  .tog-wrap{position:relative;width:38px;height:21px;flex-shrink:0;cursor:pointer;}
-  .tog-wrap input{opacity:0;width:0;height:0;position:absolute;}
-  .tog-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid rgba(184,148,104,.2);border-radius:21px;transition:background .25s;}
-  .tog-wrap input:checked~.tog-track{background:#d4893c;}
-  .tog-thumb{position:absolute;top:2px;left:2px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .25s;pointer-events:none;}
-  .tog-wrap input:checked~.tog-thumb{transform:translateX(17px);}
-  .btn-nav-cancel{background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;color:#e8ddd0;}
-  .btn-nav-save{background:#d4893c;border:none;padding:.5rem 1.3rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:#060408;}
-  .btn-nav-signout{display:flex;align-items:center;gap:.6rem;width:100%;background:rgba(155,63,42,.1);border:1px solid rgba(155,63,42,.28);color:#e07060;padding:.62rem 1rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;margin-top:.5rem;-webkit-tap-highlight-color:transparent;}
-  .btn-nav-signout:hover{background:rgba(155,63,42,.2);}
-  /* sign out confirm */
-  .so-inner{text-align:center;}
-  .so-emoji{font-size:2.3rem;margin-bottom:.75rem;}
-  .so-ttl{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#f5ede0;margin-bottom:.38rem;}
-  .so-sub{font-size:.82rem;color:#8a7258;line-height:1.55;margin-bottom:1.4rem;}
-  .so-btns{display:flex;gap:.7rem;}
-  .so-cancel{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.58rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;color:#e8ddd0;}
-  .so-confirm{flex:1;background:#9b3f2a;border:none;padding:.58rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;color:#fff;}
-  /* toast */
-  .nav-toast{position:fixed;bottom:calc(var(--bnav-h) + 1rem);left:50%;transform:translateX(-50%) translateY(10px);background:#d4893c;color:#060408;border-radius:10px;padding:.52rem 1.4rem;font-size:.8rem;font-weight:700;font-family:'DM Sans',sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .28s,transform .28s;pointer-events:none;z-index:600;white-space:nowrap;}
-  .nav-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  @media(max-width:860px){.nav-center,.nav-search{display:none;}.hamburger{display:flex;}.pp-info,.pp-arrow{display:none;}.profile-pill{padding:.28rem;border-radius:50%;}}
-
-</style>
-</head>
-<body>
-
-<!-- NAVBAR -->
-<!-- ══ NAVBAR ══ -->
-<nav class="navbar" id="_navbar">
-  <a class="nav-logo" href="index.html">Pagebound<em>Social for Readers</em></a>
-  <div class="nav-center">
-    <a href="index.html">Home</a>
-    <a href="discover.html" class="active">Discover</a>
-    <a href="clubs.html">📚 Clubs</a>
-    <a href="friends.html">👥 Friends</a>
-    <a href="seasonpass.html">⚡ Season Pass</a>
-  </div>
-  <div class="nav-right">
-    <div class="profile-dropdown-wrap" id="_dd-wrap">
-      <button class="profile-pill" id="_pp-btn" onclick="_toggleDD(event)">
-        <div class="pp-avatar" id="_pp-avatar">?</div>
-        <div class="pp-info" id="_pp-info">
-          <div class="pp-name" id="_pp-name">Loading…</div>
-          <div class="pp-sub" id="_pp-sub"></div>
-        </div>
-        <span class="pp-arrow">›</span>
-      </button>
-      <div class="profile-dropdown" id="_dd">
-        <!-- LOGGED-IN -->
-        <div id="_dd-in">
-          <div class="dd-header">
-            <div class="dd-uname" id="_dd-name"></div>
-            <div class="dd-uhandle" id="_dd-handle"></div>
-          </div>
-          <div class="dd-section">
-            <a class="dd-item" href="bookshelf_profile.html"><span class="dd-icon">👤</span> My Profile</a>
-            <a class="dd-item" href="friends.html"><span class="dd-icon">👥</span> Find Friends</a>
-            <a class="dd-item" href="seasonpass.html"><span class="dd-icon">⚡</span> Season Pass</a>
-          </div>
-          <div class="dd-section">
-            <div class="dd-lang-row">
-              <span class="dd-lang-label">🌐 Language</span>
-              <div class="dd-lang-toggle">
-                <button class="dd-lang-btn active" id="_lang-en" onclick="_setLang('en',event)">🇬🇧 EN</button>
-                <button class="dd-lang-btn" id="_lang-es" onclick="_setLang('es',event)">🇪🇸 ES</button>
-              </div>
-            </div>
-          </div>
-          <div class="dd-section">
-            <button class="dd-item" onclick="_openSettings();_closeDD()"><span class="dd-icon">⚙️</span> Settings</button>
-            <button class="dd-item danger" onclick="_openSignOut();_closeDD()"><span class="dd-icon">🚪</span> Sign Out</button>
-          </div>
-        </div>
-        <!-- LOGGED-OUT -->
-        <div id="_dd-out" style="display:none">
-          <div class="dd-section">
-            <a class="dd-item highlight" href="login.html"><span class="dd-icon">🔑</span> Sign In</a>
-          </div>
-          <div class="dd-section">
-            <div class="dd-lang-row">
-              <span class="dd-lang-label">🌐 Language</span>
-              <div class="dd-lang-toggle">
-                <button class="dd-lang-btn active" id="_lang-en-lo" onclick="_setLang('en',event)">🇬🇧 EN</button>
-                <button class="dd-lang-btn" id="_lang-es-lo" onclick="_setLang('es',event)">🇪🇸 ES</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <button class="hamburger" id="_hbg" onclick="_toggleMenu()"><span></span><span></span><span></span></button>
-  </div>
-</nav>
-
-<!-- MOBILE DRAWER -->
-<div class="mobile-menu" id="_mob">
-  <a href="index.html">Home</a>
-  <a href="discover.html" class="active">Discover</a>
-  <a href="clubs.html">📚 Clubs</a>
-  <a href="friends.html">👥 Friends</a>
-  <a href="seasonpass.html">⚡ Season Pass</a>
-  <div class="mobile-menu-lang">
-    <span class="mobile-menu-lang-label">🌐 Language</span>
-    <div class="dd-lang-toggle">
-      <button class="dd-lang-btn active" id="_mlang-en" onclick="_setLang('en',event)">🇬🇧 EN</button>
-      <button class="dd-lang-btn" id="_mlang-es" onclick="_setLang('es',event)">🇪🇸 ES</button>
-    </div>
-  </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div class="nav-overlay" id="_settings-overlay" onclick="if(event.target===this)_closeSettings()">
-  <div class="nav-modal">
-    <div class="nav-modal-title">
-      ⚙️ Settings
-      <button class="nav-modal-x" onclick="_closeSettings()">✕</button>
-    </div>
-    <div class="settings-sec">Language</div>
-    <div class="settings-row">
-      <div>
-        <div class="settings-label">🌐 Display Language</div>
-        <div class="settings-desc">Choose the language for the interface</div>
-      </div>
-      <div class="dd-lang-toggle">
-        <button class="dd-lang-btn active" id="_slang-en" onclick="_setLang('en',event)" style="padding:.36rem .8rem;font-size:.76rem;">🇬🇧 EN</button>
-        <button class="dd-lang-btn" id="_slang-es" onclick="_setLang('es',event)" style="padding:.36rem .8rem;font-size:.76rem;">🇪🇸 ES</button>
-      </div>
-    </div>
-    <div class="settings-sec" style="margin-top:1.2rem;">Notifications</div>
-    <div class="settings-row">
-      <div><div class="settings-label">🔔 Comments on posts</div></div>
-      <label class="tog-wrap"><input type="checkbox" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
-    </div>
-    <div class="settings-row">
-      <div><div class="settings-label">❤️ Likes on posts</div></div>
-      <label class="tog-wrap"><input type="checkbox" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
-    </div>
-    <div class="settings-row">
-      <div><div class="settings-label">👥 New followers</div></div>
-      <label class="tog-wrap"><input type="checkbox"><div class="tog-track"></div><div class="tog-thumb"></div></label>
-    </div>
-    <div class="settings-sec" style="margin-top:1.2rem;">Privacy</div>
-    <div class="settings-row">
-      <div><div class="settings-label">🔒 Private profile</div><div class="settings-desc">Only followers see your posts</div></div>
-      <label class="tog-wrap"><input type="checkbox"><div class="tog-track"></div><div class="tog-thumb"></div></label>
-    </div>
-    <button class="btn-nav-signout" onclick="_closeSettings();_openSignOut()">🚪 Sign Out</button>
-    <div style="display:flex;justify-content:flex-end;gap:.65rem;margin-top:1.2rem;">
-      <button class="btn-nav-cancel" onclick="_closeSettings()">Cancel</button>
-      <button class="btn-nav-save" onclick="_saveSettings()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- SIGN OUT CONFIRM -->
-<div class="nav-overlay" id="_so-overlay" onclick="if(event.target===this)_closeSignOut()">
-  <div class="nav-modal" style="max-width:360px;">
-    <div class="so-inner">
-      <div class="so-emoji">👋</div>
-      <div class="so-ttl">Sign out of Pagebound?</div>
-      <div class="so-sub">You'll need to sign back in to access your library and reading progress.</div>
-      <div class="so-btns">
-        <button class="so-cancel" onclick="_closeSignOut()">Cancel</button>
-        <button class="so-confirm" onclick="_doSignOut()">Sign Out</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div class="nav-toast" id="_toast"></div>
-
-<!-- BOTTOM NAV -->
-<nav class="bottom-nav" id="_bnav">
-  <a class="bnav-item " href="index.html"><span class="bnav-icon">🏠</span>Home</a>
-  <a class="bnav-item " href="friends.html"><span class="bnav-icon">👥</span>Friends</a>
-  <a class="bnav-item " href="seasonpass.html"><span class="bnav-icon">⚡</span>Pass</a>
-  <a class="bnav-item " href="bookshelf_profile.html"><span class="bnav-icon">👤</span>Profile</a>
-</nav>
-
-
-<!-- PAGE HEADER -->
-<div class="page-header">
-  <div class="page-header-inner">
-    <div class="page-eyebrow fade-up fade-up-1">✦ New Voices</div>
-    <h1 class="page-title fade-up fade-up-2">Discover<br><em>Emerging Writers</em></h1>
-    <p class="page-subtitle fade-up fade-up-3">Stories that haven't found their audiences yet — but are about to. Explore debut authors, self-published voices, and the next generation of literary talent.</p>
-    <div class="page-stats fade-up fade-up-4">
-      <div class="stat-item">
-        <div class="stat-num">2,840</div>
-        <div class="stat-label">New Authors</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">14.6k</div>
-        <div class="stat-label">Works Published</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">312</div>
-        <div class="stat-label">This Month</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- FILTER BAR -->
-<div class="filter-bar">
-  <button class="filter-chip active" onclick="setFilter(this,'all')">✦ All Genres</button>
-  <button class="filter-chip" onclick="setFilter(this,'literary')">📖 Literary Fiction</button>
-  <button class="filter-chip" onclick="setFilter(this,'fantasy')">🐉 Fantasy</button>
-  <button class="filter-chip" onclick="setFilter(this,'thriller')">🔪 Thriller</button>
-  <button class="filter-chip" onclick="setFilter(this,'romance')">💌 Romance</button>
-  <button class="filter-chip" onclick="setFilter(this,'sf')">🚀 Sci-Fi</button>
-  <button class="filter-chip" onclick="setFilter(this,'poetry')">🌿 Poetry</button>
-  <button class="filter-chip" onclick="setFilter(this,'memoir')">🪞 Memoir</button>
-  <button class="filter-chip" onclick="setFilter(this,'horror')">🕯️ Horror</button>
-</div>
-
-<!-- SPOTLIGHT: FEATURED NEW VOICE -->
-<div class="spotlight fade-up">
-  <div class="spotlight-content">
-    <div class="spotlight-badge">⭐ Voice of the Month</div>
-    <div class="spotlight-author-name">Marisol Vega-Ortiz</div>
-    <div class="spotlight-genre">Magic Realism · Debut Author</div>
-    <p class="spotlight-bio">A former marine biologist from Cartagena whose debut novel weaves the folklore of the Caribbean coast with the quiet violence of diaspora. Her prose reads like sea glass — worn smooth by something vast.</p>
-    <div class="spotlight-actions">
-      <button class="btn-follow" id="spotlight-follow" onclick="toggleFollow(this)">+ Follow</button>
-      <button class="btn-read">Read Sample →</button>
-    </div>
-  </div>
-  <div class="spotlight-book">
-    <div class="spotlight-book-cover" style="background:linear-gradient(160deg,#1a3a4a,#2c5e6a,#3a7080)">
-      <div class="spotlight-book-inner">
-        <div class="sb-title">The Depth Beneath Salt</div>
-        <div class="sb-author">Marisol Vega-Ortiz</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- SECTIONS -->
-<div class="sections">
-
-  <!-- Rising This Week -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-title"><span class="s-icon">🚀</span> Rising This Week</div>
-      <a href="#" class="section-see-all">See All</a>
-    </div>
-    <div class="scroll-row-wrap">
-      <button class="scroll-btn left" onclick="scrollRow('rising',-1)">‹</button>
-      <div class="scroll-row" id="rising"></div>
-      <button class="scroll-btn right" onclick="scrollRow('rising',1)">›</button>
-    </div>
-  </div>
-
-  <!-- Browse by Genre -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-title"><span class="s-icon">🎨</span> Browse by Genre</div>
-    </div>
-    <div class="genre-grid">
-      <div class="genre-card">
-        <div class="genre-bg" style="background:linear-gradient(135deg,#1a2e3a,#2c4a5e,#3d6070)"></div>
-        <div class="genre-vignette"></div>
-        <div class="genre-content"><div class="genre-icon">🌑</div><div class="genre-name">Dark Academia</div><div class="genre-count">184 authors</div></div>
-      </div>
-      <div class="genre-card">
-        <div class="genre-bg" style="background:linear-gradient(135deg,#2e1a1a,#5e2c20,#7a3a24)"></div>
-        <div class="genre-vignette"></div>
-        <div class="genre-content"><div class="genre-icon">🌍</div><div class="genre-name">World Lit</div><div class="genre-count">412 authors</div></div>
-      </div>
-      <div class="genre-card">
-        <div class="genre-bg" style="background:linear-gradient(135deg,#1a2e1a,#2c5e2c,#3a6e3a)"></div>
-        <div class="genre-vignette"></div>
-        <div class="genre-content"><div class="genre-icon">✨</div><div class="genre-name">Magic Realism</div><div class="genre-count">229 authors</div></div>
-      </div>
-      <div class="genre-card">
-        <div class="genre-bg" style="background:linear-gradient(135deg,#2a1a3a,#4a2e5e,#5a3a72)"></div>
-        <div class="genre-vignette"></div>
-        <div class="genre-content"><div class="genre-icon">🐉</div><div class="genre-name">Epic Fantasy</div><div class="genre-count">538 authors</div></div>
-      </div>
-      <div class="genre-card">
-        <div class="genre-bg" style="background:linear-gradient(135deg,#2e2410,#5e4820,#7a5e28)"></div>
-        <div class="genre-vignette"></div>
-        <div class="genre-content"><div class="genre-icon">🪞</div><div class="genre-name">Memoir</div><div class="genre-count">167 authors</div></div>
-      </div>
-      <div class="genre-card">
-        <div class="genre-bg" style="background:linear-gradient(135deg,#1e1e2e,#2e2e4e,#3a3a60)"></div>
-        <div class="genre-vignette"></div>
-        <div class="genre-content"><div class="genre-icon">🚀</div><div class="genre-name">Sci-Fi</div><div class="genre-count">305 authors</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Debut Authors -->
-  <div class="section" style="margin-top:1.4rem;">
-    <div class="section-header">
-      <div class="section-title"><span class="s-icon">🌱</span> Debut Authors</div>
-      <a href="#" class="section-see-all">See All</a>
-    </div>
-    <div class="scroll-row-wrap">
-      <button class="scroll-btn left" onclick="scrollRow('debuts',-1)">‹</button>
-      <div class="scroll-row" id="debuts"></div>
-      <button class="scroll-btn right" onclick="scrollRow('debuts',1)">›</button>
-    </div>
-  </div>
-
-  <!-- Their First Books -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-title"><span class="s-icon">📖</span> First Chapters,<em>First Chances</em></div>
-      <a href="#" class="section-see-all">See All</a>
-    </div>
-    <div class="scroll-row-wrap">
-      <button class="scroll-btn left" onclick="scrollRow('firstbooks',-1)">‹</button>
-      <div class="scroll-row" id="firstbooks"></div>
-      <button class="scroll-btn right" onclick="scrollRow('firstbooks',1)">›</button>
-    </div>
-  </div>
-
-  <!-- Trending Tags -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-title"><span class="s-icon">🏷️</span> Trending Tags</div>
-    </div>
-    <div class="tags-row">
-      <span class="tag">#diaspora</span><span class="tag">#OwnVoices</span><span class="tag">#speculative</span>
-      <span class="tag">#queer-lit</span><span class="tag">#climate-fiction</span><span class="tag">#afrofuturism</span>
-      <span class="tag">#unreliable-narrator</span><span class="tag">#hopepunk</span><span class="tag">#literary-horror</span>
-      <span class="tag">#slow-burn</span><span class="tag">#epistolary</span><span class="tag">#folk-horror</span>
-      <span class="tag">#debut2025</span><span class="tag">#southasianlit</span><span class="tag">#latam-voices</span>
-    </div>
-  </div>
-
-  <!-- What Authors Say -->
-  <div class="section">
-    <div class="testimonial-strip">
-      <div class="testimonial-label">Writers on Pagebound</div>
-      <div class="testimonials-row" id="testimonials-row"></div>
-    </div>
-  </div>
-
-  <!-- Recently Followed Authors' New Works -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-title"><span class="s-icon">💛</span> From Authors You Follow</div>
-      <a href="#" class="section-see-all">See All</a>
-    </div>
-    <div class="scroll-row-wrap">
-      <button class="scroll-btn left" onclick="scrollRow('followed',-1)">‹</button>
-      <div class="scroll-row" id="followed"></div>
-      <button class="scroll-btn right" onclick="scrollRow('followed',1)">›</button>
-    </div>
-  </div>
-
-</div>
-
-<!-- BECOME AN AUTHOR CTA -->
-<div class="author-cta">
-  <div class="cta-deco">✍</div>
-  <div class="cta-inner">
-    <div class="cta-eyebrow">✍️ For Writers</div>
-    <h2 class="cta-title">Your story<br>deserves<em> to be read.</em></h2>
-    <p class="cta-desc">Pagebound isn't just for readers. Publish your work, build your audience, and connect with readers who are actively looking for the next voice they'll love. No gatekeepers. No minimums. Just writing.</p>
-    <div class="cta-perks">
-      <div class="cta-perk"><div class="cta-perk-icon">📚</div><div><strong>Publish instantly.</strong> Upload chapters, short stories, or complete novels — your timeline, your pace.</div></div>
-      <div class="cta-perk"><div class="cta-perk-icon">💬</div><div><strong>Real readers, real feedback.</strong> Our community rates, reviews, and shares what resonates. No bots, no algorithms gaming discovery.</div></div>
-      <div class="cta-perk"><div class="cta-perk-icon">⚡</div><div><strong>Get featured.</strong> Top emerging authors are spotlighted in Season Pass rewards, newsletters, and the homepage — reaching 40k+ active readers.</div></div>
-      <div class="cta-perk"><div class="cta-perk-icon">💰</div><div><strong>Earn as you grow.</strong> Unlock monetisation tools once you hit 500 followers — tips, chapter unlocks, and reader subscriptions.</div></div>
-    </div>
-    <div class="cta-btns">
-      <button class="btn-cta-primary" onclick="alert('Author sign-up coming soon!')">✍️ Start Writing on Pagebound</button>
-      <button class="btn-cta-ghost" onclick="alert('Learn more coming soon!')">Learn More</button>
-    </div>
-  </div>
-</div>
-
-<footer>
-  <div class="footer-logo">Pagebound</div>
-  <div class="footer-links">
-    <a href="#">About</a><a href="#">Blog</a><a href="clubs.html">📚 Clubs</a>
-    <a href="#">For Writers</a><a href="#">Privacy</a><a href="#">Terms</a>
-  </div>
-  <div class="footer-copy">© 2026 Pagebound · Social Reading Network</div>
-</footer>
-
-<script>
-const PALETTES=[
-  "linear-gradient(160deg,#3d2810,#6e4820)","linear-gradient(160deg,#1a2e3a,#2c4e6a)",
-  "linear-gradient(160deg,#2a1a3a,#4a2e5e)","linear-gradient(160deg,#1a3a2a,#2c5e40)",
-  "linear-gradient(160deg,#3a1a1a,#6e2c2c)","linear-gradient(160deg,#3a2e1a,#6e4c2c)",
-  "linear-gradient(160deg,#1e1e2e,#3a3a5e)","linear-gradient(160deg,#2e1a2a,#5a2e4a)",
-  "linear-gradient(160deg,#1a2e1a,#3a5e3a)","linear-gradient(160deg,#2e2410,#5e4820)",
-  "linear-gradient(160deg,#10202e,#1e3e5e)","linear-gradient(160deg,#2e1010,#5e2020)",
-];
-
-const newAuthors = [
-  {name:"Tomás Restrepo",genre:"Magical Realism",books:2,followers:"1.2k",palette:3,debut:true},
-  {name:"Anika Osei",genre:"Afrofuturism · SF",books:1,followers:"840",palette:9,debut:true},
-  {name:"Yuki Shiraishi",genre:"Literary Horror",books:3,followers:"3.1k",palette:7,debut:false},
-  {name:"Priya Mehrotra",genre:"South Asian Lit",books:1,followers:"620",palette:0,debut:true},
-  {name:"Cal Oduya",genre:"Queer Fiction",books:2,followers:"2.4k",palette:4,debut:false},
-  {name:"Lena Vasquez",genre:"Climate Fiction",books:1,followers:"510",palette:2,debut:true},
-  {name:"Dmitri Sorokin",genre:"Literary Thriller",books:4,followers:"4.8k",palette:1,debut:false},
-  {name:"Amara Diallo",genre:"Memoir · Poetry",books:2,followers:"1.9k",palette:8,debut:true},
-];
-
-const debutAuthors = [
-  {name:"Seun Adeyemi",genre:"Epic Fantasy",books:1,followers:"390",palette:6,debut:true},
-  {name:"Celeste Blanc",genre:"Dark Academia",books:1,followers:"720",palette:2,debut:true},
-  {name:"Jin-ho Kwon",genre:"Speculative Fic",books:1,followers:"445",palette:1,debut:true},
-  {name:"Rosa Mitrović",genre:"Folk Horror",books:1,followers:"285",palette:4,debut:true},
-  {name:"Nneka Okafor",genre:"Diaspora Lit",books:1,followers:"612",palette:3,debut:true},
-  {name:"Mateo Villanueva",genre:"Slow-burn Romance",books:1,followers:"934",palette:9,debut:true},
-];
-
-const followedBooks = [
-  {title:"The Glass Meridian",author:"Yuki Shiraishi",r:5,p:7},
-  {title:"Saltblood",author:"Cal Oduya",r:4,p:4},
-  {title:"Nightward",author:"Dmitri Sorokin",r:5,p:1},
-  {title:"Hummingbird Bones",author:"Amara Diallo",r:4,p:8},
-  {title:"Between Rains",author:"Priya Mehrotra",r:5,p:0},
-  {title:"The Second Sun",author:"Tomás Restrepo",r:4,p:3},
-];
-
-const risingBooks = [
-  {title:"The Depth Beneath Salt",author:"Marisol Vega-Ortiz",r:5,p:2},
-  {title:"What the River Remembers",author:"Anika Osei",r:4,p:9},
-  {title:"An Ordinary Violence",author:"Seun Adeyemi",r:5,p:6},
-  {title:"Half-Light Sonnets",author:"Amara Diallo",r:5,p:8},
-  {title:"The Cartographer's Fever",author:"Celeste Blanc",r:4,p:1},
-  {title:"Children of the Interzone",author:"Jin-ho Kwon",r:4,p:7},
-  {title:"The Grief Protocols",author:"Lena Vasquez",r:5,p:3},
-];
-
-const firstbooks = [
-  {title:"An Ordinary Violence",author:"Seun Adeyemi",r:5,p:6},
-  {title:"The Pale Register",author:"Celeste Blanc",r:4,p:2},
-  {title:"Echo Meridian",author:"Jin-ho Kwon",r:4,p:1},
-  {title:"Villanelle for the End",author:"Rosa Mitrović",r:5,p:4},
-  {title:"Letters from Lagos",author:"Nneka Okafor",r:4,p:3},
-  {title:"The Almost Season",author:"Mateo Villanueva",r:5,p:9},
-];
-
-const testimonials = [
-  {quote:"Pagebound gave my debut novel an audience I never expected. Within two months I had 800 followers and real conversations about my work.",name:"Anika Osei",books:"1 novel published",color:"#2c5e40"},
-  {quote:"I self-published my poetry collection here after 12 rejections. It now has 3,000 reads. That changed everything for me.",name:"Amara Diallo",books:"2 works published",color:"#3a2e5e"},
-  {quote:"The feedback from Pagebound readers is so much more thoughtful than any writing group I've been in. These people actually care.",name:"Tomás Restrepo",books:"2 novels published",color:"#5e2c20"},
-  {quote:"Being featured in the Season Pass was surreal. I went from 200 to 1,400 followers in a week. Real readers, not bots.",name:"Yuki Shiraishi",books:"3 books published",color:"#1a2e3a"},
-  {quote:"I was terrified to publish. This community made it feel safe to be imperfect. My writing has grown so much because of honest readers.",name:"Priya Mehrotra",books:"1 debut novel",color:"#3a1a2e"},
-];
-
-function stars(n){return Array.from({length:5},(_,i)=>`<span style="color:${i<n?'var(--amber)':'var(--text-dim)'}">★</span>`).join('');}
-
-function authorInitial(name){return name.trim()[0].toUpperCase();}
-
-function renderAuthorCard(a){
-  return `<div class="author-card">
-    ${a.debut?'<div class="au-new-badge">Debut</div>':''}
-    <div class="author-avatar" style="background:${PALETTES[a.palette]}">
-      <div class="author-avatar-inner">
-        <div class="author-initial">${authorInitial(a.name)}</div>
-      </div>
-      <div class="author-avatar-overlay"><button class="follow-quick-btn" onclick="this.textContent=this.textContent==='+ Follow'?'✓ Following':'+ Follow'">+ Follow</button></div>
-    </div>
-    <div class="author-info">
-      <div class="au-name">${a.name}</div>
-      <div class="au-genre">${a.genre}</div>
-      <div class="au-stats"><span class="au-stat">${a.books} work${a.books!==1?'s':''}</span><div class="au-dot"></div><span class="au-stat">${a.followers} followers</span></div>
-    </div>
-  </div>`;
-}
-
-function renderBookCard(b){
-  return `<div class="book-card">
-    <div class="book-cover" style="background:${PALETTES[b.p]}">
-      <div class="book-cover-inner"><div class="bc-title">${b.title}</div><div class="bc-author">${b.author}</div></div>
-      <div class="book-overlay"><button class="overlay-btn">＋</button><button class="overlay-btn ghost">ⓘ</button></div>
-    </div>
-    <div class="book-info"><div class="bi-title">${b.title}</div><div class="bi-author">${b.author}</div><div class="bi-rating">${stars(b.r)}</div></div>
-  </div>`;
-}
-
-document.getElementById('rising').innerHTML = risingBooks.map(renderBookCard).join('');
-document.getElementById('debuts').innerHTML = debutAuthors.map(renderAuthorCard).join('');
-document.getElementById('firstbooks').innerHTML = firstbooks.map(renderBookCard).join('');
-document.getElementById('followed').innerHTML = followedBooks.map(renderBookCard).join('');
-
-document.getElementById('testimonials-row').innerHTML = testimonials.map(t=>`
-  <div class="testimonial-card">
-    <div class="tc-quote">"${t.quote}"</div>
-    <div class="tc-author">
-      <div class="tc-avatar" style="background:${t.color}">${t.name[0]}</div>
-      <div><div class="tc-name">${t.name}</div><div class="tc-books">${t.books}</div></div>
-    </div>
-  </div>`).join('');
-
-function scrollRow(id,dir){document.getElementById(id).scrollBy({left:dir*480,behavior:'smooth'});}
-
-function toggleMenu(){
-  const m=document.getElementById('mobile-menu');
-  const b=document.getElementById('hamburger');
-  const open=m.classList.toggle('open');
-  b.classList.toggle('open',open);
-  document.body.style.overflow=open?'hidden':'';
-}
-function closeMenu(){
-  document.getElementById('mobile-menu').classList.remove('open');
-  document.getElementById('hamburger').classList.remove('open');
-  document.body.style.overflow='';
-}
-document.addEventListener('click',e=>{
-  const m=document.getElementById('mobile-menu');
-  const b=document.getElementById('hamburger');
-  if(m.classList.contains('open')&&!m.contains(e.target)&&!b.contains(e.target))closeMenu();
-});
-
-function toggleDropdown(e){
-  e && e.stopPropagation();
-  const dd=document.getElementById('profile-dropdown');
-  dd.classList.toggle('open');
-}
-document.addEventListener('click',e=>{
-  const wrap=document.getElementById('profile-dropdown-wrap');
-  if(wrap&&!wrap.contains(e.target))document.getElementById('profile-dropdown').classList.remove('open');
-});
-
-function setFilter(el, genre){
-  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-}
-
-function toggleFollow(btn){
-  const following = btn.classList.toggle('following');
-  btn.textContent = following ? '✓ Following' : '+ Follow';
-}
-</script>
-<script>
-
-/* ══ SHARED NAV JS ══ */
-(function(){
-  // helpers
-  function gs(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
-  function el(id){ return document.getElementById(id); }
-
-  const SESSION = gs();
-  const isLoggedIn = !!SESSION;
-  const ME = isLoggedIn ? {
-    name:    SESSION.name||SESSION.username,
-    handle:  '@'+SESSION.username,
-    initial: (SESSION.name||SESSION.username).charAt(0).toUpperCase(),
-    username: SESSION.username
-  } : null;
 
   // Init avatar / pill
   function initPill(){
     if(isLoggedIn){
       el('_dd-in').style.display=''; el('_dd-out').style.display='none';
       el('_pp-info').style.display='';
-      const av=el('_pp-avatar'); av.textContent=ME.initial;
-      av.style.cssText='width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;';
+      const av=el('_pp-avatar');
+      setAvatarEl(av, null, ME.initial);
       el('_pp-name').textContent=ME.name;
       el('_pp-sub').textContent='';
       el('_dd-name').textContent=ME.name;
@@ -2065,18 +1053,33 @@ function toggleFollow(btn){
     } else {
       el('_dd-in').style.display='none'; el('_dd-out').style.display='';
       el('_pp-info').style.display='none';
-      const av=el('_pp-avatar'); av.textContent='👤';
-      av.style.cssText='width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';
+      const av=el('_pp-avatar');
+      av.textContent='👤';
+      av.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';
     }
-    // Load name from Firebase for pill
+    // Load profile from Firebase: name + avatar
     if(isLoggedIn && typeof firebase !== 'undefined'){
       try{
         const fdb = firebase.database();
-        fdb.ref('pb_profile/'+ME.username.replace(/\./g,'_')).once('value').then(s=>{
-          const p=s.val(); if(p&&p.name){ el('_pp-name').textContent=p.name; el('_dd-name').textContent=p.name; }
+        const uk = ME.username.replace(/\./g,'_');
+        fdb.ref('pb_profile/'+uk).once('value').then(s=>{
+          const p=s.val();
+          if(!p) return;
+          if(p.name){
+            el('_pp-name').textContent=p.name;
+            el('_dd-name').textContent=p.name;
+          }
+          // Load avatar image
+          if(p.avatar){
+            setAvatarEl(el('_pp-avatar'), p.avatar, ME.initial);
+            setMobAvatar(p.avatar, ME.initial);
+            // Also update the dropdown header avatar if present
+            const ddAv = el('_dd-avatar');
+            if(ddAv) setAvatarEl(ddAv, p.avatar, ME.initial);
+          }
         }).catch(()=>{});
-        // books read count for sub
-        fdb.ref('pb_libraries/'+ME.username.replace(/\./g,'_')).once('value').then(s=>{
+        // Books read count
+        fdb.ref('pb_libraries/'+uk).once('value').then(s=>{
           const lib=s.val(); const cnt=lib&&Array.isArray(lib)?lib.filter(b=>b.status==='read').length:0;
           if(cnt>0) el('_pp-sub').textContent=cnt+' books read';
         }).catch(()=>{});
@@ -2153,30 +1156,56 @@ function toggleFollow(btn){
   }
 
   initPill();
+
+  // Highlight active mobile bottom nav item
+  (function(){
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    const map = {
+      'index.html':'_mbn-home',
+      'discover.html':'_mbn-discover',
+      'friends.html':'_mbn-friends',
+      'seasonpass.html':'_mbn-pass',
+      'bookshelf_profile.html':'_mbn-profile',
+    };
+    const activeId = map[path];
+    if(activeId){ const a=el(activeId); if(a) a.classList.add('active'); }
+    // Set initial of mob profile avatar
+    if(isLoggedIn){
+      const mobAv=el('_mob-profile-av');
+      if(mobAv) mobAv.textContent=ME.initial;
+    } else {
+      const mobAv=el('_mob-profile-av');
+      if(mobAv) mobAv.textContent='👤';
+    }
+  })();
+
 })();
 
-</script>
 
-<script>
-// Load real profile picture from Firebase
-(function(){
-  try{
-    const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
-    if(!sess) return;
-    const uk = sess.username.replace(/\./g,'_');
-    if(typeof firebase === 'undefined') return;
-    firebase.database().ref('pb_profile/'+uk).once('value').then(function(snap){
-      const p = snap.val();
-      if(!p || !p.avatar) return;
-      const img = '<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      ['_pp-avatar','_mob-profile-av','_dd-avatar'].forEach(function(id){
-        const el = document.getElementById(id);
-        if(el){ el.innerHTML=img; el.style.overflow='hidden'; }
-      });
-    }).catch(function(){});
-  }catch(e){}
-})();
 </script>
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-bottom-nav" id="_mob-bottom">
+  <a href="index.html" class="mob-nav-item" id="_mbn-home">
+    <span class="mob-nav-icon">🏠</span>
+    <span class="mob-nav-label">Home</span>
+  </a>
+  <a href="discover.html" class="mob-nav-item" id="_mbn-discover">
+    <span class="mob-nav-icon">🔍</span>
+    <span class="mob-nav-label">Discover</span>
+  </a>
+  <a href="friends.html" class="mob-nav-item" id="_mbn-friends">
+    <span class="mob-nav-icon">👥</span>
+    <span class="mob-nav-label">Friends</span>
+  </a>
+  <a href="seasonpass.html" class="mob-nav-item" id="_mbn-pass">
+    <span class="mob-nav-icon">⚡</span>
+    <span class="mob-nav-label">Pass</span>
+  </a>
+  <button class="mob-nav-item mob-nav-profile" onclick="_toggleDD(event)" id="_mbn-profile">
+    <div class="mob-profile-av" id="_mob-profile-av">?</div>
+    <span class="mob-nav-label">Profile</span>
+  </button>
+</nav>
 
 </body>
 </html>
