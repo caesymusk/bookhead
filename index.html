@@ -335,15 +335,45 @@ function pmFireConfetti(){
   .cat-pill.active-cat .cat-label{color:var(--bg);}
 
   /* ── BOOK-ADDED MODAL ── */
-  .book-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(6px);padding:1rem;}
+  .book-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(10px);padding:1.2rem;}
   .book-modal-overlay.open{display:flex;}
-  .book-modal{background:#1e160e;border:1px solid rgba(184,148,104,.25);border-radius:18px;width:100%;max-width:360px;overflow:hidden;animation:bmIn .25s cubic-bezier(.22,1,.36,1);}
-  @keyframes bmIn{from{transform:translateY(20px) scale(.96);opacity:0;}to{transform:none;opacity:1;}}
-  .bm-cover{height:140px;position:relative;display:flex;align-items:flex-end;padding:1rem 1.1rem;}
-  .bm-cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:12px;background:rgba(0,0,0,.3);}
-  .bm-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 60%);}
-  .bm-cover-title{position:relative;z-index:1;font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:rgba(245,237,224,.95);line-height:1.2;}
-  .bm-cover-author{position:relative;z-index:1;font-size:.75rem;color:rgba(245,237,224,.55);margin-top:.2rem;}
+  /* Open-book layout */
+  .book-modal{background:#1a110a;border:1px solid rgba(184,148,104,.22);border-radius:14px;width:100%;max-width:680px;display:flex;overflow:hidden;animation:bmIn .28s cubic-bezier(.22,1,.36,1);min-height:360px;box-shadow:0 32px 80px rgba(0,0,0,.9);}
+  @keyframes bmIn{from{transform:translateY(24px) scale(.96);opacity:0;}to{transform:none;opacity:1;}}
+  /* LEFT — book cover */
+  .bm-left{width:220px;flex-shrink:0;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:1.4rem 1.1rem;background-size:cover;background-position:center;}
+  .bm-left::before{content:'';position:absolute;right:0;top:0;bottom:0;width:18px;background:linear-gradient(to right,rgba(0,0,0,.35),rgba(0,0,0,.1));pointer-events:none;}
+  .bm-left::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.1) 55%);pointer-events:none;}
+  .bm-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .bm-cover-title{position:relative;z-index:2;font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:rgba(245,237,224,.95);line-height:1.25;}
+  .bm-cover-author{position:relative;z-index:2;font-size:.74rem;color:rgba(245,237,224,.55);margin-top:.25rem;}
+  /* RIGHT — details */
+  .bm-right{flex:1;padding:1.6rem 1.5rem;display:flex;flex-direction:column;gap:.9rem;overflow-y:auto;max-height:520px;border-left:1px solid rgba(184,148,104,.1);}
+  .bm-book-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--cream);line-height:1.3;}
+  .bm-book-author{font-size:.8rem;color:var(--text-dim);margin-top:.15rem;}
+  .bm-desc{font-size:.8rem;color:var(--text-dim);line-height:1.7;flex:1;}
+  .bm-desc em{color:var(--text-muted);font-style:italic;}
+  .bm-genre-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+  .bm-tag{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;background:rgba(184,148,104,.1);border:1px solid rgba(184,148,104,.18);border-radius:20px;padding:.22rem .65rem;color:var(--text-dim);}
+  /* Action area */
+  .bm-actions{display:flex;flex-direction:column;gap:.55rem;margin-top:auto;}
+  .bm-read-now{width:100%;background:linear-gradient(135deg,#5a9e6f,#2a6e40);border:none;border-radius:11px;padding:.7rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:opacity .15s;}
+  .bm-read-now:hover{opacity:.9;}
+  .bm-subscribe-cta{width:100%;background:linear-gradient(135deg,rgba(212,137,60,.15),rgba(196,112,26,.1));border:1px solid rgba(212,137,60,.3);border-radius:11px;padding:.65rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:var(--amber-light);cursor:pointer;transition:background .15s;}
+  .bm-subscribe-cta:hover{background:linear-gradient(135deg,rgba(212,137,60,.25),rgba(196,112,26,.18));}
+  .bm-free-trial{width:100%;background:linear-gradient(135deg,rgba(90,158,111,.15),rgba(42,110,64,.1));border:1px solid rgba(90,158,111,.3);border-radius:11px;padding:.65rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:#7dcea0;cursor:pointer;transition:background .15s;}
+  .bm-free-trial:hover{background:linear-gradient(135deg,rgba(90,158,111,.25),rgba(42,110,64,.2));}
+  .bm-add-lib{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:11px;padding:.65rem;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.45rem;transition:background .15s,color .15s;}
+  .bm-add-lib:hover{background:rgba(255,255,255,.1);color:var(--cream);}
+  .bm-add-lib.added{background:rgba(90,158,111,.12);border-color:rgba(90,158,111,.3);color:#7dcea0;}
+  .bm-close-btn{position:absolute;top:.75rem;right:.75rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;color:var(--text-dim);transition:background .15s;z-index:10;}
+  .bm-close-btn:hover{background:rgba(255,255,255,.15);color:var(--cream);}
+  /* Mobile: stack vertically */
+  @media(max-width:580px){
+    .book-modal{flex-direction:column;max-width:360px;}
+    .bm-left{width:100%;height:180px;}
+    .bm-right{max-height:none;border-left:none;border-top:1px solid rgba(184,148,104,.1);}
+  }
   .bm-body{padding:1.2rem 1.3rem 1.5rem;}
   .bm-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:.3rem;}
   .bm-sub{font-size:.8rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.5;}
@@ -1185,34 +1215,155 @@ function addBookToLibrary(book){const lib=getLibrary();if(!lib.find(b=>b.title==
 
 /* BOOK MODAL */
 let pendingBook=null,pendingStatus='wishlist';
-function openBookModal(title,author,color,epubKey){
-  pendingBook={title,author,color,epubKey:epubKey||''};pendingStatus='wishlist';
-  document.getElementById('bm-cover').style.background=color;
-  document.getElementById('bm-cover-title').textContent=title;
-  document.getElementById('bm-cover-author').textContent=author;
-  document.querySelectorAll('.bm-status-btn').forEach(b=>b.classList.toggle('selected',b.dataset.status==='wishlist'));
-  const addBtn=document.getElementById('bm-add-btn');
-  if(isInLibrary(title)){addBtn.textContent='\u2713 Already in Library';addBtn.style.background='#5a9e6f';}
-  else{addBtn.textContent='Add to Library';addBtn.style.background='';}
-  const readBtn=document.getElementById('bm-read-btn');
-  if(readBtn){
-    if(epubKey){readBtn.style.display='';readBtn.onclick=()=>openReader(epubKey,title,author,color);}
-    else readBtn.style.display='none';
+function openBookModal(title, author, color, epubKey){
+  const sess   = _getSession();
+  const isPrem = sess ? localStorage.getItem('pb_premium_'+sess.username.replace(/\./g,'_'))==='true' : false;
+  const inLib  = isInLibrary(title);
+
+  // Store pending book
+  pendingBook   = { title, author, color, epubKey: epubKey||'' };
+  pendingStatus = 'wishlist';
+
+  // ── LEFT: cover ──
+  const coverEl = document.getElementById('bm-cover');
+  if(coverEl) coverEl.style.background = color || 'linear-gradient(160deg,#3d2810,#6e4820)';
+
+  // Cover image (from catalogue)
+  const bk = Object.values(sections).flat().find(b=>b.title===title);
+  const coverImg = document.getElementById('bm-cover-img');
+  if(coverImg){
+    if(bk && bk.coverImage){
+      coverImg.src = bk.coverImage;
+      coverImg.style.display = 'block';
+    } else {
+      coverImg.style.display = 'none';
+    }
   }
+  document.getElementById('bm-cover-title').textContent  = title;
+  document.getElementById('bm-cover-author').textContent = author;
+
+  // ── RIGHT: title / author / desc / genre ──
+  document.getElementById('bm-book-title').textContent  = title;
+  document.getElementById('bm-book-author').textContent = author;
+
+  const desc = bk && bk.desc ? bk.desc : '';
+  const descEl = document.getElementById('bm-desc');
+  if(descEl) descEl.innerHTML = desc ? desc : '<em>No description available.</em>';
+
+  const genreEl = document.getElementById('bm-genre-row');
+  if(genreEl){
+    const tags = [];
+    if(bk && bk.genre)   tags.push(bk.genre);
+    if(bk && bk.section) tags.push(bk.section);
+    genreEl.innerHTML = tags.map(t=>'<span class="bm-tag">'+t+'</span>').join('');
+  }
+
+  // ── ACTIONS: show correct buttons based on auth/subscription ──
+  const elReadNow    = document.getElementById('bm-read-now');
+  const elSubCta     = document.getElementById('bm-subscribe-cta');
+  const elFreeTrial  = document.getElementById('bm-free-trial');
+  const elAddLib     = document.getElementById('bm-add-lib');
+  const elAddIcon    = document.getElementById('bm-add-lib-icon');
+  const elAddLabel   = document.getElementById('bm-add-lib-label');
+
+  // Hide all first
+  [elReadNow, elSubCta, elFreeTrial].forEach(el=>{ if(el) el.style.display='none'; });
+
+  if(!epubKey){
+    // No epub — just show add button, no read option
+  } else if(!sess){
+    // Not registered
+    if(elFreeTrial) elFreeTrial.style.display='';
+  } else if(!isPrem){
+    // Registered but not subscribed
+    if(elSubCta) elSubCta.style.display='';
+  } else {
+    // Premium user
+    if(elReadNow) elReadNow.style.display='';
+    elReadNow.textContent = '📖 Read Now';
+  }
+
+  // Add to library button state
+  if(elAddLib){
+    if(inLib){
+      elAddLib.classList.add('added');
+      if(elAddIcon) elAddIcon.textContent = '✓';
+      if(elAddLabel) elAddLabel.textContent = 'In Your Library';
+    } else {
+      elAddLib.classList.remove('added');
+      if(elAddIcon) elAddIcon.textContent = '＋';
+      if(elAddLabel) elAddLabel.textContent = 'Add to Wishlist';
+    }
+  }
+
   document.getElementById('book-modal-overlay').classList.add('open');
-  document.body.style.overflow='hidden';
+  document.body.style.overflow = 'hidden';
 }
-function closeBookModal(){document.getElementById('book-modal-overlay').classList.remove('open');document.body.style.overflow='';pendingBook=null;}
-function selectStatus(btn){document.querySelectorAll('.bm-status-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');pendingStatus=btn.dataset.status;}
-function confirmAddToLibrary(){
-  if(!pendingBook)return;
-  if(isInLibrary(pendingBook.title)){closeBookModal();return;}
-  addBookToLibrary({title:pendingBook.title,author:pendingBook.author,status:pendingStatus,rating:0,color:pendingBook.color,epubKey:pendingBook.epubKey||''});
-  const t=pendingBook.title;
+
+function bmReadNow(){
+  if(!pendingBook || !pendingBook.epubKey) return;
   closeBookModal();
-  showToast('\ud83d\udcda "'+t+'" added to your library!');
-  renderAllSections();
+  // Add to library as "reading" then open reader
+  if(!isInLibrary(pendingBook.title)){
+    addBookToLibrary({...pendingBook, status:'reading', rating:0});
+    // Also save to profile "currently reading" in Firebase
+    const sess = _getSession();
+    if(sess && typeof _fbDb !== 'undefined' && _fbDb){
+      const uk = sess.username.replace(/\./g,'_');
+      _fbDb.ref('pb_libraries/'+uk).once('value').then(snap=>{
+        const lib = snap.val()||[];
+        const arr = Array.isArray(lib) ? lib : Object.values(lib);
+        _fbDb.ref('pb_libraries/'+uk).set(arr);
+      }).catch(()=>{});
+    }
+  }
+  openReader(pendingBook.epubKey, pendingBook.title, pendingBook.author, pendingBook.color);
 }
+
+function bmGoSubscribe(){
+  closeBookModal();
+  if(pendingBook){
+    const p = new URLSearchParams({
+      key: pendingBook.epubKey||'', title: pendingBook.title,
+      author: pendingBook.author, color: pendingBook.color||'',
+      from: window.location.href
+    });
+    window.location.href = 'subscribe.html?' + p.toString();
+  } else {
+    window.location.href = 'subscribe.html';
+  }
+}
+
+function bmGoTrial(){
+  closeBookModal();
+  if(pendingBook){
+    const p = new URLSearchParams({
+      key: pendingBook.epubKey||'', title: pendingBook.title,
+      author: pendingBook.author, color: pendingBook.color||'',
+      from: window.location.href
+    });
+    window.location.href = 'subscribe.html?' + p.toString();
+  } else {
+    window.location.href = 'subscribe.html';
+  }
+}
+
+function bmAddToLibrary(){
+  if(!pendingBook) return;
+  const inLib = isInLibrary(pendingBook.title);
+  if(inLib) return;
+  addBookToLibrary({...pendingBook, status:'wishlist', rating:0});
+  renderAllSections();
+  // Update button state
+  const elAddLib   = document.getElementById('bm-add-lib');
+  const elAddIcon  = document.getElementById('bm-add-lib-icon');
+  const elAddLabel = document.getElementById('bm-add-lib-label');
+  if(elAddLib)   elAddLib.classList.add('added');
+  if(elAddIcon)  elAddIcon.textContent = '✓';
+  if(elAddLabel) elAddLabel.textContent = 'In Your Library';
+  _showToast('📚 "'+pendingBook.title+'" added to your wishlist!');
+}
+
 
 function openReader(epubKey,title,author,color){
   if(!epubKey){showToast('No epub file for this book yet.');return;}
@@ -1618,28 +1769,48 @@ renderAllSections();
 </style>
 <!-- BOOK-ADDED MODAL -->
 <div class="book-modal-overlay" id="book-modal-overlay" onclick="if(event.target===this)closeBookModal()">
-  <div class="book-modal">
-    <div class="bm-cover" id="bm-cover">
+  <div class="book-modal" style="position:relative;">
+
+    <!-- Close button -->
+    <button class="bm-close-btn" onclick="closeBookModal()">✕</button>
+
+    <!-- LEFT: Book cover -->
+    <div class="bm-left" id="bm-cover">
+      <img class="bm-cover-img" id="bm-cover-img" src="" alt="" style="display:none;">
+      <div class="bm-cover-title" id="bm-cover-title"></div>
+      <div class="bm-cover-author" id="bm-cover-author"></div>
+    </div>
+
+    <!-- RIGHT: Details + actions -->
+    <div class="bm-right">
       <div>
-        <div class="bm-cover-title" id="bm-cover-title"></div>
-        <div class="bm-cover-author" id="bm-cover-author"></div>
+        <div class="bm-book-title" id="bm-book-title"></div>
+        <div class="bm-book-author" id="bm-book-author"></div>
+      </div>
+      <div class="bm-genre-row" id="bm-genre-row"></div>
+      <div class="bm-desc" id="bm-desc"><em>No description available.</em></div>
+
+      <div class="bm-actions">
+        <!-- Premium user: Read Now -->
+        <button class="bm-read-now" id="bm-read-now" style="display:none" onclick="bmReadNow()">
+          📖 Read Now
+        </button>
+        <!-- Registered but not subscribed -->
+        <button class="bm-subscribe-cta" id="bm-subscribe-cta" style="display:none" onclick="bmGoSubscribe()">
+          🔒 Subscribe to Read This Book
+        </button>
+        <!-- Not registered -->
+        <button class="bm-free-trial" id="bm-free-trial" style="display:none" onclick="bmGoTrial()">
+          🎁 Free 30-Day Trial · Register Now
+        </button>
+        <!-- Add to library (wishlist) -->
+        <button class="bm-add-lib" id="bm-add-lib" onclick="bmAddToLibrary()">
+          <span id="bm-add-lib-icon">＋</span>
+          <span id="bm-add-lib-label">Add to Wishlist</span>
+        </button>
       </div>
     </div>
-    <div class="bm-body">
-      <div class="bm-title" id="bm-modal-title">Add to your Library</div>
-      <div class="bm-sub" id="bm-modal-sub">Choose a reading status for this book.</div>
-      <div class="bm-status-label" id="bm-status-label">STATUS</div>
-      <div class="bm-status-row">
-        <button class="bm-status-btn selected" data-status="wishlist" onclick="selectStatus(this)">🔖 Want to Read</button>
-        <button class="bm-status-btn" data-status="reading" onclick="selectStatus(this)">📖 Reading</button>
-        <button class="bm-status-btn" data-status="read" onclick="selectStatus(this)">✅ Read</button>
-      </div>
-      <div class="bm-btns">
-        <button class="bm-cancel" onclick="closeBookModal()" id="bm-cancel-btn">Cancel</button>
-        <button class="bm-add" onclick="confirmAddToLibrary()" id="bm-add-btn">Add to Library</button>
-      </div>
-      <button id="bm-read-btn" onclick="" style="display:none;width:100%;margin-top:.55rem;background:rgba(90,158,111,.18);border:1px solid rgba(90,158,111,.35);border-radius:9px;padding:.55rem;font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:700;color:#7dcea0;cursor:pointer;transition:background .15s;">▶ Read Now</button>
-    </div>
+
   </div>
 </div>
 
