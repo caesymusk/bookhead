@@ -69,7 +69,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .user-card{background:rgba(22,16,10,.9);border:1px solid var(--border);border-radius:14px;padding:1.2rem;display:flex;flex-direction:column;gap:.9rem;transition:border-color .2s,transform .2s;backdrop-filter:blur(6px);}
 .user-card:hover{border-color:rgba(184,148,104,.4);transform:translateY(-2px);}
 .user-card-top{display:flex;align-items:center;gap:.9rem;}
-.user-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:#fff;flex-shrink:0;position:relative;}
+.user-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:#fff;flex-shrink:0;position:relative;overflow:hidden;}
 .user-avatar-status{position:absolute;bottom:0;right:0;width:14px;height:14px;background:var(--green);border-radius:50%;border:2.5px solid var(--surface2);}
 .user-info{flex:1;min-width:0;}
 .user-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--cream);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -524,7 +524,22 @@ function loadAll(){
   db.ref('pb_users').once('value').then(snap=>{
     const all = snap.val()||{};
     allUsers = Object.values(all).filter(u => u.username !== ME.username);
-    renderDiscover();
+
+    // Batch load all profiles to get avatars in one call
+    db.ref('pb_profile').once('value').then(profileSnap=>{
+      const profiles = profileSnap.val()||{};
+      allUsers = allUsers.map(u=>{
+        const uk = u.username.replace(/\./g,'_');
+        const p  = profiles[uk];
+        if(p){
+          if(p.avatar) u.avatar = p.avatar;
+          if(p.name)   u.name   = p.name;
+          if(p.bio)    u.bio    = p.bio;
+        }
+        return u;
+      });
+      renderDiscover();
+    }).catch(()=>{ renderDiscover(); });
   }).catch(()=>{});
 
   // 2. Load my friends list
@@ -589,7 +604,7 @@ function buildUserCard(user, extraActions){
 
   return `<div class="user-card" id="ucard-${uKey(user.username)}">
     <div class="user-card-top" style="cursor:pointer" onclick="window.location='bookshelf_profile.html?user='+encodeURIComponent('${user.username}')">
-      <div class="user-avatar" style="background:${color}" id="av-${uKey(user.username)}" data-username="${user.username}">${(user.name||user.username).charAt(0).toUpperCase()}</div>
+      <div class="user-avatar" style="background:${color}" id="av-${uKey(user.username)}" data-username="${user.username}">${user.avatar ? `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : (user.name||user.username).charAt(0).toUpperCase()}</div>
       <div class="user-info">
         <div class="user-name">${user.name||user.username}</div>
         <div class="user-handle">@${user.username}</div>
@@ -626,7 +641,6 @@ function renderDiscover(){
     grid.innerHTML = searchQuery
       ? `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No users found</div><div class="empty-sub">No one with that username or name. Try a different search.</div></div>`
       : `<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No other readers yet</div><div class="empty-sub">Be the first to invite friends to Pagebound!</div></div>`;
-  setTimeout(loadAvatarsForVisible, 50);
     return;
   }
 
@@ -668,7 +682,6 @@ function renderFriends(){
       <button class="btn-add-friend friends" style="cursor:default" disabled>✓ Friends</button>
       <button onclick="removeFriend('${u.username}')" style="background:rgba(155,63,42,.12);border:1px solid rgba(155,63,42,.3);color:#e07060;border-radius:9px;padding:.52rem .7rem;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;transition:background .18s;" onmouseover="this.style.background='rgba(155,63,42,.25)'" onmouseout="this.style.background='rgba(155,63,42,.12)'">✕</button>
     `);
-  setTimeout(loadAvatarsForVisible, 50);
   }).join('');
 }
 
@@ -685,7 +698,6 @@ function renderRequests(){
   }
   grid.innerHTML = reqs.map(req=>{
     const u = { username: req.username, name: req.name, _profile:{}, _libCount:0 };
-  setTimeout(loadAvatarsForVisible, 50);
     const actions = `
       <button class="btn-add-friend" onclick="acceptRequest('${req.username}',this)" style="background:var(--green)">✓ Accept</button>
       <button onclick="declineRequest('${req.username}')" style="background:rgba(155,63,42,.12);border:1px solid rgba(155,63,42,.3);color:#e07060;border-radius:9px;padding:.52rem .7rem;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;">✕ Decline</button>
@@ -998,26 +1010,7 @@ loadAll();
 })();
 
 
-/* ── Load real avatars from pb_profile after cards render ── */
-async function loadAvatarsForVisible(){
-  if(!db) return;
-  const avatarEls = document.querySelectorAll('[data-username][id^="av-"]');
-  for(const el of avatarEls){
-    if(el.dataset.avatarLoaded) continue;
-    el.dataset.avatarLoaded = '1';
-    const username = el.dataset.username;
-    const uk = username.replace(/\./g,'_');
-    try{
-      const snap = await db.ref('pb_profile/'+uk+'/avatar').once('value');
-      const avatar = snap.val();
-      if(avatar){
-        el.style.overflow = 'hidden';
-        el.style.padding = '0';
-        el.innerHTML = '<img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      }
-    }catch(e){}
-  }
-}
+/* avatars loaded from pb_profile batch fetch above */
 
 </script>
 
