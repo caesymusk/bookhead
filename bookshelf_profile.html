@@ -1220,7 +1220,34 @@ function applyProfileToUI(p){
       else{ userProfile.memberSince=new Date().getFullYear(); db.ref(profileKey(ME.username)).set(userProfile).catch(()=>{}); }
     }).catch(()=>{ applyProfileToUI(userProfile); });
   }
+  // Load friends count (people I follow)
+  loadFriendsCount();
 })();
+
+function loadFriendsCount(){
+  if(!db || !SESSION) return;
+  const uk = ME.username.replace(/\./g,'_');
+
+  // Following count = entries in pb_friends/myKey
+  db.ref('pb_friends/'+uk).once('value').then(snap=>{
+    const data = snap.val()||{};
+    const count = Object.keys(data).length;
+    const el = document.getElementById('stat-following');
+    if(el) el.textContent = count;
+  }).catch(()=>{});
+
+  // Followers count = how many other users have me in their pb_friends
+  // We store this as pb_followers/{uk} for efficiency
+  db.ref('pb_followers/'+uk).once('value').then(snap=>{
+    const data = snap.val()||{};
+    const count = Object.keys(data).length;
+    const el = document.getElementById('stat-followers');
+    if(el) el.textContent = count;
+  }).catch(()=>{
+    // Fallback: count manually (slow but works)
+    document.getElementById('stat-followers') && (document.getElementById('stat-followers').textContent = '0');
+  });
+}
 
 /* ════════════════════════════════════════════
    LIBRARY
@@ -1238,9 +1265,30 @@ if(db && SESSION && !IS_VISITOR){
     const fb=snap.val();
     if(fb && Array.isArray(fb) && fb.length>0){ books=fb; localStorage.setItem(LS_LIB_KEY,JSON.stringify(books)); }
     else { books=[]; localStorage.setItem(LS_LIB_KEY,'[]'); }
-    updateBookCount(); updateAboutStats();
-    populateReviewBookPicker();
-    if(document.getElementById('panel-library').classList.contains('active')) renderBooks();
+
+    // Enrich books with coverImage + desc from pb_catalogue
+    db.ref('pb_catalogue').once('value').then(catSnap=>{
+      const cat = catSnap.val()||{};
+      const catArr = Object.values(cat);
+      books = books.map(b=>{
+        const match = catArr.find(c=>c.title && c.title.toLowerCase()===b.title.toLowerCase());
+        if(match){
+          if(match.coverImage && !b.coverImage) b.coverImage = match.coverImage;
+          if(match.desc && !b.desc) b.desc = match.desc;
+          if(match.color && !b.color) b.color = match.color;
+          if(match.epubKey && !b.epubKey) b.epubKey = match.epubKey;
+        }
+        return b;
+      });
+      localStorage.setItem(LS_LIB_KEY, JSON.stringify(books));
+      updateBookCount(); updateAboutStats();
+      populateReviewBookPicker();
+      if(document.getElementById('panel-library').classList.contains('active')) renderBooks();
+    }).catch(()=>{
+      updateBookCount(); updateAboutStats();
+      populateReviewBookPicker();
+      if(document.getElementById('panel-library').classList.contains('active')) renderBooks();
+    });
   }).catch(()=>{ books=getLibrary()||[]; });
 }
 
@@ -2298,12 +2346,16 @@ function toggleFollow(){
   const isFollowing = btn.textContent.includes('Following');
   if(isFollowing){
     db.ref('pb_friends/'+mk+'/'+tk).remove().then(()=>{
+      // Also remove from pb_followers
+      db.ref('pb_followers/'+tk+'/'+mk).remove().catch(()=>{});
       btn.textContent = '➕ Follow';
       btn.style.cssText = '';
       showToast('Unfollowed @'+targetUsername);
     });
   } else {
     db.ref('pb_friends/'+mk+'/'+tk).set(Date.now()).then(()=>{
+      // Also write to pb_followers so target's follower count is accurate
+      db.ref('pb_followers/'+tk+'/'+mk).set(Date.now()).catch(()=>{});
       btn.textContent = '✓ Following';
       btn.style.background = 'rgba(90,158,111,.2)';
       btn.style.color = 'var(--green)';
