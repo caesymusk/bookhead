@@ -1215,6 +1215,12 @@ function addBookToLibrary(book){const lib=getLibrary();if(!lib.find(b=>b.title==
 
 /* BOOK MODAL */
 let pendingBook=null,pendingStatus='wishlist';
+function closeBookModal(){
+  document.getElementById('book-modal-overlay').classList.remove('open');
+  document.body.style.overflow='';
+  pendingBook=null;
+}
+
 function openBookModal(title, author, color, epubKey){
   const sess   = _getSession();
   const isPrem = sess ? localStorage.getItem('pb_premium_'+sess.username.replace(/\./g,'_'))==='true' : false;
@@ -1704,6 +1710,9 @@ function showToast(msg) {
     t.style.transform = 'translateX(-50%) translateY(10px)';
   }, 3000);
 }
+
+// Close book modal on Escape
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeBookModal(); });
 
 initAuth();
 renderAllSections();
