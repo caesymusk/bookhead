@@ -9,6 +9,9 @@
 /* ════════════════════════════════════════════
    PREMIUM SYSTEM
 ════════════════════════════════════════════ */
+/* _getSession must be defined first — called by initPremium on load */
+function _getSession(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
+
 let _isPremium   = false;
 let _pmPlan      = 'annual';
 
@@ -1185,7 +1188,6 @@ const BOOK_GENRES={'Babel':'fantasy','Tomorrow, and Tomorrow':'literary-fiction'
 let currentCategory='all';
 
 /* ── FIREBASE CONFIG ── */
-function _getSession(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
 function _libKey(u){ return 'pb_libraries/' + u.replace(/\./g,'_'); }
 function _lsKey(){ const s=_getSession(); return s ? 'pb_library_'+s.username : 'pb_library'; }
 
