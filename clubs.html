@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+(function(){
+  const c={apiKey:"AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",authDomain:"casey-80b19.firebaseapp.com",
+  databaseURL:"https://casey-80b19-default-rtdb.firebaseio.com",projectId:"casey-80b19",
+  storageBucket:"casey-80b19.firebasestorage.app",messagingSenderId:"1084195161725",
+  appId:"1:1084195161725:web:c4db255376c0aaf25d5314"};
+  if(typeof firebase!=='undefined'&&!firebase.apps.length) firebase.initializeApp(c);
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pagebound — Book Clubs</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
-/* Firebase init */
-(function(){
-  const cfg={apiKey:"AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",authDomain:"casey-80b19.firebaseapp.com",databaseURL:"https://casey-80b19-default-rtdb.firebaseio.com",projectId:"casey-80b19",storageBucket:"casey-80b19.firebasestorage.app",messagingSenderId:"1084195161725",appId:"1:1084195161725:web:c4db255376c0aaf25d5314"};
-  if(typeof firebase!=='undefined'&&!firebase.apps.length) firebase.initializeApp(cfg);
-})();
-</script>
-
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -30,1085 +33,7 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
 /* ── NAVBAR ── */
-.navbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(6,4,8,.97);border-bottom:1px solid rgba(184,148,104,.2);backdrop-filter:blur(16px);}
-.nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:var(--amber-light);text-decoration:none;line-height:1;}
-.nav-logo em{font-style:normal;font-size:.56rem;display:block;color:var(--tan-dim);letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
-.nav-center{display:flex;gap:1.8rem;}
-.nav-center a{color:var(--tan);text-decoration:none;font-size:.84rem;font-weight:500;opacity:.7;transition:opacity .2s,color .2s;}
-.nav-center a:hover{opacity:1;color:var(--cream);}
-.nav-center a.active{opacity:1;color:var(--amber-light);}
-.nav-right{display:flex;align-items:center;gap:.9rem;}
-
-/* Profile pill */
-.profile-dropdown-wrap{position:relative;}
-.profile-pill{display:flex;align-items:center;gap:.55rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:.28rem .75rem .28rem .28rem;cursor:pointer;transition:background .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}
-.profile-pill:hover{background:rgba(255,255,255,.09);border-color:rgba(184,148,104,.3);}
-.pp-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;}
-.pp-info{display:flex;flex-direction:column;line-height:1.2;}
-.pp-name{font-size:.8rem;font-weight:600;color:var(--cream);}
-.pp-sub{font-size:.63rem;color:var(--text-dim);}
-.pp-arrow{font-size:1.1rem;color:var(--text-dim);transition:transform .2s;}
-.profile-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(18,12,8,.97);border:1px solid rgba(184,148,104,.22);border-radius:14px;width:230px;box-shadow:0 16px 48px rgba(0,0,0,.7);backdrop-filter:blur(18px);overflow:hidden;opacity:0;pointer-events:none;transform:translateY(-8px) scale(.97);transform-origin:top right;transition:opacity .2s,transform .2s;z-index:400;}
-.profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
-.dd-header{padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(184,148,104,.15);}
-.dd-uname{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--cream);line-height:1.2;}
-.dd-uhandle{font-size:.68rem;color:var(--amber);margin-top:.12rem;}
-.dd-section{padding:.35rem 0;}
-.dd-section+.dd-section{border-top:1px solid rgba(184,148,104,.1);}
-.dd-item{display:flex;align-items:center;gap:.65rem;width:100%;background:none;border:none;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;color:var(--text-dim);cursor:pointer;text-decoration:none;transition:background .15s,color .15s;text-align:left;-webkit-tap-highlight-color:transparent;}
-.dd-item:hover{background:rgba(184,148,104,.1);color:var(--cream);}
-.dd-item .dd-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0;}
-.dd-item.danger{color:#e07060;}
-.dd-item.danger:hover{background:rgba(155,63,42,.15);color:#e08070;}
-.dd-item.highlight{color:var(--amber);}
-.dd-item.highlight:hover{background:rgba(212,137,60,.12);color:var(--amber-light);}
-.dd-lang-row{display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;}
-.dd-lang-label{font-size:.78rem;color:var(--text-dim);display:flex;align-items:center;gap:.5rem;}
-.dd-lang-toggle{display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:7px;overflow:hidden;}
-.dd-lang-btn{background:none;border:none;padding:.28rem .65rem;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
-.dd-lang-btn.active{background:var(--amber);color:var(--bg);}
-.dd-lang-btn:not(.active):hover{background:rgba(255,255,255,.08);color:var(--cream);}
-
-/* hamburger */
-.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;cursor:pointer;background:none;border:none;padding:4px;-webkit-tap-highlight-color:transparent;}
-.hamburger span{display:block;height:2px;background:var(--cream);border-radius:2px;transition:transform .3s,opacity .3s;}
-.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-.hamburger.open span:nth-child(2){opacity:0;}
-.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-.mobile-menu{position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,9,6,.98);backdrop-filter:blur(16px);z-index:250;padding:1rem 1.5rem 2rem;display:none;flex-direction:column;border-bottom:1px solid var(--border);}
-.mobile-menu.open{display:flex;}
-.mobile-menu a{color:var(--tan);text-decoration:none;font-size:.98rem;font-weight:500;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.06);transition:color .2s;display:flex;align-items:center;gap:.6rem;}
-.mobile-menu a:last-child{border-bottom:none;}
-.mobile-menu a.active,.mobile-menu a:hover{color:var(--amber-light);}
-.mobile-menu-lang{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.06);}
-.mobile-menu-lang-label{font-size:.82rem;color:var(--text-dim);display:flex;align-items:center;gap:.5rem;}
-
-/* bottom nav */
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;height:var(--bnav-h);background:rgba(13,9,6,.97);border-top:1px solid rgba(184,148,104,.2);padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around;}
-.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:#5a4a30;font-size:.57rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.4rem .5rem;min-width:54px;-webkit-tap-highlight-color:transparent;transition:color .2s;}
-.bnav-icon{font-size:1.25rem;line-height:1;}
-.bnav-item.active{color:#f0a84e;}
-.bnav-item:hover{color:var(--amber);}
-
-/* settings / sign-out modals */
-.nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(6px);padding:1rem;}
-.nav-overlay.open{display:flex;}
-.nav-modal{background:#1e160e;border:1px solid rgba(184,148,104,.22);border-radius:18px;width:100%;max-width:400px;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.85);animation:navModalIn .24s ease;position:relative;overflow:hidden;max-height:90vh;overflow-y:auto;}
-@keyframes navModalIn{from{transform:translateY(18px);opacity:0;}to{transform:none;opacity:1;}}
-.nav-modal-x{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);color:var(--text-dim);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;}
-.nav-modal-x:hover{background:rgba(255,255,255,.14);}
-.nav-modal-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--cream);margin-bottom:1.3rem;display:flex;align-items:center;justify-content:space-between;}
-.settings-sec{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#5a4a30;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid rgba(184,148,104,.15);}
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid rgba(184,148,104,.07);}
-.settings-row:last-of-type{border-bottom:none;}
-.settings-label{font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:.5rem;}
-.settings-desc{font-size:.68rem;color:var(--text-dim);padding-left:1.5rem;margin-top:.05rem;}
-.tog-wrap{position:relative;width:38px;height:21px;flex-shrink:0;cursor:pointer;}
-.tog-wrap input{opacity:0;width:0;height:0;position:absolute;}
-.tog-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid rgba(184,148,104,.2);border-radius:21px;transition:background .25s;}
-.tog-wrap input:checked~.tog-track{background:var(--amber);}
-.tog-thumb{position:absolute;top:2px;left:2px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .25s;pointer-events:none;}
-.tog-wrap input:checked~.tog-thumb{transform:translateX(17px);}
-.btn-nav-cancel{background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);}
-.btn-nav-save{background:var(--amber);border:none;padding:.5rem 1.3rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:#060408;}
-.btn-nav-signout{display:flex;align-items:center;gap:.6rem;width:100%;background:rgba(155,63,42,.1);border:1px solid rgba(155,63,42,.28);color:#e07060;padding:.62rem 1rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;margin-top:.5rem;}
-.btn-nav-signout:hover{background:rgba(155,63,42,.2);}
-.so-inner{text-align:center;}
-.so-emoji{font-size:2.3rem;margin-bottom:.75rem;}
-.so-ttl{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:.38rem;}
-.so-sub{font-size:.82rem;color:var(--text-dim);line-height:1.55;margin-bottom:1.4rem;}
-.so-btns{display:flex;gap:.7rem;}
-.so-cancel{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.58rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;color:var(--text);}
-.so-confirm{flex:1;background:var(--rust);border:none;padding:.58rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;color:#fff;}
-.nav-toast{position:fixed;bottom:calc(var(--bnav-h) + 1rem);left:50%;transform:translateX(-50%) translateY(10px);background:var(--amber);color:#060408;border-radius:10px;padding:.52rem 1.4rem;font-size:.8rem;font-weight:700;font-family:'DM Sans',sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .28s,transform .28s;pointer-events:none;z-index:600;white-space:nowrap;}
-.nav-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-/* ── PAGE LAYOUT ── */
-.page{max-width:1000px;margin:0 auto;padding:2.4rem 1.4rem 6rem;}
-
-/* ── PAGE HEADER ── */
-.page-header{margin-bottom:2rem;}
-.page-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--cream);line-height:1.15;margin-bottom:.4rem;}
-.page-sub{font-size:.88rem;color:var(--text-dim);line-height:1.6;}
-
-/* ── TABS ── */
-.tabs{display:flex;gap:0;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:.3rem;margin-bottom:1.8rem;width:fit-content;}
-.tab-btn{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:600;color:var(--text-dim);padding:.5rem 1.1rem;border-radius:9px;cursor:pointer;transition:background .18s,color .18s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:.4rem;white-space:nowrap;}
-.tab-btn.active{background:var(--amber);color:var(--bg);}
-.tab-btn:not(.active):hover{background:rgba(255,255,255,.07);color:var(--cream);}
-.tab-badge{background:rgba(255,255,255,.15);border-radius:20px;padding:.05rem .45rem;font-size:.65rem;font-weight:700;}
-.tab-btn.active .tab-badge{background:rgba(0,0,0,.2);}
-
-/* ── TOOLBAR (search + create) ── */
-.toolbar{display:flex;gap:.8rem;margin-bottom:2rem;flex-wrap:wrap;}
-.search-wrap{flex:1;min-width:200px;position:relative;}
-.search-icon{position:absolute;left:.95rem;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none;opacity:.45;}
-.search-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;padding:.72rem 1.1rem .72rem 2.8rem;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;}
-.search-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-glow);}
-.search-input::placeholder{color:var(--text-muted);}
-.btn-create{background:var(--amber);color:var(--bg);border:none;padding:.72rem 1.4rem;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s,transform .1s;white-space:nowrap;display:flex;align-items:center;gap:.5rem;-webkit-tap-highlight-color:transparent;}
-.btn-create:hover{background:var(--amber-light);}
-.btn-create:active{transform:scale(.97);}
-
-/* ── FILTER CHIPS ── */
-.filter-chips{display:flex;gap:.55rem;margin-bottom:1.8rem;flex-wrap:wrap;}
-.chip{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:.32rem .85rem;font-size:.76rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background .15s,border-color .15s,color .15s;-webkit-tap-highlight-color:transparent;}
-.chip:hover{background:rgba(255,255,255,.09);color:var(--cream);}
-.chip.active{background:rgba(212,137,60,.15);border-color:rgba(212,137,60,.5);color:var(--amber-light);}
-
-/* ── CLUBS GRID ── */
-.clubs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem;}
-
-/* ── CLUB CARD ── */
-.club-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s;position:relative;}
-.club-card:hover{border-color:rgba(212,137,60,.4);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.5);}
-.club-card:active{transform:scale(.98);}
-.club-banner{height:90px;position:relative;display:flex;align-items:flex-end;padding:.7rem .9rem;overflow:hidden;}
-.club-banner-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(22,16,10,.95) 10%,transparent 80%);}
-.club-emoji{position:absolute;top:.7rem;right:.9rem;font-size:1.8rem;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));}
-.club-privacy-badge{position:absolute;top:.7rem;left:.9rem;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:.15rem .55rem;font-size:.6rem;font-weight:700;color:rgba(245,237,224,.7);text-transform:uppercase;letter-spacing:.07em;}
-.club-body{padding:.9rem 1rem 1rem;}
-.club-name{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);line-height:1.25;margin-bottom:.22rem;}
-.club-tagline{font-size:.76rem;color:var(--text-dim);line-height:1.45;margin-bottom:.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.club-meta{display:flex;align-items:center;gap:.9rem;margin-bottom:.9rem;flex-wrap:wrap;}
-.club-meta-item{display:flex;align-items:center;gap:.32rem;font-size:.72rem;color:var(--text-muted);}
-.club-meta-item span:first-child{font-size:.85rem;}
-.club-current-book{background:rgba(212,137,60,.07);border:1px solid rgba(212,137,60,.15);border-radius:9px;padding:.5rem .7rem;display:flex;align-items:center;gap:.6rem;margin-bottom:.9rem;}
-.club-book-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);margin-bottom:.08rem;}
-.club-book-title{font-size:.78rem;font-weight:600;color:var(--cream);line-height:1.2;}
-.club-book-author{font-size:.66rem;color:var(--text-dim);}
-.club-book-cover{width:28px;height:42px;border-radius:2px 5px 5px 2px;flex-shrink:0;box-shadow:2px 3px 10px rgba(0,0,0,.6);position:relative;}
-.club-book-cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:rgba(0,0,0,.3);}
-.club-footer{display:flex;align-items:center;gap:.55rem;}
-.btn-join{flex:1;background:var(--amber);border:none;border-radius:9px;padding:.52rem .8rem;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;color:var(--bg);cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;}
-.btn-join:hover{background:var(--amber-light);}
-.btn-join.joined{background:rgba(90,158,111,.15);border:1px solid rgba(90,158,111,.35);color:#7ecf9e;}
-.btn-join.joined:hover{background:rgba(90,158,111,.25);}
-.btn-join.pending{background:rgba(184,148,104,.1);border:1px solid var(--border);color:var(--text-dim);cursor:default;}
-.btn-view-club{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;padding:.52rem .8rem;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
-.btn-view-club:hover{background:rgba(255,255,255,.1);color:var(--cream);}
-
-/* ── MY CLUB card state ── */
-.club-card.mine{border-color:rgba(212,137,60,.28);}
-.club-card.mine .club-name::after{content:' ✦';font-size:.6rem;color:var(--amber);vertical-align:middle;}
-
-/* ── MEMBER AVATARS ── */
-.member-avatars{display:flex;margin-left:auto;}
-.member-av{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);margin-left:-7px;font-size:.55rem;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-family:'Playfair Display',serif;}
-.member-av:first-child{margin-left:0;}
-.member-av-more{background:rgba(255,255,255,.1);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:.52rem;}
-
-/* ── EMPTY STATE ── */
-.empty-state{text-align:center;padding:4rem 1rem;color:var(--text-dim);}
-.empty-icon{font-size:3rem;margin-bottom:.9rem;opacity:.5;}
-.empty-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--cream);margin-bottom:.5rem;}
-.empty-sub{font-size:.84rem;line-height:1.6;max-width:300px;margin:0 auto .5rem;}
-
-/* ── SECTION LABEL ── */
-.section-label{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--cream);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;}
-.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
-
-/* ── CLUB DETAIL MODAL ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:flex-end;justify-content:center;z-index:600;backdrop-filter:blur(8px);}
-.overlay.open{display:flex;}
-.club-detail{background:#160f0a;border:1px solid rgba(184,148,104,.22);border-radius:22px 22px 0 0;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;animation:slideUp .28s ease;}
-@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-.cd-handle{width:40px;height:4px;background:rgba(255,255,255,.15);border-radius:4px;margin:1rem auto .5rem;}
-.cd-banner{height:160px;position:relative;display:flex;align-items:flex-end;padding:1rem 1.4rem;overflow:hidden;}
-.cd-banner-overlay{position:absolute;inset:0;background:linear-gradient(to top,#160f0a 5%,rgba(22,15,10,.3) 60%,transparent);}
-.cd-banner-emoji{position:absolute;top:1.2rem;right:1.4rem;font-size:3.5rem;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));}
-.cd-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--cream);position:relative;z-index:1;}
-.cd-body{padding:1.2rem 1.4rem 2rem;}
-.cd-tagline{font-size:.88rem;color:var(--text-dim);line-height:1.6;margin-bottom:1.2rem;}
-.cd-stats-row{display:flex;gap:1.5rem;margin-bottom:1.3rem;flex-wrap:wrap;}
-.cd-stat{display:flex;flex-direction:column;}
-.cd-stat-val{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--cream);}
-.cd-stat-label{font-size:.66rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:.05rem;}
-.cd-section-title{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.13em;color:var(--text-muted);margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:1px solid rgba(184,148,104,.12);}
-.cd-current-book{background:rgba(212,137,60,.07);border:1px solid rgba(212,137,60,.18);border-radius:12px;padding:.85rem 1rem;display:flex;align-items:center;gap:.9rem;margin-bottom:1.3rem;}
-.cd-book-cover{width:38px;height:57px;border-radius:3px 7px 7px 3px;flex-shrink:0;box-shadow:3px 4px 14px rgba(0,0,0,.7);position:relative;}
-.cd-book-cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:rgba(0,0,0,.3);}
-.cd-book-info{flex:1;}
-.cd-book-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);margin-bottom:.2rem;}
-.cd-book-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--cream);line-height:1.25;}
-.cd-book-author{font-size:.74rem;color:var(--text-dim);margin-top:.12rem;}
-.cd-book-progress{margin-top:.5rem;}
-.cd-progress-bar{background:rgba(255,255,255,.08);border-radius:6px;height:5px;overflow:hidden;margin-bottom:.25rem;}
-.cd-progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--amber),var(--amber-light));}
-.cd-progress-label{font-size:.65rem;color:var(--text-muted);}
-.cd-members-grid{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1.3rem;}
-.cd-member-chip{display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:.28rem .7rem .28rem .28rem;}
-.cd-mem-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff;font-family:'Playfair Display',serif;}
-.cd-mem-name{font-size:.73rem;color:var(--text-dim);}
-.cd-schedule{background:var(--surface2);border-radius:12px;padding:.9rem 1rem;margin-bottom:1.4rem;}
-.cd-sched-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(255,255,255,.05);}
-.cd-sched-row:last-child{border-bottom:none;}
-.cd-sched-date{font-size:.75rem;color:var(--text-dim);}
-.cd-sched-event{font-size:.8rem;color:var(--text);font-weight:500;}
-.cd-sched-tag{font-size:.6rem;background:rgba(212,137,60,.15);color:var(--amber);border-radius:5px;padding:.1rem .45rem;font-weight:700;}
-.cd-actions{display:flex;gap:.7rem;margin-top:1.5rem;}
-.btn-cd-join{flex:1;background:var(--amber);border:none;border-radius:11px;padding:.7rem 1rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;color:var(--bg);cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;}
-.btn-cd-join:hover{background:var(--amber-light);}
-.btn-cd-join.joined{background:rgba(90,158,111,.15);border:1px solid rgba(90,158,111,.35);color:#7ecf9e;}
-.btn-cd-share{background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:11px;padding:.7rem 1.1rem;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s;}
-.btn-cd-share:hover{background:rgba(255,255,255,.12);color:var(--cream);}
-.cd-close{position:absolute;top:1rem;right:1.2rem;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);color:var(--cream);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:background .2s;}
-.cd-close:hover{background:rgba(255,255,255,.12);}
-
-/* ── CREATE CLUB MODAL ── */
-.create-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:700;backdrop-filter:blur(8px);padding:1rem;}
-.create-overlay.open{display:flex;}
-.create-modal{background:#1a110a;border:1px solid rgba(184,148,104,.22);border-radius:18px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:2rem;box-shadow:0 24px 70px rgba(0,0,0,.9);animation:navModalIn .26s ease;position:relative;}
-.cm-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--cream);margin-bottom:1.5rem;}
-.cm-x{position:absolute;top:1.2rem;right:1.2rem;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text-dim);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;}
-.cm-x:hover{background:rgba(255,255,255,.14);}
-.cm-field{margin-bottom:1.1rem;}
-.cm-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-bottom:.45rem;display:block;}
-.cm-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:.65rem .9rem;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;}
-.cm-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-glow);}
-.cm-input::placeholder{color:var(--text-muted);}
-textarea.cm-input{resize:vertical;min-height:80px;line-height:1.5;}
-.cm-emoji-grid{display:flex;flex-wrap:wrap;gap:.45rem;}
-.cm-emoji-btn{width:36px;height:36px;background:rgba(255,255,255,.05);border:2px solid transparent;border-radius:9px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s;-webkit-tap-highlight-color:transparent;}
-.cm-emoji-btn:hover{background:rgba(255,255,255,.1);}
-.cm-emoji-btn.active{border-color:var(--amber);background:rgba(212,137,60,.12);}
-.cm-genre-grid{display:flex;flex-wrap:wrap;gap:.4rem;}
-.cm-genre-chip{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:.28rem .75rem;font-size:.75rem;color:var(--text-dim);cursor:pointer;transition:background .15s,border-color .15s,color .15s;-webkit-tap-highlight-color:transparent;}
-.cm-genre-chip:hover{background:rgba(255,255,255,.09);}
-.cm-genre-chip.active{background:rgba(212,137,60,.15);border-color:rgba(212,137,60,.5);color:var(--amber-light);}
-.cm-privacy-row{display:flex;gap:.6rem;}
-.cm-priv-btn{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;color:var(--text-dim);cursor:pointer;text-align:center;transition:background .15s,border-color .15s,color .15s;}
-.cm-priv-btn.active{background:rgba(212,137,60,.12);border-color:rgba(212,137,60,.45);color:var(--amber-light);}
-.cm-actions{display:flex;gap:.7rem;margin-top:1.5rem;}
-.btn-cm-cancel{background:rgba(255,255,255,.06);border:1px solid var(--border);padding:.6rem 1.1rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--text);}
-.btn-cm-create{flex:1;background:var(--amber);border:none;padding:.6rem 1.1rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:700;color:var(--bg);}
-.btn-cm-create:hover{background:var(--amber-light);}
-
-/* ── RESPONSIVE ── */
-@media(max-width:860px){
-  .nav-center,.nav-search{display:none;}
-  .hamburger{display:flex;}
-  .pp-info,.pp-arrow{display:none;}
-  .profile-pill{padding:.28rem;border-radius:50%;}
-}
-@media(max-width:600px){
-  body{padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom));}
-  .bottom-nav{display:flex;}
-  .clubs-grid{grid-template-columns:1fr;}
-  .page{padding:1.8rem 1rem 6rem;}
-  .cd-banner{height:130px;}
-  .create-modal{padding:1.5rem;}
-}
-</style>
-</head>
-<body>
-
-<!-- ══ NAVBAR ══ -->
-<nav class="navbar" id="_navbar">
-  <a class="nav-logo" href="index.html">Pagebound<em>Social for Readers</em></a>
-  <div class="nav-center">
-    <a href="index.html">Home</a>
-    <a href="discover.html">Discover</a>
-    <a href="clubs.html" class="active">📚 Clubs</a>
-    <a href="friends.html">Friends</a>
-    <a href="seasonpass.html">⚡ Season Pass</a>
-  </div>
-  <div class="nav-right">
-    <div class="profile-dropdown-wrap" id="_dd-wrap">
-      <button class="profile-pill" id="_pp-btn" onclick="_toggleDD(event)">
-        <div class="pp-avatar" id="_pp-avatar">?</div>
-        <div class="pp-info" id="_pp-info">
-          <div class="pp-name" id="_pp-name">Loading…</div>
-          <div class="pp-sub" id="_pp-sub"></div>
-        </div>
-        <span class="pp-arrow">›</span>
-      </button>
-      <div class="profile-dropdown" id="_dd">
-        <div id="_dd-in">
-          <div class="dd-header">
-            <div id="_dd-avatar" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff;font-weight:700;flex-shrink:0;border:2px solid rgba(212,137,60,.35);overflow:hidden;"></div>
-            <div>
-              <div class="dd-uname" id="_dd-name"></div>
-              <div class="dd-uhandle" id="_dd-handle"></div>
-            </div>
-          </div>
-          <div class="dd-section">
-            <a class="dd-item" href="bookshelf_profile.html"><span class="dd-icon">👤</span> My Profile</a>
-            <a class="dd-item" href="clubs.html"><span class="dd-icon">📚</span> Clubs</a>
-            <a class="dd-item" href="friends.html"><span class="dd-icon">👥</span> Friends</a>
-            <a class="dd-item" href="seasonpass.html"><span class="dd-icon">⚡</span> Season Pass</a>
-          </div>
-          <div class="dd-section">
-            <div class="dd-lang-row">
-              <span class="dd-lang-label">🌐 Language</span>
-              <div class="dd-lang-toggle">
-                <button class="dd-lang-btn active" id="_lang-en" onclick="_setLang('en',event)">EN</button>
-                <button class="dd-lang-btn" id="_lang-es" onclick="_setLang('es',event)">ES</button>
-              </div>
-            </div>
-          </div>
-          <div class="dd-section">
-            <button class="dd-item" onclick="_openSettings();_closeDD()"><span class="dd-icon">⚙️</span> Settings</button>
-            <button class="dd-item danger" onclick="_openSignOut();_closeDD()"><span class="dd-icon">🚪</span> Sign Out</button>
-          </div>
-        </div>
-        <div id="_dd-out" style="display:none">
-          <div class="dd-section">
-            <a class="dd-item highlight" href="login.html"><span class="dd-icon">🔑</span> Sign In</a>
-          </div>
-          <div class="dd-section">
-            <div class="dd-lang-row">
-              <span class="dd-lang-label">🌐 Language</span>
-              <div class="dd-lang-toggle">
-                <button class="dd-lang-btn active" id="_lang-en-lo" onclick="_setLang('en',event)">EN</button>
-                <button class="dd-lang-btn" id="_lang-es-lo" onclick="_setLang('es',event)">ES</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <button class="hamburger" id="_hbg" onclick="_toggleMenu()">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-</nav>
-
-<!-- Mobile menu -->
-<div class="mobile-menu" id="_mob">
-  <a href="index.html">🏠 Home</a>
-  <a href="discover.html">🔍 Discover</a>
-  <a href="clubs.html" class="active">📚 Clubs</a>
-  <a href="friends.html">👥 Friends</a>
-  <a href="seasonpass.html">⚡ Season Pass</a>
-  <div class="mobile-menu-lang">
-    <span class="mobile-menu-lang-label">🌐 Language</span>
-    <div class="dd-lang-toggle">
-      <button class="dd-lang-btn active" id="_mlang-en" onclick="_setLang('en',event)">EN</button>
-      <button class="dd-lang-btn" id="_mlang-es" onclick="_setLang('es',event)">ES</button>
-    </div>
-  </div>
-</div>
-
-<!-- SETTINGS MODAL -->
-<div class="nav-overlay" id="_settings-overlay" onclick="if(event.target===this)_closeSettings()">
-  <div class="nav-modal">
-    <button class="nav-modal-x" onclick="_closeSettings()">✕</button>
-    <div class="nav-modal-title">⚙️ Settings</div>
-    <div class="settings-sec">Notifications</div>
-    <div class="settings-row"><div><div class="settings-label">🔔 Club activity</div><div class="settings-desc">New messages and meetings</div></div><label class="tog-wrap"><input type="checkbox" checked><div class="tog-track"></div><div class="tog-thumb"></div></label></div>
-    <div class="settings-row"><div><div class="settings-label">📚 Reading reminders</div><div class="settings-desc">Stay on track with the group</div></div><label class="tog-wrap"><input type="checkbox" checked><div class="tog-track"></div><div class="tog-thumb"></div></label></div>
-    <div class="settings-row"><div><div class="settings-label">👥 New member alerts</div></div><label class="tog-wrap"><input type="checkbox"><div class="tog-track"></div><div class="tog-thumb"></div></label></div>
-    <div class="settings-sec" style="margin-top:1rem;">Privacy</div>
-    <div class="settings-row"><div><div class="settings-label">🔒 Private profile</div></div><label class="tog-wrap"><input type="checkbox"><div class="tog-track"></div><div class="tog-thumb"></div></label></div>
-    <button class="btn-nav-signout" onclick="_closeSettings();_openSignOut()">🚪 Sign Out</button>
-    <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.2rem;">
-      <button class="btn-nav-cancel" onclick="_closeSettings()">Cancel</button>
-      <button class="btn-nav-save" onclick="_saveSettings()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- SIGN OUT MODAL -->
-<div class="nav-overlay" id="_so-overlay" onclick="if(event.target===this)_closeSignOut()">
-  <div class="nav-modal so-inner">
-    <div class="so-emoji">👋</div>
-    <div class="so-ttl">Sign out of Pagebound?</div>
-    <div class="so-sub">You'll need to sign back in to access your clubs and reading progress.</div>
-    <div class="so-btns">
-      <button class="so-cancel" onclick="_closeSignOut()">Cancel</button>
-      <button class="so-confirm" onclick="_doSignOut()">Yes, Sign Out</button>
-    </div>
-  </div>
-</div>
-
-<!-- BOTTOM NAV -->
-<nav class="bottom-nav">
-  <a class="bnav-item" href="index.html"><span class="bnav-icon">🏠</span>Home</a>
-  <a class="bnav-item active" href="clubs.html"><span class="bnav-icon">📚</span>Clubs</a>
-  <a class="bnav-item" href="seasonpass.html"><span class="bnav-icon">⚡</span>Pass</a>
-  <a class="bnav-item" href="bookshelf_profile.html"><span class="bnav-icon">👤</span>Profile</a>
-</nav>
-
-<!-- CLUB DETAIL OVERLAY -->
-<div class="overlay" id="club-detail-overlay" onclick="if(event.target===this)closeDetail()">
-  <div class="club-detail" id="club-detail-panel">
-    <button class="cd-close" onclick="closeDetail()">✕</button>
-    <div class="cd-handle"></div>
-    <div class="cd-banner" id="cd-banner">
-      <div class="cd-banner-overlay"></div>
-      <div class="cd-banner-emoji" id="cd-emoji"></div>
-      <div class="cd-title" id="cd-title"></div>
-    </div>
-    <div class="cd-body">
-      <p class="cd-tagline" id="cd-tagline"></p>
-      <div class="cd-stats-row">
-        <div class="cd-stat"><div class="cd-stat-val" id="cd-members-count"></div><div class="cd-stat-label">Members</div></div>
-        <div class="cd-stat"><div class="cd-stat-val" id="cd-books-read"></div><div class="cd-stat-label">Books Read</div></div>
-        <div class="cd-stat"><div class="cd-stat-val" id="cd-meetings"></div><div class="cd-stat-label">Meetings</div></div>
-      </div>
-      <div class="cd-section-title">Currently Reading</div>
-      <div class="cd-current-book" id="cd-current-book"></div>
-      <div class="cd-section-title">Members</div>
-      <div class="cd-members-grid" id="cd-members-grid"></div>
-      <div class="cd-section-title">Upcoming Schedule</div>
-      <div class="cd-schedule" id="cd-schedule"></div>
-      <div class="cd-actions">
-        <button class="btn-cd-join" id="cd-join-btn" onclick="toggleJoinFromDetail()"></button>
-        <button class="btn-cd-share" onclick="shareClub()">🔗 Share</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- CREATE CLUB OVERLAY -->
-<div class="create-overlay" id="create-overlay" onclick="if(event.target===this)closeCreate()">
-  <div class="create-modal">
-    <button class="cm-x" onclick="closeCreate()">✕</button>
-    <div class="cm-title">✨ Create a New Club</div>
-    <div class="cm-field">
-      <label class="cm-label">Club Name</label>
-      <input class="cm-input" id="cm-name" placeholder="e.g. Midnight Readers" maxlength="50">
-    </div>
-    <div class="cm-field">
-      <label class="cm-label">Tagline</label>
-      <input class="cm-input" id="cm-tagline" placeholder="What's your club about?" maxlength="120">
-    </div>
-    <div class="cm-field">
-      <label class="cm-label">Pick an Emoji</label>
-      <div class="cm-emoji-grid" id="cm-emoji-grid"></div>
-    </div>
-    <div class="cm-field">
-      <label class="cm-label">Genre</label>
-      <div class="cm-genre-grid" id="cm-genre-grid"></div>
-    </div>
-    <div class="cm-field">
-      <label class="cm-label">Privacy</label>
-      <div class="cm-privacy-row">
-        <button class="cm-priv-btn active" id="cm-priv-open" onclick="selectPrivacy('open')">🌐 Open<br><span style="font-size:.68rem;font-weight:400;color:var(--text-muted)">Anyone can join</span></button>
-        <button class="cm-priv-btn" id="cm-priv-invite" onclick="selectPrivacy('invite')">🔒 Invite Only<br><span style="font-size:.68rem;font-weight:400;color:var(--text-muted)">Approval required</span></button>
-      </div>
-    </div>
-    <div class="cm-actions">
-      <button class="btn-cm-cancel" onclick="closeCreate()">Cancel</button>
-      <button class="btn-cm-create" onclick="createClub()">✨ Create Club</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div class="nav-toast" id="_toast"></div>
-
-<!-- ══ PAGE ══ -->
-<div class="page">
-  <div class="page-header">
-    <h1 class="page-title">📚 Book Clubs</h1>
-    <p class="page-sub">Find your reading tribe — join clubs, follow along, and read together.</p>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab-btn active" id="tab-explore" onclick="switchTab('explore')">🔍 Explore</button>
-    <button class="tab-btn" id="tab-mine" onclick="switchTab('mine')">My Clubs <span class="tab-badge" id="my-clubs-badge">0</span></button>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="club-search" placeholder="Search clubs by name or genre…" oninput="filterClubs()">
-    </div>
-    <button class="btn-create" onclick="openCreate()">✦ Create Club</button>
-  </div>
-
-  <!-- Filter chips -->
-  <div class="filter-chips" id="filter-chips"></div>
-
-  <!-- EXPLORE TAB -->
-  <div id="pane-explore">
-    <div class="section-label">Trending Clubs</div>
-    <div class="clubs-grid" id="trending-grid"></div>
-    <div class="section-label" style="margin-top:2.2rem;">All Clubs</div>
-    <div class="clubs-grid" id="all-grid"></div>
-  </div>
-
-  <!-- MY CLUBS TAB -->
-  <div id="pane-mine" style="display:none">
-    <div id="my-clubs-empty" class="empty-state" style="display:none">
-      <div class="empty-icon">📭</div>
-      <div class="empty-title">No clubs yet</div>
-      <div class="empty-sub">Browse the Explore tab to find a club that suits your reading taste.</div>
-      <button class="btn-create" style="margin:1rem auto 0;display:inline-flex;" onclick="switchTab('explore')">🔍 Explore Clubs</button>
-    </div>
-    <div class="clubs-grid" id="my-grid"></div>
-  </div>
-</div>
-
-<script>
-/* ══════════════════════════════════════════
-   CLUBS DATA
-══════════════════════════════════════════ */
-const GENRES = ['All','Fiction','Mystery','Sci-Fi','Fantasy','Romance','Non-Fiction','History','Thriller','Horror','Literary','Poetry'];
-const EMOJIS = ['📚','🌙','⚡','🏰','🌿','🔮','🕯️','🌊','🦋','🎭','🗺️','🌸','☕','🌌','🔬','🧩'];
-
-// Clubs loaded dynamically from Firebase pb_clubs_catalogue
-let CLUBS_DATA = [];
-
-async function loadClubsCatalogue(){
-  if(!_clubsDb){ renderExplore(); return; }
-  try{
-    const snap = await _clubsDb.ref('pb_clubs_catalogue').once('value');
-    const data = snap.val();
-    if(data && typeof data === 'object'){
-      CLUBS_DATA = Object.entries(data).map(([key, c])=>({
-        id: key,
-        name:       c.name||'Unnamed Club',
-        emoji:      c.emoji||'📚',
-        genre:      c.genre||'General',
-        privacy:    c.privacy||'open',
-        tagline:    c.tagline||'',
-        members:    c.members||0,
-        booksRead:  c.booksRead||0,
-        meetings:   c.meetings||0,
-        trending:   c.trending||false,
-        color:      c.color||'linear-gradient(135deg,#1a1008,#0d0906)',
-        memberList: c.memberList||[],
-        currentBook:c.currentBook||null,
-        schedule:   c.schedule||[],
-        createdBy:  c.createdBy||'admin',
-        createdAt:  c.createdAt||0,
-      }));
-    } else {
-      CLUBS_DATA = [];
-    }
-    renderExplore();
-    renderMine();
-  } catch(e){
-    console.warn('Failed to load clubs:', e);
-    CLUBS_DATA = [];
-    renderExplore();
-  }
-}
-
-/* ══════════════════════════════════════════
-   STATE
-══════════════════════════════════════════ */
-let myClubs    = new Set(JSON.parse(localStorage.getItem('pb_my_clubs')||'[]'));
-
-// Firebase db for clubs sync
-let _clubsDb = null;
-try{
-  if(typeof firebase!=='undefined' && firebase.apps && firebase.apps.length){
-    _clubsDb = firebase.database();
-  }
-}catch(e){}
-
-// Load clubs from Firebase on start (overrides localStorage)
-(function loadClubsFromFirebase(){
-  const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
-  if(!sess || !_clubsDb) return;
-  const uk = sess.username.replace(/\./g,'_');
-  _clubsDb.ref('pb_clubs/'+uk).once('value').then(snap=>{
-    const data = snap.val();
-    if(data && Array.isArray(data) && data.length>0){
-      myClubs = new Set(data);
-      localStorage.setItem('pb_my_clubs', JSON.stringify(data));
-      // Re-render if already on mine tab
-      if(typeof renderMine==='function') renderMine();
-      if(typeof renderExplore==='function') renderExplore();
-    }
-  }).catch(()=>{});
-})();
-let activeGenre = 'All';
-let currentTab  = 'explore';
-let searchQ     = '';
-let openClubId  = null;
-let createPrivacy = 'open';
-let createEmoji   = '📚';
-let createGenre   = '';
-
-const AVATAR_PALETTES = [
-  'linear-gradient(135deg,#3e6e52,#1e4030)','linear-gradient(135deg,#6e3e2e,#3a1a10)',
-  'linear-gradient(135deg,#3e4e6e,#1e2838)','linear-gradient(135deg,#6e5e2e,#3a3010)',
-  'linear-gradient(135deg,#4e2e6e,#281638)','linear-gradient(135deg,#6e3e4e,#381624)',
-];
-function avatarColor(name){let h=0;for(let c of name)h=(h*31+c.charCodeAt(0))%AVATAR_PALETTES.length;return AVATAR_PALETTES[h];}
-
-/* ══════════════════════════════════════════
-   RENDER
-══════════════════════════════════════════ */
-function saveMyClubs(){
-  const arr = [...myClubs];
-  localStorage.setItem('pb_my_clubs', JSON.stringify(arr));
-  // Sync to Firebase
-  const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
-  if(sess && _clubsDb){
-    const uk = sess.username.replace(/\./g,'_');
-    _clubsDb.ref('pb_clubs/'+uk).set(arr).catch(()=>{});
-  }
-}
-
-function buildMemberAvatars(list){
-  const shown = list.slice(0,4);
-  const extra = list.length - shown.length;
-  return shown.map(n=>`<div class="member-av" style="background:${avatarColor(n)}">${n[0]}</div>`).join('')
-    + (extra>0?`<div class="member-av member-av-more">+${extra}</div>`:'');
-}
-
-function buildClubCard(c){
-  const joined = myClubs.has(c.id);
-  return `<div class="club-card${joined?' mine':''}" onclick="openDetail(${c.id})">
-    <div class="club-banner" style="background:${c.color}">
-      <div class="club-banner-overlay"></div>
-      <span class="club-emoji">${c.emoji}</span>
-      <div class="club-privacy-badge">${c.privacy==='invite'?'🔒 Invite':'🌐 Open'}</div>
-    </div>
-    <div class="club-body">
-      <div class="club-name">${c.name}</div>
-      <div class="club-tagline">${c.tagline}</div>
-      <div class="club-meta">
-        <div class="club-meta-item"><span>👥</span><span>${c.members + (joined?1:0)} members</span></div>
-        <div class="club-meta-item"><span>📖</span><span>${c.booksRead} books</span></div>
-        <div class="club-meta-item"><span>🗓️</span><span>${c.meetings} meetings</span></div>
-        <div class="member-avatars">${buildMemberAvatars(c.memberList)}</div>
-      </div>
-      <div class="club-current-book">
-        <div class="club-book-cover" style="background:${c.currentBook.color}"></div>
-        <div>
-          <div class="club-book-label">Now Reading</div>
-          <div class="club-book-title">${c.currentBook.title}</div>
-          <div class="club-book-author">${c.currentBook.author}</div>
-        </div>
-      </div>
-      <div class="club-footer" onclick="event.stopPropagation()">
-        <button class="btn-join ${joined?'joined':''}" onclick="toggleJoin(${c.id},this)">
-          ${joined?'✓ Joined':'+ Join Club'}
-        </button>
-        <button class="btn-view-club" onclick="openDetail(${c.id})">View →</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function filterClubs(){
-  searchQ = document.getElementById('club-search').value.toLowerCase();
-  renderExplore();
-}
-
-function renderExplore(){
-  let clubs = CLUBS_DATA.filter(c=>{
-    const matchGenre = activeGenre==='All' || c.genre===activeGenre;
-    const matchSearch = !searchQ || c.name.toLowerCase().includes(searchQ) || c.genre.toLowerCase().includes(searchQ) || c.tagline.toLowerCase().includes(searchQ);
-    return matchGenre && matchSearch;
-  });
-  const trending = clubs.filter(c=>c.trending);
-  const all      = clubs.filter(c=>!c.trending);
-  document.getElementById('trending-grid').innerHTML = trending.length ? trending.map(buildClubCard).join('') : '';
-  document.getElementById('all-grid').innerHTML      = all.length     ? all.map(buildClubCard).join('')      :
-    `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No clubs found</div><div class="empty-sub">Try a different search or genre.</div></div>`;
-}
-
-function renderMine(){
-  const mine = CLUBS_DATA.filter(c=>myClubs.has(c.id));
-  document.getElementById('my-clubs-badge').textContent = mine.length;
-  document.getElementById('my-clubs-empty').style.display = mine.length===0 ? '' : 'none';
-  document.getElementById('my-grid').innerHTML = mine.map(buildClubCard).join('');
-}
-
-/* ══════════════════════════════════════════
-   TABS & FILTERS
-══════════════════════════════════════════ */
-function switchTab(tab){
-  currentTab = tab;
-  document.getElementById('pane-explore').style.display = tab==='explore' ? '' : 'none';
-  document.getElementById('pane-mine').style.display    = tab==='mine'    ? '' : 'none';
-  document.getElementById('tab-explore').classList.toggle('active', tab==='explore');
-  document.getElementById('tab-mine').classList.toggle('active',    tab==='mine');
-  if(tab==='mine') renderMine();
-}
-
-function buildFilterChips(){
-  const wrap = document.getElementById('filter-chips');
-  wrap.innerHTML = GENRES.map(g=>`<div class="chip${g===activeGenre?' active':''}" onclick="selectGenre('${g}')">${g}</div>`).join('');
-}
-
-function selectGenre(g){
-  activeGenre = g;
-  buildFilterChips();
-  renderExplore();
-}
-
-/* ══════════════════════════════════════════
-   JOIN / LEAVE
-══════════════════════════════════════════ */
-function toggleJoin(id, btn){
-  const c = CLUBS_DATA.find(x=>x.id===id);
-  if(!c) return;
-  if(myClubs.has(id)){
-    myClubs.delete(id);
-    btn.textContent='+ Join Club'; btn.className='btn-join';
-    _showToast(`Left ${c.name}`);
-  } else {
-    if(c.privacy==='invite'){
-      _showToast('📨 Request sent — waiting for approval!');
-      btn.textContent='📨 Pending'; btn.className='btn-join pending';
-      return;
-    }
-    myClubs.add(id);
-    btn.textContent='✓ Joined'; btn.className='btn-join joined';
-    _showToast(`🎉 Joined ${c.name}!`);
-  }
-  saveMyClubs();
-  renderMine();
-}
-
-function toggleJoinFromDetail(){
-  if(!openClubId) return;
-  const c = CLUBS_DATA.find(x=>x.id===openClubId);
-  if(!c) return;
-  const btn = document.getElementById('cd-join-btn');
-  if(myClubs.has(c.id)){
-    myClubs.delete(c.id);
-    btn.textContent='+ Join Club'; btn.className='btn-cd-join';
-    _showToast(`Left ${c.name}`);
-  } else {
-    if(c.privacy==='invite'){
-      btn.textContent='📨 Request Sent'; btn.className='btn-cd-join pending';
-      _showToast('📨 Request sent — waiting for approval!');
-      saveMyClubs(); renderMine(); renderExplore(); return;
-    }
-    myClubs.add(c.id);
-    btn.textContent='✓ Joined'; btn.className='btn-cd-join joined';
-    _showToast(`🎉 Joined ${c.name}!`);
-  }
-  saveMyClubs(); renderMine(); renderExplore();
-}
-
-function shareClub(){
-  _showToast('🔗 Club link copied!');
-}
-
-/* ══════════════════════════════════════════
-   CLUB DETAIL
-══════════════════════════════════════════ */
-function openDetail(id){
-  const c = CLUBS_DATA.find(x=>x.id===id);
-  if(!c) return;
-  openClubId = id;
-
-  document.getElementById('cd-banner').style.background = c.color;
-  document.getElementById('cd-emoji').textContent = c.emoji;
-  document.getElementById('cd-title').textContent = c.name;
-  document.getElementById('cd-tagline').textContent = c.tagline;
-  document.getElementById('cd-members-count').textContent = c.members + (myClubs.has(id)?1:0);
-  document.getElementById('cd-books-read').textContent = c.booksRead;
-  document.getElementById('cd-meetings').textContent = c.meetings;
-
-  // Current book
-  const cb = c.currentBook;
-  document.getElementById('cd-current-book').innerHTML = `
-    <div class="cd-book-cover" style="background:${cb.color}"></div>
-    <div class="cd-book-info">
-      <div class="cd-book-label">Now Reading</div>
-      <div class="cd-book-title">${cb.title}</div>
-      <div class="cd-book-author">${cb.author}</div>
-      <div class="cd-book-progress">
-        <div class="cd-progress-bar"><div class="cd-progress-fill" style="width:${cb.progress}%"></div></div>
-        <div class="cd-progress-label">${cb.progress}% through the group</div>
-      </div>
-    </div>`;
-
-  // Members
-  document.getElementById('cd-members-grid').innerHTML = c.memberList.map(n=>`
-    <div class="cd-member-chip">
-      <div class="cd-mem-av" style="background:${avatarColor(n)}">${n[0]}</div>
-      <div class="cd-mem-name">${n}</div>
-    </div>`).join('');
-
-  // Schedule
-  document.getElementById('cd-schedule').innerHTML = c.schedule.map(s=>`
-    <div class="cd-sched-row">
-      <div class="cd-sched-date">${s.date}</div>
-      <div class="cd-sched-event">${s.event}</div>
-      <div class="cd-sched-tag">${s.tag}</div>
-    </div>`).join('');
-
-  // Join button
-  const joined = myClubs.has(id);
-  const joinBtn = document.getElementById('cd-join-btn');
-  joinBtn.textContent = joined ? '✓ Joined' : (c.privacy==='invite' ? '📨 Request to Join' : '+ Join Club');
-  joinBtn.className = 'btn-cd-join' + (joined?' joined':'');
-
-  document.getElementById('club-detail-overlay').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-
-function closeDetail(){
-  document.getElementById('club-detail-overlay').classList.remove('open');
-  document.body.style.overflow='';
-  openClubId = null;
-}
-
-/* ══════════════════════════════════════════
-   CREATE CLUB
-══════════════════════════════════════════ */
-function openCreate(){
-  document.getElementById('create-overlay').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeCreate(){
-  document.getElementById('create-overlay').classList.remove('open');
-  document.body.style.overflow='';
-}
-function selectPrivacy(p){
-  createPrivacy=p;
-  document.getElementById('cm-priv-open').classList.toggle('active',p==='open');
-  document.getElementById('cm-priv-invite').classList.toggle('active',p==='invite');
-}
-function buildCreateEmojis(){
-  document.getElementById('cm-emoji-grid').innerHTML = EMOJIS.map(e=>
-    `<button class="cm-emoji-btn${e===createEmoji?' active':''}" onclick="selectEmoji(this,'${e}')">${e}</button>`
-  ).join('');
-}
-function selectEmoji(btn,e){
-  createEmoji=e;
-  document.querySelectorAll('.cm-emoji-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
-function buildCreateGenres(){
-  document.getElementById('cm-genre-grid').innerHTML = GENRES.slice(1).map(g=>
-    `<div class="cm-genre-chip${g===createGenre?' active':''}" onclick="selectCreateGenre(this,'${g}')">${g}</div>`
-  ).join('');
-}
-function selectCreateGenre(chip,g){
-  createGenre=g;
-  document.querySelectorAll('.cm-genre-chip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
-}
-function createClub(){
-  const name = document.getElementById('cm-name').value.trim();
-  const tag  = document.getElementById('cm-tagline').value.trim();
-  if(!name){ _showToast('⚠️ Give your club a name!'); return; }
-  if(!createGenre){ _showToast('⚠️ Pick a genre!'); return; }
-  const newClub = {
-    id: Date.now(), name, emoji:createEmoji, genre:createGenre, privacy:createPrivacy,
-    tagline: tag||'A brand new reading club — first meeting coming soon!',
-    members:1, booksRead:0, meetings:0, trending:false, joined:true,
-    color:`linear-gradient(135deg,#1e1408,#0e0c06)`,
-    memberList:['You'],
-    currentBook:{title:'TBD',author:'Vote in progress',color:'#2e1c08',progress:0},
-    schedule:[{date:'TBD',event:'First meeting — date TBD',tag:'Meeting'}]
-  };
-  CLUBS_DATA.push(newClub);
-  myClubs.add(newClub.id);
-  saveMyClubs();
-  closeCreate();
-  renderExplore();
-  renderMine();
-  document.getElementById('my-clubs-badge').textContent = [...myClubs].length;
-  _showToast(`🎉 "${name}" created!`);
-  setTimeout(()=>switchTab('mine'),600);
-}
-
-/* ══════════════════════════════════════════
-   INIT
-══════════════════════════════════════════ */
-buildFilterChips();
-buildCreateEmojis();
-buildCreateGenres();
-renderExplore();
-renderMine();
-</script>
-
-<!-- ══ SHARED NAV JS (identical pattern to friends.html) ══ -->
-<script>
-(function(){
-  function gs(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
-  function el(id){ return document.getElementById(id); }
-
-  const SESSION = gs();
-  const isLoggedIn = !!SESSION;
-  const ME = isLoggedIn ? {
-    name:    SESSION.name||SESSION.username,
-    handle:  '@'+SESSION.username,
-    initial: (SESSION.name||SESSION.username).charAt(0).toUpperCase(),
-    username: SESSION.username
-  } : null;
-
-    function setAvatarEl(avEl,imgSrc,initial){
-    if(!avEl)return;
-    if(imgSrc){avEl.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';avEl.style.cssText='width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,137,60,.4)display:block;';}
-    else{avEl.textContent=initial;avEl.style.cssText='width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.95rem;color:#fff;font-weight:700;flex-shrink:0;';}
-  }
-  function initPill(){
-    const ppav=el('_pp-avatar'), ppname=el('_pp-name'), ppsub=el('_pp-sub');
-    if(isLoggedIn){
-      el('_dd-in').style.display=''; el('_dd-out').style.display='none';
-      el('_pp-info').style.display='';
-      setAvatarEl(ppav,null,ME.initial);
-      if(ppname) ppname.textContent=ME.name;
-      if(ppsub)  ppsub.textContent='';
-      el('_dd-name').textContent=ME.name;
-      el('_dd-handle').textContent=ME.handle;
-    } else {
-      el('_dd-in').style.display='none'; el('_dd-out').style.display='';
-      el('_pp-info').style.display='none';
-      if(ppav){ppav.textContent='👤';ppav.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';}
-    }
-    if(isLoggedIn && typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
-      try{
-        const fdb=firebase.database(), uk=ME.username.replace(/\./g,'_');
-        fdb.ref('pb_profile/'+uk).once('value').then(function(s){
-          const p=s.val(); if(!p) return;
-          if(p.name){if(ppname)ppname.textContent=p.name; el('_dd-name').textContent=p.name;}
-          if(p.avatar){
-            setAvatarEl(ppav,p.avatar,ME.initial);
-            setAvatarEl(el('_dd-avatar'),p.avatar,ME.initial);
-            const mob=el('_mob-profile-av');
-            if(mob){mob.innerHTML='<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'; mob.style.overflow='hidden';}
-            const sp=el('sp-nav-avatar');
-            if(sp){sp.innerHTML='<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'; sp.style.overflow='hidden';}
-          }
-        }).catch(function(){});
-        fdb.ref('pb_libraries/'+uk).once('value').then(function(s){
-          const lib=s.val(),cnt=lib&&Array.isArray(lib)?lib.filter(function(b){return b.status==='read';}).length:0;
-          if(cnt>0&&ppsub) ppsub.textContent=cnt+' books read';
-        }).catch(function(){});
-      }catch(e){}
-    }
-  }
-
-  window._toggleDD = function(e){
-    e.stopPropagation();
-    const dd=el('_dd'); dd.classList.toggle('open');
-    _closeMob();
-  };
-  window._closeDD = function(){ el('_dd').classList.remove('open'); };
-  document.addEventListener('click',function(e){
-    const wrap=el('_dd-wrap'); if(wrap&&!wrap.contains(e.target)) _closeDD();
-  });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ _closeDD(); _closeMob(); } });
-
-  window._toggleMenu = function(){
-    const m=el('_mob'),b=el('_hbg');
-    const open=m.classList.toggle('open'); b.classList.toggle('open',open);
-    document.body.style.overflow=open?'hidden':'';
-    _closeDD();
-  };
-  window._closeMob = function(){
-    const m=el('_mob'),b=el('_hbg');
-    if(m){m.classList.remove('open');} if(b){b.classList.remove('open');}
-    document.body.style.overflow='';
-  };
-
-  let _lang = localStorage.getItem('pb_lang')||'en';
-  window._setLang = function(lang, e){
-    if(e) e.stopPropagation();
-    _lang=lang; localStorage.setItem('pb_lang',lang);
-    ['_lang-en','_lang-es','_lang-en-lo','_lang-es-lo','_mlang-en','_mlang-es'].forEach(id=>{
-      const btn=el(id); if(btn) btn.classList.toggle('active',id.endsWith(lang));
-    });
-    _showToast(lang==='es'?'🇪🇸 Idioma: Español':'🇬🇧 Language: English');
-  };
-  if(_lang==='es') _setLang('es',null);
-
-  window._openSettings  = function(){ el('_settings-overlay').classList.add('open'); document.body.style.overflow='hidden'; };
-  window._closeSettings = function(){ el('_settings-overlay').classList.remove('open'); document.body.style.overflow=''; };
-  window._saveSettings  = function(){ _closeSettings(); _showToast('✓ Settings saved'); };
-  window._openSignOut   = function(){ el('_so-overlay').classList.add('open'); document.body.style.overflow='hidden'; };
-  window._closeSignOut  = function(){ el('_so-overlay').classList.remove('open'); document.body.style.overflow=''; };
-  window._doSignOut     = function(){
-    localStorage.removeItem('pb_session');
-    _closeSignOut(); _showToast('Signing out…');
-    setTimeout(()=>{ window.location.href='login.html'; },900);
-  };
-
-  window._showToast = function(msg){
-    const t=el('_toast'); if(!t)return;
-    t.textContent=msg; t.classList.add('show');
-    clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),3000);
-  };
-
-  initPill();
-})();
-</script>
-
-<script>
-// Load real profile picture from Firebase
-(function(){
-  try{
-    const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
-    if(!sess) return;
-    const uk = sess.username.replace(/\./g,'_');
-    if(typeof firebase === 'undefined') return;
-    firebase.database().ref('pb_profile/'+uk).once('value').then(function(snap){
-      const p = snap.val();
-      if(!p || !p.avatar) return;
-      const img = '<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      ['_pp-avatar','_mob-profile-av','_dd-avatar'].forEach(function(id){
-        const el = document.getElementById(id);
-        if(el){ el.innerHTML=img; el.style.overflow='hidden'; }
-      });
-    }).catch(function(){});
-  }catch(e){}
-})();
-</script>
-
-
-<script>
-/* Load real profile picture */
-(function(){
-  try{
-    if(typeof firebase==='undefined') return;
-    const sess=JSON.parse(localStorage.getItem('pb_session')||'null');
-    if(!sess) return;
-    const uk=sess.username.replace(/\./g,'_');
-    firebase.database().ref('pb_profile/'+uk).once('value').then(function(snap){
-      const p=snap.val(); if(!p||!p.avatar) return;
-      const img='<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      ['sp-nav-avatar','_pp-avatar','_mob-profile-av','_dd-avatar'].forEach(function(id){
-        const el=document.getElementById(id);
-        if(el){el.innerHTML=img;el.style.overflow='hidden';}
-      });
-    }).catch(function(){});
-  }catch(e){}
-})();
-</script>
-
-</body>
-</html>E html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pagebound — Book Clubs</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script>
-/* Firebase init */
-(function(){
-  const cfg={apiKey:"AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",authDomain:"casey-80b19.firebaseapp.com",databaseURL:"https://casey-80b19-default-rtdb.firebaseio.com",projectId:"casey-80b19",storageBucket:"casey-80b19.firebasestorage.app",messagingSenderId:"1084195161725",appId:"1:1084195161725:web:c4db255376c0aaf25d5314"};
-  if(typeof firebase!=='undefined'&&!firebase.apps.length) firebase.initializeApp(cfg);
-})();
-</script>
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#0d0906; --surface:#16100a; --surface2:#1e160e;
-  --amber:#d4893c; --amber-light:#f0a84e; --amber-glow:rgba(212,137,60,.18);
-  --cream:#f5ede0; --tan:#b89468; --tan-dim:#6e5434;
-  --text:#e8ddd0; --text-dim:#8a7258; --text-muted:#5a4830;
-  --rust:#9b3f2a; --green:#5a9e6f;
-  --border:rgba(184,148,104,.2);
-  --nav-h:56px; --bnav-h:62px;
-}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-
-/* ── NAVBAR ── */
-.navbar{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(6,4,8,.97);border-bottom:1px solid rgba(184,148,104,.2);backdrop-filter:blur(16px);}
+.navbar{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(13,9,6,.97);border-bottom:1px solid var(--border);backdrop-filter:blur(14px);}
 .nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:var(--amber-light);text-decoration:none;line-height:1;}
 .nav-logo em{font-style:normal;font-size:.56rem;display:block;color:var(--tan-dim);letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
 .nav-center{display:flex;gap:1.8rem;}
@@ -1626,102 +551,9 @@ textarea.cm-input{resize:vertical;min-height:80px;line-height:1.5;}
 const GENRES = ['All','Fiction','Mystery','Sci-Fi','Fantasy','Romance','Non-Fiction','History','Thriller','Horror','Literary','Poetry'];
 const EMOJIS = ['📚','🌙','⚡','🏰','🌿','🔮','🕯️','🌊','🦋','🎭','🗺️','🌸','☕','🌌','🔬','🧩'];
 
-const CLUBS_DATA = [
-  {
-    id:1, name:'Midnight Readers', emoji:'🌙', genre:'Fiction', privacy:'open',
-    tagline:'We read the books you stay up too late to finish. Dark academia, literary fiction, and the occasional ghost story.',
-    members:124, booksRead:31, meetings:28, trending:true, joined:false,
-    color:'linear-gradient(135deg,#1a1030,#0d0820)',
-    memberList:['Eleanor V.','Marcus R.','Sofia L.','James T.','Priya M.'],
-    currentBook:{title:'The Secret History',author:'Donna Tartt',color:'#2c1654',progress:62},
-    schedule:[
-      {date:'May 24',event:'Ch. 1–8 Discussion',tag:'Meeting'},
-      {date:'Jun 1',event:'Full Book Wrap-up',tag:'Meeting'},
-      {date:'Jun 8',event:'Next Book Vote',tag:'Poll'},
-    ]
-  },
-  {
-    id:2, name:'The Cosmos Club', emoji:'🌌', genre:'Sci-Fi', privacy:'open',
-    tagline:'For readers who look up at the stars and wonder what stories live there. Hard sci-fi, space opera, cyberpunk.',
-    members:89, booksRead:24, meetings:19, trending:true, joined:false,
-    color:'linear-gradient(135deg,#0a1a30,#051020)',
-    memberList:['Alex K.','Dana W.','Riku T.','Lena S.'],
-    currentBook:{title:'Piranesi',author:'Susanna Clarke',color:'#183060',progress:40},
-    schedule:[
-      {date:'May 22',event:'Part I Discussion',tag:'Meeting'},
-      {date:'Jun 5',event:'Full Wrap-up',tag:'Meeting'},
-    ]
-  },
-  {
-    id:3, name:'The Parlour Mysteries', emoji:'🕯️', genre:'Mystery', privacy:'open',
-    tagline:'Clues, red herrings, and tea. Classic and contemporary mystery with a cosy reading atmosphere.',
-    members:67, booksRead:18, meetings:22, trending:true, joined:false,
-    color:'linear-gradient(135deg,#201510,#12090a)',
-    memberList:['Beatrice H.','Colin M.','Yasmin O.','Patrick L.','Nina R.'],
-    currentBook:{title:'Rebecca',author:'Daphne du Maurier',color:'#3a1820',progress:78},
-    schedule:[
-      {date:'May 21',event:'Final Chapters',tag:'Meeting'},
-      {date:'May 28',event:'New Book Reveal',tag:'Announcement'},
-    ]
-  },
-  {
-    id:4, name:'Enchanted Pages', emoji:'🔮', genre:'Fantasy', privacy:'open',
-    tagline:'Dragons, magic systems, and world-building that makes you forget your own. Epic and urban fantasy welcome.',
-    members:211, booksRead:47, meetings:38, trending:false, joined:false,
-    color:'linear-gradient(135deg,#1a0a28,#0e0618)',
-    memberList:['Aria T.','Sam B.','Zoe C.','Felix D.','Mia R.','Hugo L.'],
-    currentBook:{title:'The Master and Margarita',author:'Mikhail Bulgakov',color:'#2a1040',progress:30},
-    schedule:[
-      {date:'May 25',event:'Chapters 1–12',tag:'Meeting'},
-      {date:'Jun 10',event:'Author Q&A',tag:'Special'},
-    ]
-  },
-  {
-    id:5, name:'Hearts & Pages', emoji:'🌸', genre:'Romance', privacy:'open',
-    tagline:'Because love stories deserve serious literary discussion. Contemporary, historical, and everything in between.',
-    members:158, booksRead:39, meetings:33, trending:false, joined:false,
-    color:'linear-gradient(135deg,#28100e,#180808)',
-    memberList:['Clara B.','Rose M.','Ellie D.','Tom N.'],
-    currentBook:{title:'Normal People',author:'Sally Rooney',color:'#6e1828',progress:55},
-    schedule:[
-      {date:'May 23',event:'Mid-book Check-in',tag:'Meeting'},
-    ]
-  },
-  {
-    id:6, name:'True Pages Society', emoji:'📰', genre:'Non-Fiction', privacy:'invite',
-    tagline:'Essays, biographies, long-form journalism. We believe non-fiction can be just as unputdownable as fiction.',
-    members:44, booksRead:12, meetings:14, trending:false, joined:false,
-    color:'linear-gradient(135deg,#1a1810,#0e0c06)',
-    memberList:['Oliver S.','Grace T.','Ivan P.'],
-    currentBook:{title:'Educated',author:'Tara Westover',color:'#3a3010',progress:88},
-    schedule:[
-      {date:'May 20',event:'Final Discussion',tag:'Meeting'},
-      {date:'Jun 1',event:'June Pick Vote',tag:'Poll'},
-    ]
-  },
-  {
-    id:7, name:'Dark Hours', emoji:'🦇', genre:'Horror', privacy:'open',
-    tagline:'We read in the dark. Psychological horror, gothic fiction, and whatever keeps you up at night (besides us).',
-    members:73, booksRead:20, meetings:17, trending:false, joined:false,
-    color:'linear-gradient(135deg,#0a0808,#080508)',
-    memberList:['Vince D.','Nora C.','Ray M.','Selene K.'],
-    currentBook:{title:'Mexican Gothic',author:'Silvia Moreno-Garcia',color:'#1a0808',progress:45},
-    schedule:[
-      {date:'May 26',event:'Ch. 15 onward',tag:'Meeting'},
-    ]
-  },
-  {
-    id:8, name:'The Expedition', emoji:'🗺️', genre:'History', privacy:'open',
-    tagline:'Historical fiction and popular history. We travel through time one book at a time.',
-    members:52, booksRead:16, meetings:20, trending:false, joined:false,
-    color:'linear-gradient(135deg,#1e1408,#120c04)',
-    memberList:['Henry A.','Ruth K.','Leo F.','Camille V.'],
-    currentBook:{title:'Wolf Hall',author:'Hilary Mantel',color:'#2e1c08',progress:20},
-    schedule:[
-      {date:'Jun 3',event:'Tudor History Deep-dive',tag:'Special'},
-    ]
-  },
-];
+// Clubs are loaded from Firebase — see loadClubsCatalogue() below
+let CLUBS_DATA = [];
+
 
 /* ══════════════════════════════════════════
    STATE
@@ -1845,8 +677,10 @@ function toggleJoin(id, btn){
   if(!c) return;
   if(myClubs.has(id)){
     myClubs.delete(id);
+    c.members = Math.max(0,(c.members||1)-1);
     btn.textContent='+ Join Club'; btn.className='btn-join';
-    _showToast(`Left ${c.name}`);
+    _showToast('Left '+c.name);
+    if(_db) _db.ref('pb_clubs_catalogue/'+id+'/members').set(c.members).catch(()=>{});
   } else {
     if(c.privacy==='invite'){
       _showToast('📨 Request sent — waiting for approval!');
@@ -1854,8 +688,10 @@ function toggleJoin(id, btn){
       return;
     }
     myClubs.add(id);
+    c.members = (c.members||0)+1;
     btn.textContent='✓ Joined'; btn.className='btn-join joined';
-    _showToast(`🎉 Joined ${c.name}!`);
+    _showToast('🎉 Joined '+c.name+'!');
+    if(_db) _db.ref('pb_clubs_catalogue/'+id+'/members').set(c.members).catch(()=>{});
   }
   saveMyClubs();
   renderMine();
@@ -2015,8 +851,8 @@ function createClub(){
 buildFilterChips();
 buildCreateEmojis();
 buildCreateGenres();
-renderExplore();
-renderMine();
+// Load clubs from Firebase, then render
+loadClubsCatalogue();
 </script>
 
 <!-- ══ SHARED NAV JS (identical pattern to friends.html) ══ -->
@@ -2104,28 +940,120 @@ renderMine();
 
   initPill();
 })();
-</script>
 
-<script>
-// Load real profile picture from Firebase
-(function(){
+
+/* ════════════════════════════════════════════
+   FIREBASE CLUBS SYSTEM
+════════════════════════════════════════════ */
+const _db = (function(){
   try{
-    const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
-    if(!sess) return;
-    const uk = sess.username.replace(/\./g,'_');
-    if(typeof firebase === 'undefined') return;
-    firebase.database().ref('pb_profile/'+uk).once('value').then(function(snap){
-      const p = snap.val();
-      if(!p || !p.avatar) return;
-      const img = '<img src="'+p.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-      ['_pp-avatar','_mob-profile-av','_dd-avatar'].forEach(function(id){
-        const el = document.getElementById(id);
-        if(el){ el.innerHTML=img; el.style.overflow='hidden'; }
-      });
-    }).catch(function(){});
+    if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length)
+      return firebase.database();
   }catch(e){}
+  return null;
 })();
-</script>
 
+// Load all clubs from Firebase
+async function loadClubsCatalogue(){
+  // Load user's joined clubs first
+  const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
+  if(_db && sess){
+    try{
+      const uk = sess.username.replace(/\./g,'_');
+      const snap = await _db.ref('pb_clubs/'+uk).once('value');
+      const data = snap.val();
+      // Only use if it's an array of string keys (not timestamps)
+      if(data && Array.isArray(data) && data.length > 0 && typeof data[0] === 'string'){
+        myClubs = new Set(data);
+        localStorage.setItem('pb_my_clubs', JSON.stringify(data));
+      }
+    }catch(e){}
+  }
+
+  // Load club catalogue
+  if(!_db){
+    renderExplore(); renderMine(); return;
+  }
+  try{
+    const snap = await _db.ref('pb_clubs_catalogue').once('value');
+    const data = snap.val();
+    if(data && typeof data==='object'){
+      CLUBS_DATA = Object.entries(data).map(([key,c])=>({
+        id:         key,
+        name:       c.name||'Unnamed Club',
+        emoji:      c.emoji||'📚',
+        genre:      c.genre||'General',
+        privacy:    c.privacy||'open',
+        tagline:    c.tagline||'',
+        members:    c.members||0,
+        booksRead:  c.booksRead||0,
+        meetings:   c.meetings||0,
+        trending:   c.trending||false,
+        color:      c.color||'linear-gradient(135deg,#1a1008,#0d0906)',
+        memberList: c.memberList||[],
+        currentBook:c.currentBook||null,
+        schedule:   c.schedule ? (Array.isArray(c.schedule) ? c.schedule : Object.values(c.schedule)) : [],
+        createdBy:  c.createdBy||'admin',
+        createdAt:  c.createdAt||0,
+      }));
+    }
+  }catch(e){
+    console.warn('Failed to load clubs catalogue:', e);
+  }
+  renderExplore();
+  renderMine();
+}
+
+// Save user's joined clubs to Firebase
+function saveMyClubs(){
+  const arr = [...myClubs];
+  localStorage.setItem('pb_my_clubs', JSON.stringify(arr));
+  const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
+  if(sess && _db){
+    const uk = sess.username.replace(/\./g,'_');
+    _db.ref('pb_clubs/'+uk).set(arr).catch(()=>{});
+  }
+}
+
+// Create a new club — saves to Firebase
+function createClub(){
+  const name = document.getElementById('cm-name').value.trim();
+  const tag  = document.getElementById('cm-tagline').value.trim();
+  if(!name){ _showToast('⚠️ Give your club a name!'); return; }
+  if(!createGenre){ _showToast('⚠️ Pick a genre!'); return; }
+
+  const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
+  if(!sess){ _showToast('⚠️ You need to be signed in to create a club.'); return; }
+  if(!_db){ _showToast('⚠️ Not connected to database.'); return; }
+
+  const key = name.toLowerCase().replace(/[^a-z0-9]+/g,'_').substring(0,40)+'_'+Date.now();
+  const club = {
+    name, emoji:createEmoji, genre:createGenre, privacy:createPrivacy,
+    tagline: tag||'A brand new reading club — first meeting coming soon!',
+    members:1, booksRead:0, meetings:0, trending:false,
+    color:'linear-gradient(135deg,#1e1408,#0e0c06)',
+    memberList:[sess.name||sess.username],
+    createdBy: sess.username,
+    createdAt: Date.now()
+  };
+
+  _db.ref('pb_clubs_catalogue/'+key).set(club).then(()=>{
+    // Also join it immediately
+    CLUBS_DATA.push({...club, id:key});
+    myClubs.add(key);
+    saveMyClubs();
+    closeCreate();
+    renderExplore();
+    renderMine();
+    document.getElementById('my-clubs-badge').textContent = [...myClubs].length;
+    _showToast('🎉 "'+name+'" created!');
+    setTimeout(()=>switchTab('mine'), 600);
+  }).catch(e=>{
+    _showToast('Failed to create club: '+e.message);
+  });
+}
+
+
+</script>
 </body>
 </html>
