@@ -589,7 +589,7 @@ function buildUserCard(user, extraActions){
 
   return `<div class="user-card" id="ucard-${uKey(user.username)}">
     <div class="user-card-top" style="cursor:pointer" onclick="window.location='bookshelf_profile.html?user='+encodeURIComponent('${user.username}')">
-      <div class="user-avatar" style="background:${color}">${(user.name||user.username).charAt(0).toUpperCase()}</div>
+      <div class="user-avatar" style="background:${color}" id="av-${uKey(user.username)}" data-username="${user.username}">${(user.name||user.username).charAt(0).toUpperCase()}</div>
       <div class="user-info">
         <div class="user-name">${user.name||user.username}</div>
         <div class="user-handle">@${user.username}</div>
@@ -626,6 +626,7 @@ function renderDiscover(){
     grid.innerHTML = searchQuery
       ? `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No users found</div><div class="empty-sub">No one with that username or name. Try a different search.</div></div>`
       : `<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">No other readers yet</div><div class="empty-sub">Be the first to invite friends to Pagebound!</div></div>`;
+  setTimeout(loadAvatarsForVisible, 50);
     return;
   }
 
@@ -667,6 +668,7 @@ function renderFriends(){
       <button class="btn-add-friend friends" style="cursor:default" disabled>✓ Friends</button>
       <button onclick="removeFriend('${u.username}')" style="background:rgba(155,63,42,.12);border:1px solid rgba(155,63,42,.3);color:#e07060;border-radius:9px;padding:.52rem .7rem;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;transition:background .18s;" onmouseover="this.style.background='rgba(155,63,42,.25)'" onmouseout="this.style.background='rgba(155,63,42,.12)'">✕</button>
     `);
+  setTimeout(loadAvatarsForVisible, 50);
   }).join('');
 }
 
@@ -683,6 +685,7 @@ function renderRequests(){
   }
   grid.innerHTML = reqs.map(req=>{
     const u = { username: req.username, name: req.name, _profile:{}, _libCount:0 };
+  setTimeout(loadAvatarsForVisible, 50);
     const actions = `
       <button class="btn-add-friend" onclick="acceptRequest('${req.username}',this)" style="background:var(--green)">✓ Accept</button>
       <button onclick="declineRequest('${req.username}')" style="background:rgba(155,63,42,.12);border:1px solid rgba(155,63,42,.3);color:#e07060;border-radius:9px;padding:.52rem .7rem;font-family:'DM Sans',sans-serif;font-size:.75rem;cursor:pointer;">✕ Decline</button>
@@ -993,6 +996,28 @@ loadAll();
     }
   })();
 })();
+
+
+/* ── Load real avatars from pb_profile after cards render ── */
+async function loadAvatarsForVisible(){
+  if(!db) return;
+  const avatarEls = document.querySelectorAll('[data-username][id^="av-"]');
+  for(const el of avatarEls){
+    if(el.dataset.avatarLoaded) continue;
+    el.dataset.avatarLoaded = '1';
+    const username = el.dataset.username;
+    const uk = username.replace(/\./g,'_');
+    try{
+      const snap = await db.ref('pb_profile/'+uk+'/avatar').once('value');
+      const avatar = snap.val();
+      if(avatar){
+        el.style.overflow = 'hidden';
+        el.style.padding = '0';
+        el.innerHTML = '<img src="'+avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      }
+    }catch(e){}
+  }
+}
 
 </script>
 
