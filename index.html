@@ -1249,8 +1249,9 @@ function openBookModal(title, author, color, epubKey){
   const sess = _getSession();
   const uk   = sess ? sess.username.replace(/\./g,'_') : null;
 
-  // Check premium — localStorage first, then async Firebase check
-  let isPrem = uk ? localStorage.getItem('pb_premium_'+uk)==='true' : false;
+  // Use the global _isPremium flag (set by initPremium on page load)
+  // Fall back to localStorage check as safety net
+  let isPrem = _isPremium || (uk && localStorage.getItem('pb_premium_'+uk)==='true');
 
   // Store pending book — resolve epubKey from arg or catalogue
   const bk = Object.values(sections).flat().find(b=>b.title===title);
@@ -1308,13 +1309,13 @@ function openBookModal(title, author, color, epubKey){
 
   applyButtonState(isPrem);
 
-  // If not premium in localStorage, check Firebase and update button if needed
+  // If not premium, check Firebase and update button live
   if(!isPrem && sess && resolvedEpubKey && typeof _fbDb !== 'undefined' && _fbDb){
     _fbDb.ref('pb_premium/'+uk).once('value').then(snap=>{
       const data = snap.val();
       if(data && data.active){
-        localStorage.setItem('pb_premium_'+uk,'true');
         _isPremium = true;
+        localStorage.setItem('pb_premium_'+uk,'true');
         applyButtonState(true);
         _applyPremiumUI();
       }
