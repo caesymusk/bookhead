@@ -390,28 +390,32 @@ async function loadEpub(){
   }
 
   // Logged in — check premium
-  let isPremium = false;
   const uk = SESSION.username.replace(/\./g,'_');
-  if(localStorage.getItem('pb_premium_'+uk)==='true'){
-    isPremium=true;
-  } else {
+  let isPremium = localStorage.getItem('pb_premium_'+uk)==='true';
+
+  // If not in localStorage, check Firebase (with timeout so we don't hang)
+  if(!isPremium){
     try{
-      const snap = await db.ref('pb_premium/'+uk).once('value');
-      if(snap.val()&&snap.val().active){
+      const premSnap = await Promise.race([
+        db.ref('pb_premium/'+uk).once('value'),
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),5000))
+      ]);
+      if(premSnap.val()&&premSnap.val().active){
         isPremium=true;
         localStorage.setItem('pb_premium_'+uk,'true');
       }
-    }catch(e){}
+    }catch(e){
+      // Firebase unreachable or timed out — if they have a session, let them try
+      // Don't block on network issues
+      console.warn('Premium check failed:', e.message);
+    }
   }
 
-  // Not premium → subscribe page (pass book context so they return here after)
+  // Not premium → subscribe page
   if(!isPremium){
     const params = new URLSearchParams({
-      key:    EPUB_KEY,
-      title:  TITLE,
-      author: AUTHOR,
-      color:  COLOR,
-      from:   window.location.href,
+      key: EPUB_KEY, title: TITLE, author: AUTHOR, color: COLOR,
+      from: window.location.href,
     });
     window.location.href = 'subscribe.html?' + params.toString();
     return;
