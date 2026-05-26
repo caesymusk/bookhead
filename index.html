@@ -1237,8 +1237,10 @@ function openBookModal(title, author, color, epubKey){
   const isPrem = sess ? localStorage.getItem('pb_premium_'+sess.username.replace(/\./g,'_'))==='true' : false;
   const inLib  = isInLibrary(title);
 
-  // Store pending book
-  pendingBook   = { title, author, color, epubKey: epubKey||'' };
+  // Store pending book — use epubKey from arg or fall back to catalogue data
+  const bk = Object.values(sections).flat().find(b=>b.title===title);
+  const resolvedEpubKey = epubKey || (bk && bk.epubKey) || '';
+  pendingBook   = { title, author, color, epubKey: resolvedEpubKey };
   pendingStatus = 'wishlist';
 
   // ── LEFT: cover ──
@@ -1246,7 +1248,6 @@ function openBookModal(title, author, color, epubKey){
   if(coverEl) coverEl.style.background = color || 'linear-gradient(160deg,#3d2810,#6e4820)';
 
   // Cover image (from catalogue)
-  const bk = Object.values(sections).flat().find(b=>b.title===title);
   const coverImg = document.getElementById('bm-cover-img');
   if(coverImg){
     if(bk && bk.coverImage){
@@ -1286,7 +1287,7 @@ function openBookModal(title, author, color, epubKey){
   // Hide all first
   [elReadNow, elSubCta, elFreeTrial].forEach(el=>{ if(el) el.style.display='none'; });
 
-  if(!epubKey){
+  if(!resolvedEpubKey){
     // No epub — just show add button, no read option
   } else if(!sess){
     // Not registered
@@ -1296,8 +1297,7 @@ function openBookModal(title, author, color, epubKey){
     if(elSubCta) elSubCta.style.display='';
   } else {
     // Premium user
-    if(elReadNow) elReadNow.style.display='';
-    elReadNow.textContent = '📖 Read Now';
+    if(elReadNow){ elReadNow.style.display=''; elReadNow.textContent='📖 Read Now'; }
   }
 
   // Add to library button state
@@ -1318,23 +1318,18 @@ function openBookModal(title, author, color, epubKey){
 }
 
 function bmReadNow(){
-  if(!pendingBook || !pendingBook.epubKey) return;
+  if(!pendingBook) return;
+  // Resolve epubKey — from pendingBook or from catalogue
+  const bk = Object.values(sections).flat().find(b=>b.title===pendingBook.title);
+  const epubKey = pendingBook.epubKey || (bk && bk.epubKey) || '';
+  if(!epubKey){ _showToast('No epub file uploaded for this book yet.'); return; }
   closeBookModal();
-  // Add to library as "reading" then open reader
+  // Add to library as "reading"
   if(!isInLibrary(pendingBook.title)){
-    addBookToLibrary({...pendingBook, status:'reading', rating:0});
-    // Also save to profile "currently reading" in Firebase
-    const sess = _getSession();
-    if(sess && typeof _fbDb !== 'undefined' && _fbDb){
-      const uk = sess.username.replace(/\./g,'_');
-      _fbDb.ref('pb_libraries/'+uk).once('value').then(snap=>{
-        const lib = snap.val()||[];
-        const arr = Array.isArray(lib) ? lib : Object.values(lib);
-        _fbDb.ref('pb_libraries/'+uk).set(arr);
-      }).catch(()=>{});
-    }
+    addBookToLibrary({...pendingBook, epubKey, status:'reading', rating:0});
   }
-  openReader(pendingBook.epubKey, pendingBook.title, pendingBook.author, pendingBook.color);
+  // Navigate to reader
+  openReader(epubKey, pendingBook.title, pendingBook.author, pendingBook.color);
 }
 
 function bmGoSubscribe(){
