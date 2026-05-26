@@ -603,14 +603,14 @@ function buildClubCard(c){
         <div class="club-meta-item"><span>🗓️</span><span>${c.meetings} meetings</span></div>
         <div class="member-avatars">${buildMemberAvatars(c.memberList)}</div>
       </div>
-      <div class="club-current-book">
-        <div class="club-book-cover" style="background:${c.currentBook.color}"></div>
+      ${c.currentBook ? `<div class="club-current-book">
+        <div class="club-book-cover" style="background:${c.currentBook.color||'#2e1c08'}"></div>
         <div>
           <div class="club-book-label">Now Reading</div>
-          <div class="club-book-title">${c.currentBook.title}</div>
-          <div class="club-book-author">${c.currentBook.author}</div>
+          <div class="club-book-title">${c.currentBook.title||'TBD'}</div>
+          <div class="club-book-author">${c.currentBook.author||''}</div>
         </div>
-      </div>
+      </div>` : ''}
       <div class="club-footer" onclick="event.stopPropagation()">
         <button class="btn-join ${joined?'joined':''}" onclick="toggleJoin(${c.id},this)">
           ${joined?'✓ Joined':'+ Join Club'}
@@ -741,17 +741,17 @@ function openDetail(id){
 
   // Current book
   const cb = c.currentBook;
-  document.getElementById('cd-current-book').innerHTML = `
-    <div class="cd-book-cover" style="background:${cb.color}"></div>
+  document.getElementById('cd-current-book').innerHTML = cb ? `
+    <div class="cd-book-cover" style="background:${cb.color||'#2e1c08'}"></div>
     <div class="cd-book-info">
       <div class="cd-book-label">Now Reading</div>
-      <div class="cd-book-title">${cb.title}</div>
-      <div class="cd-book-author">${cb.author}</div>
+      <div class="cd-book-title">${cb.title||'TBD'}</div>
+      <div class="cd-book-author">${cb.author||''}</div>
       <div class="cd-book-progress">
-        <div class="cd-progress-bar"><div class="cd-progress-fill" style="width:${cb.progress}%"></div></div>
-        <div class="cd-progress-label">${cb.progress}% through the group</div>
+        <div class="cd-progress-bar"><div class="cd-progress-fill" style="width:${cb.progress||0}%"></div></div>
+        <div class="cd-progress-label">${cb.progress||0}% through the group</div>
       </div>
-    </div>`;
+    </div>` : '<div style="color:var(--text-muted);font-size:.8rem;padding:.5rem">No book selected yet.</div>';
 
   // Members
   document.getElementById('cd-members-grid').innerHTML = c.memberList.map(n=>`
