@@ -17,9 +17,22 @@ function initPremium(){
   const sess = _getSession();
   if(!sess) return;
   const uk = sess.username.replace(/\./g,'_');
+  // Check localStorage first (instant)
   if(localStorage.getItem('pb_premium_'+uk)==='true'){
     _isPremium = true;
     _applyPremiumUI();
+    return;
+  }
+  // Check Firebase as fallback (async)
+  if(typeof _fbDb !== 'undefined' && _fbDb){
+    _fbDb.ref('pb_premium/'+uk).once('value').then(snap=>{
+      const data = snap.val();
+      if(data && data.active){
+        _isPremium = true;
+        localStorage.setItem('pb_premium_'+uk,'true');
+        _applyPremiumUI();
+      }
+    }).catch(()=>{});
   }
 }
 // Run after DOM is fully ready
