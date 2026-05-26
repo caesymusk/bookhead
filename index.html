@@ -1341,11 +1341,17 @@ function openBookModal(title, author, color, epubKey){
 }
 
 function bmReadNow(){
-  if(!pendingBook) return;
+  if(!pendingBook) { console.log('bmReadNow: no pendingBook'); return; }
   // Resolve epubKey — from pendingBook or from catalogue
   const bk = Object.values(sections).flat().find(b=>b.title===pendingBook.title);
   const epubKey = pendingBook.epubKey || (bk && bk.epubKey) || '';
-  if(!epubKey){ _showToast('No epub file uploaded for this book yet.'); return; }
+  console.log('bmReadNow:', { pendingBook, bkFound: !!bk, bkEpubKey: bk&&bk.epubKey, resolvedEpubKey: epubKey });
+  if(!epubKey){
+    _showToast('No epub file uploaded for this book yet.');
+    // Still try to navigate to reader — let reader handle missing epub
+    openReader('', pendingBook.title, pendingBook.author, pendingBook.color);
+    return;
+  }
   closeBookModal();
   // Add to library as "reading"
   if(!isInLibrary(pendingBook.title)){
@@ -1401,7 +1407,7 @@ function bmAddToLibrary(){
 
 
 function openReader(epubKey,title,author,color){
-  if(!epubKey){showToast('No epub file for this book yet.');return;}
+  if(!epubKey){ _showToast('No epub file for this book yet.'); return; }
   window.location.href='reader.html?key='+encodeURIComponent(epubKey)+'&title='+encodeURIComponent(title)+'&author='+encodeURIComponent(author)+'&color='+encodeURIComponent(color||'');
 }
 function filterByCategory(cat,el){
