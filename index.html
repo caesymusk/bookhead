@@ -151,14 +151,1972 @@ function pmFireConfetti(){
   }
 }
 
-// Dummy session fallback helper to prevent initialization crashes if not defined elsewhere
-function _getSession() {
-  return window._session || { username: "guest.user" };
-}
-function _showToast(msg) { alert(msg); }
-function _closeDD() {
-  document.getElementById('profile-dropdown')?.classList.remove('open');
-}
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0d0906; --surface:#16100a;
+    --amber:#d4893c; --amber-light:#f0a84e; --amber-glow:rgba(212,137,60,.18);
+    --cream:#f5ede0; --tan:#b89468; --tan-dim:#6e5434;
+    --text:#e8ddd0; --text-dim:#8a7258; --rust:#9b3f2a;
+    --nav-h:56px; --bnav-h:62px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+  /* ── NAVBAR ── */
+  .navbar{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:linear-gradient(to bottom,rgba(13,9,6,.98),rgba(13,9,6,0));transition:background .3s;}
+  .navbar.solid{background:rgba(13,9,6,.97);box-shadow:0 1px 20px rgba(0,0,0,.55);}
+  .nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:var(--amber-light);cursor:pointer;user-select:none;line-height:1;}
+  .nav-logo em{font-style:normal;font-size:.56rem;display:block;color:var(--tan-dim);letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
+  .nav-center{display:flex;gap:1.8rem;align-items:center;}
+  .nav-center a{color:var(--tan);text-decoration:none;font-size:.84rem;font-weight:500;letter-spacing:.04em;opacity:.75;transition:opacity .2s,color .2s;}
+  .nav-center a:hover{opacity:1;color:var(--cream);}
+  .nav-center a.active{opacity:1;color:var(--amber-light);}
+  .nav-right{display:flex;align-items:center;gap:.85rem;}
+  .nav-search{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:.34rem .9rem .34rem .8rem;display:flex;align-items:center;gap:.45rem;cursor:text;transition:background .2s,border-color .2s;}
+  .nav-search:hover{background:rgba(255,255,255,.1);border-color:var(--amber);}
+  .nav-search input{background:none;border:none;outline:none;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.82rem;width:130px;}
+  .nav-search input::placeholder{color:var(--text-dim);}
+
+  /* Profile pill */
+  .profile-pill{display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:.28rem .75rem .28rem .32rem;cursor:pointer;text-decoration:none;transition:background .2s,border-color .2s,transform .15s;position:relative;}
+  .profile-pill:hover{background:rgba(212,137,60,.15);border-color:var(--amber);transform:translateY(-1px);}
+  .profile-pill-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--rust));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;}
+  .profile-pill-info{line-height:1.15;}
+  .profile-pill-name{font-size:.76rem;font-weight:600;color:var(--cream);}
+  .profile-pill-sub{font-size:.62rem;color:var(--tan-dim);}
+  .profile-pill-arrow{color:var(--tan-dim);font-size:.7rem;margin-left:.15rem;transition:transform .2s;}
+  .profile-pill:hover .profile-pill-arrow{transform:translateX(3px);}
+
+  /* ── PROFILE DROPDOWN ── */
+  .profile-dropdown-wrap{position:relative;}
+  .profile-dropdown{
+    position:absolute;top:calc(100% + 10px);right:0;
+    background:rgba(18,12,8,.97);
+    border:1px solid rgba(184,148,104,.22);
+    border-radius:14px;
+    width:240px;
+    box-shadow:0 16px 48px rgba(0,0,0,.7);
+    backdrop-filter:blur(18px);
+    overflow:visible;
+    opacity:0;pointer-events:none;
+    transform:translateY(-8px) scale(.97);
+    transform-origin:top right;
+    transition:opacity .2s,transform .2s;
+    z-index:400;
+  }
+  .profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
+
+  /* dropdown header (logged-in only) */
+  .dd-header{padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(184,148,104,.15);}
+  .dd-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--cream);line-height:1.2;}
+  .dd-handle{font-size:.68rem;color:var(--amber);margin-top:.12rem;}
+
+  /* dropdown items */
+  .dd-section{padding:.35rem 0;}
+  .dd-section+.dd-section{border-top:1px solid rgba(184,148,104,.1);}
+  .dd-item{display:flex;align-items:center;gap:.65rem;width:100%;background:none;border:none;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;color:var(--text-dim);cursor:pointer;text-decoration:none;transition:background .15s,color .15s;text-align:left;-webkit-tap-highlight-color:transparent;}
+  .dd-item:hover{background:rgba(184,148,104,.1);color:var(--cream);}
+  .dd-item .dd-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0;}
+  .dd-item.danger{color:#e07060;}
+  .dd-item.danger:hover{background:rgba(155,63,42,.15);color:#e08070;}
+  .dd-item.highlight{color:var(--amber);}
+  .dd-item.highlight:hover{background:rgba(212,137,60,.12);color:var(--amber-light);}
+
+  /* language toggle inside dropdown */
+  .dd-lang-row{display:flex;align-items:center;justify-content:space-between;padding:.55rem 1rem;}
+  .dd-lang-label{font-size:.78rem;color:var(--text-dim);display:flex;align-items:center;gap:.5rem;}
+  .dd-lang-toggle{display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:7px;overflow:hidden;}
+  .dd-lang-btn{background:none;border:none;padding:.28rem .65rem;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+  .dd-lang-btn.active{background:var(--amber);color:var(--bg);}
+  .dd-lang-btn:not(.active):hover{background:rgba(255,255,255,.08);color:var(--cream);}
+
+  /* Hamburger */
+  .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;cursor:pointer;background:none;border:none;padding:4px;-webkit-tap-highlight-color:transparent;}
+  .hamburger span{display:block;height:2px;background:var(--cream);border-radius:2px;transition:transform .3s,opacity .3s;}
+  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  /* Mobile drawer */
+  .mobile-menu{position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,9,6,.98);backdrop-filter:blur(14px);z-index:250;padding:1rem 1.5rem 2rem;display:none;flex-direction:column;gap:0;border-bottom:1px solid rgba(255,255,255,.08);}
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{color:var(--tan);text-decoration:none;font-size:.98rem;font-weight:500;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.06);transition:color .2s;display:flex;align-items:center;gap:.6rem;}
+  .mobile-menu a:last-of-type{border-bottom:none;}
+  .mobile-menu a.active,.mobile-menu a:hover{color:var(--amber-light);}
+  .mobile-search{margin-top:1rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:.65rem 1rem;display:flex;align-items:center;gap:.6rem;}
+  .mobile-search input{background:none;border:none;outline:none;color:var(--cream);font-family:'DM Sans',sans-serif;font-size:.9rem;flex:1;}
+  .mobile-search input::placeholder{color:var(--text-dim);}
+
+  /* Bottom nav */
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;height:var(--bnav-h);background:rgba(13,9,6,.97);border-top:1px solid rgba(255,255,255,.08);padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around;}
+  .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:var(--text-dim);font-size:.58rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:color .2s;padding:.4rem .5rem;min-width:54px;-webkit-tap-highlight-color:transparent;}
+  .bnav-icon{font-size:1.3rem;line-height:1;}
+  .bnav-item.active{color:var(--amber-light);}
+
+  /* ── HERO ── */
+  .hero{height:88vh;min-height:500px;position:relative;display:flex;align-items:flex-end;padding:0 2rem 5.5rem;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 65% 40%,rgba(90,40,10,.55) 0%,transparent 70%),linear-gradient(160deg,#1a0e06 0%,#2a1608 40%,#160c04 100%);}
+  .hero-bg-book{position:absolute;right:5%;top:50%;transform:translateY(-50%);width:36%;max-width:380px;aspect-ratio:2/3;border-radius:8px 14px 14px 8px;background:linear-gradient(160deg,#3d2810,#7a4e20);box-shadow:-20px 16px 60px rgba(0,0,0,.7),inset -6px 0 16px rgba(0,0,0,.4);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:1.8rem 1.4rem;animation:heroFloat 6s ease-in-out infinite;}
+  @keyframes heroFloat{0%,100%{transform:translateY(-50%) rotate(-1deg);}50%{transform:translateY(calc(-50% - 12px)) rotate(0.5deg);}}
+  .hero-bg-book::before{content:'';position:absolute;left:0;top:0;bottom:0;width:16px;background:rgba(0,0,0,.35);border-radius:8px 0 0 8px;}
+  .hero-book-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:rgba(245,237,224,.9);line-height:1.2;position:relative;z-index:1;}
+  .hero-book-author{font-size:.82rem;color:rgba(245,237,224,.5);margin-top:.35rem;position:relative;z-index:1;}
+  .hero-vignette{position:absolute;inset:0;background:linear-gradient(to right,var(--bg) 0%,transparent 55%),linear-gradient(to top,var(--bg) 0%,transparent 45%);}
+  .hero-content{position:relative;z-index:1;max-width:480px;}
+  .hero-badge{display:inline-block;background:var(--amber);color:var(--bg);font-size:.65rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;padding:.26rem .75rem;border-radius:4px;margin-bottom:.85rem;}
+  .hero-title{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,5vw,3.4rem);font-weight:700;line-height:1.1;color:var(--cream);margin-bottom:.6rem;}
+  .hero-title em{font-style:italic;color:var(--amber-light);}
+  .hero-meta{display:flex;gap:.8rem;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap;}
+  .hero-meta-tag{font-size:.72rem;font-weight:600;letter-spacing:.06em;color:var(--tan);text-transform:uppercase;}
+  .hero-meta-dot{width:3px;height:3px;background:var(--tan-dim);border-radius:50%;}
+  .hero-stars{color:var(--amber);font-size:.82rem;}
+  .hero-desc{font-size:.9rem;color:rgba(232,221,208,.7);line-height:1.65;max-width:380px;margin-bottom:1.4rem;}
+  .hero-btns{display:flex;gap:.7rem;flex-wrap:wrap;}
+  .btn-primary{background:var(--amber);color:var(--bg);border:none;padding:.65rem 1.5rem;border-radius:8px;font-weight:700;font-size:.88rem;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:.45rem;transition:background .2s;-webkit-tap-highlight-color:transparent;}
+  .btn-primary:active{background:var(--amber-light);transform:scale(.97);}
+  .btn-ghost{background:rgba(255,255,255,.08);color:var(--cream);border:1.5px solid rgba(255,255,255,.18);padding:.65rem 1.3rem;border-radius:8px;font-weight:500;font-size:.88rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;-webkit-tap-highlight-color:transparent;}
+  .btn-ghost:active{background:rgba(255,255,255,.18);}
+
+  /* ── FEATURED STRIP ── */
+  .featured-strip{margin:0 1.4rem 2.4rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+  .feat-card{border-radius:12px;overflow:hidden;position:relative;height:165px;cursor:pointer;transition:transform .2s;-webkit-tap-highlight-color:transparent;}
+  .feat-card:active{transform:scale(.97);}
+  .feat-bg{position:absolute;inset:0;}
+  .feat-vignette{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.72) 0%,rgba(0,0,0,.2) 100%);}
+  .feat-content{position:relative;z-index:1;padding:1rem;height:100%;display:flex;flex-direction:column;justify-content:flex-end;}
+  .feat-label{font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);margin-bottom:.3rem;}
+  .feat-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--cream);line-height:1.2;}
+  .feat-sub{font-size:.7rem;color:rgba(232,221,208,.55);margin-top:.2rem;}
+
+  /* ── SECTIONS ── */
+  .sections{padding:0 0 4rem;}
+  .section{margin-bottom:2.4rem;}
+  .section-header{display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;margin-bottom:.9rem;}
+  .section-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--cream);display:flex;align-items:center;gap:.5rem;}
+  .section-title .s-icon{font-size:1rem;flex-shrink:0;}
+  .section-title em{font-style:italic;color:var(--amber);margin-left:.25rem;}
+  .section-see-all{font-size:.72rem;font-weight:600;color:var(--amber);text-decoration:none;letter-spacing:.06em;text-transform:uppercase;opacity:.75;transition:opacity .2s;flex-shrink:0;}
+  .section-see-all:hover{opacity:1;}
+
+  /* Scroll row */
+  .scroll-row-wrap{position:relative;}
+  .scroll-row{display:flex;gap:.85rem;padding:.3rem 1.4rem;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
+  .scroll-row::-webkit-scrollbar{display:none;}
+  .scroll-btn{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:rgba(13,9,6,.88);border:1px solid rgba(255,255,255,.15);color:var(--cream);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background .2s;box-shadow:0 4px 18px rgba(0,0,0,.6);}
+  .scroll-btn:hover{background:var(--amber);color:var(--bg);}
+  .scroll-btn.left{left:.4rem;}
+  .scroll-btn.right{right:.4rem;}
+
+  /* ── BOOK CARD ── */
+  
+  
+  .bc-title{font-family:'Playfair Display',serif;font-size:.65rem;font-weight:700;color:rgba(245,237,224,.9);line-height:1.25;position:relative;z-index:1;}
+  .bc-author{font-size:.55rem;color:rgba(245,237,224,.5);margin-top:.12rem;}
+  
+  .overlay-btn:active{transform:scale(.9);}
+  .bi-title{font-size:.72rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bi-author{font-size:.63rem;color:var(--text-dim);margin-top:.08rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bi-rating{font-size:.63rem;color:var(--amber);margin-top:.18rem;}
+
+  /* ── FOOTER ── */
+  footer{background:var(--surface);border-top:1px solid rgba(255,255,255,.05);padding:2rem 1.4rem;display:flex;flex-direction:column;align-items:center;gap:.85rem;text-align:center;}
+  .footer-logo{font-family:'Playfair Display',serif;font-style:italic;color:var(--amber);font-size:1.15rem;}
+  .footer-links{display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center;}
+  .footer-links a{color:var(--text-dim);font-size:.76rem;text-decoration:none;transition:color .2s;}
+  .footer-links a:hover{color:var(--amber);}
+  .footer-copy{font-size:.72rem;color:var(--text-dim);}
+
+  /* Animations */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .fu{animation:fadeUp .45s ease both;}
+  .fu1{animation-delay:.08s;}.fu2{animation-delay:.18s;}.fu3{animation-delay:.3s;}
+
+  /* ── CATEGORIES ROW ── */
+  .categories-section{padding:0 0 .4rem;}
+  .categories-scroll{display:flex;gap:.75rem;padding:.4rem 1.4rem 1rem;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;}
+  .categories-scroll::-webkit-scrollbar{display:none;}
+  .cat-pill{flex-shrink:0;scroll-snap-align:start;display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:22px;padding:.42rem 1.05rem;cursor:pointer;text-decoration:none;transition:background .18s,border-color .18s,transform .15s;-webkit-tap-highlight-color:transparent;}
+  .cat-pill:hover{background:rgba(184,148,104,.14);border-color:var(--amber);transform:translateY(-2px);}
+  .cat-pill:active{transform:scale(.96);}
+  .cat-pill.active-cat{background:var(--amber);border-color:var(--amber);color:var(--bg);}
+  .cat-emoji{font-size:1rem;line-height:1;}
+  .cat-label{font-size:.78rem;font-weight:600;color:var(--text);white-space:nowrap;}
+  .cat-pill.active-cat .cat-label{color:var(--bg);}
+
+  /* ── BOOK-ADDED MODAL ── */
+  .book-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(10px);padding:1.2rem;}
+  .book-modal-overlay.open{display:flex;}
+  /* Open-book layout */
+  .book-modal{background:#1a110a;border:1px solid rgba(184,148,104,.22);border-radius:14px;width:100%;max-width:680px;display:flex;overflow:hidden;animation:bmIn .28s cubic-bezier(.22,1,.36,1);min-height:360px;box-shadow:0 32px 80px rgba(0,0,0,.9);}
+  @keyframes bmIn{from{transform:translateY(24px) scale(.96);opacity:0;}to{transform:none;opacity:1;}}
+  /* LEFT — book cover */
+  .bm-left{width:220px;flex-shrink:0;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:1.4rem 1.1rem;background-size:cover;background-position:center;}
+  .bm-left::before{content:'';position:absolute;right:0;top:0;bottom:0;width:18px;background:linear-gradient(to right,rgba(0,0,0,.35),rgba(0,0,0,.1));pointer-events:none;}
+  .bm-left::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.1) 55%);pointer-events:none;}
+  .bm-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .bm-cover-title{position:relative;z-index:2;font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:rgba(245,237,224,.95);line-height:1.25;}
+  .bm-cover-author{position:relative;z-index:2;font-size:.74rem;color:rgba(245,237,224,.55);margin-top:.25rem;}
+  /* RIGHT — details */
+  .bm-right{flex:1;padding:1.6rem 1.5rem;display:flex;flex-direction:column;gap:.9rem;overflow-y:auto;max-height:520px;border-left:1px solid rgba(184,148,104,.1);}
+  .bm-book-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--cream);line-height:1.3;}
+  .bm-book-author{font-size:.8rem;color:var(--text-dim);margin-top:.15rem;}
+  .bm-desc{font-size:.8rem;color:var(--text-dim);line-height:1.7;flex:1;}
+  .bm-desc em{color:var(--text-muted);font-style:italic;}
+  .bm-genre-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+  .bm-tag{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;background:rgba(184,148,104,.1);border:1px solid rgba(184,148,104,.18);border-radius:20px;padding:.22rem .65rem;color:var(--text-dim);}
+  /* Action area */
+  .bm-actions{display:flex;flex-direction:column;gap:.55rem;margin-top:auto;}
+  .bm-read-now{width:100%;background:linear-gradient(135deg,#5a9e6f,#2a6e40);border:none;border-radius:11px;padding:.7rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:opacity .15s;}
+  .bm-read-now:hover{opacity:.9;}
+  .bm-subscribe-cta{width:100%;background:linear-gradient(135deg,rgba(212,137,60,.15),rgba(196,112,26,.1));border:1px solid rgba(212,137,60,.3);border-radius:11px;padding:.65rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:var(--amber-light);cursor:pointer;transition:background .15s;}
+  .bm-subscribe-cta:hover{background:linear-gradient(135deg,rgba(212,137,60,.25),rgba(196,112,26,.18));}
+  .bm-free-trial{width:100%;background:linear-gradient(135deg,rgba(90,158,111,.15),rgba(42,110,64,.1));border:1px solid rgba(90,158,111,.3);border-radius:11px;padding:.65rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:#7dcea0;cursor:pointer;transition:background .15s;}
+  .bm-free-trial:hover{background:linear-gradient(135deg,rgba(90,158,111,.25),rgba(42,110,64,.2));}
+  .bm-add-lib{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:11px;padding:.65rem;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.45rem;transition:background .15s,color .15s;}
+  .bm-add-lib:hover{background:rgba(255,255,255,.1);color:var(--cream);}
+  .bm-add-lib.added{background:rgba(90,158,111,.12);border-color:rgba(90,158,111,.3);color:#7dcea0;}
+  .bm-close-btn{position:absolute;top:.75rem;right:.75rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;color:var(--text-dim);transition:background .15s;z-index:10;}
+  .bm-close-btn:hover{background:rgba(255,255,255,.15);color:var(--cream);}
+  /* Mobile: stack vertically */
+  @media(max-width:580px){
+    .book-modal{flex-direction:column;max-width:360px;}
+    .bm-left{width:100%;height:180px;}
+    .bm-right{max-height:none;border-left:none;border-top:1px solid rgba(184,148,104,.1);}
+  }
+  .bm-body{padding:1.2rem 1.3rem 1.5rem;}
+  .bm-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--cream);margin-bottom:.3rem;}
+  .bm-sub{font-size:.8rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.5;}
+  .bm-status-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:.45rem;}
+  .bm-status-row{display:flex;gap:.5rem;margin-bottom:1.1rem;flex-wrap:wrap;}
+  .bm-status-btn{background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:8px;padding:.38rem .8rem;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background .18s,border-color .18s,color .18s;-webkit-tap-highlight-color:transparent;}
+  .bm-status-btn.selected{background:var(--amber);border-color:var(--amber);color:var(--bg);}
+  .bm-btns{display:flex;gap:.6rem;}
+  .bm-cancel{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);border-radius:9px;padding:.58rem;font-family:'DM Sans',sans-serif;font-size:.83rem;color:var(--text);cursor:pointer;transition:background .18s;}
+  .bm-cancel:hover{background:rgba(255,255,255,.1);}
+  .bm-add{flex:2;background:var(--amber);border:none;border-radius:9px;padding:.58rem;font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:700;color:var(--bg);cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent;}
+  .bm-add:hover{background:var(--amber-light);}
+  .bm-add:active{transform:scale(.97);}
+
+  /* ── BOOK CARD ALREADY-ADDED STATE ── */
+  .fade-up{animation:fadeUp .5s ease both;}
+  .fade-up-1{animation-delay:.08s;}.fade-up-2{animation-delay:.18s;}.fade-up-3{animation-delay:.28s;}.fade-up-4{animation-delay:.4s;}
+
+  /* ── TABLET (≤860px) ── */
+  @media(max-width:860px){
+    .nav-center,.nav-search{display:none;}
+    .hamburger{display:flex;}
+    .profile-pill-info,.profile-pill-arrow{display:none;}
+    .profile-pill{padding:.28rem;border-radius:50%;}
+    .profile-pill::after{display:none;}
+    .scroll-btn{display:none;}
+    .featured-strip{grid-template-columns:1fr 1fr;}
+    .featured-strip .feat-card:last-child{display:none;}
+  }
+
+  /* ── MOBILE (≤600px) ── */
+  @media(max-width:600px){
+    body{padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom));}
+    .bottom-nav{display:flex;}
+
+    /* Stacked hero on mobile */
+    .hero{height:auto;min-height:0;padding:calc(var(--nav-h) + 1.2rem) 1.2rem 2.2rem;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:1.4rem;}
+    .hero-bg-book{position:relative;right:auto;top:auto;transform:none;width:140px;margin:0 auto;animation:heroFloatM 6s ease-in-out infinite;}
+    @keyframes heroFloatM{0%,100%{transform:rotate(-1deg);}50%{transform:translateY(-10px) rotate(0.5deg);}}
+    .hero-vignette{background:linear-gradient(to top,var(--bg) 0%,rgba(13,9,6,.5) 60%,rgba(13,9,6,.85) 100%);}
+    .hero-content{max-width:100%;}
+    .hero-title{font-size:1.9rem;}
+    .hero-desc{font-size:.85rem;max-width:100%;}
+    .hero-meta{justify-content:center;}
+    .hero-btns{width:100%;}
+    .btn-primary,.btn-ghost{flex:1;justify-content:center;padding:.7rem .8rem;font-size:.84rem;}
+
+    .featured-strip{margin:0 .9rem 1.8rem;gap:.65rem;}
+    .feat-card{height:120px;}
+    .feat-title{font-size:.82rem;}
+    .feat-sub{display:none;}
+
+    .section-header{padding:0 .9rem;}
+    .section-title{font-size:.98rem;}
+    .scroll-row{padding:.25rem .9rem;gap:.65rem;}
+    footer{margin-bottom:0;}
+  }
+
+  /* Touch: show overlay buttons always */
+  @media(hover:none){
+    }
+
+  /* ══ SHARED NAV ══ */
+  :root{--nav-h:56px;--bnav-h:62px;}
+  .navbar{position:sticky;top:0;z-index:300;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:rgba(13,9,6,.97);border-bottom:1px solid rgba(184,148,104,.2);backdrop-filter:blur(16px);box-shadow:0 1px 18px rgba(0,0,0,.5);}
+  .nav-logo{font-family:'Playfair Display',serif;font-style:italic;font-size:1.45rem;color:#f0a84e;text-decoration:none;line-height:1;cursor:pointer;user-select:none;}
+  .nav-logo em{font-style:normal;font-size:.56rem;display:block;color:#6e5030;letter-spacing:.22em;text-transform:uppercase;margin-top:-2px;}
+  .nav-center{display:flex;gap:1.6rem;align-items:center;}
+  .nav-center a{color:#b89468;text-decoration:none;font-size:.84rem;font-weight:500;opacity:.75;transition:opacity .2s,color .2s;white-space:nowrap;}
+  .nav-center a:hover{opacity:1;color:#f5ede0;}
+  .nav-center a.active{opacity:1;color:#f0a84e;}
+  .nav-right{display:flex;align-items:center;gap:.85rem;}
+  /* profile pill */
+  .profile-dropdown-wrap{position:relative;}
+  .profile-pill{display:flex;align-items:center;gap:.55rem;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:28px;padding:.28rem .75rem .28rem .32rem;cursor:pointer;transition:background .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}
+  .profile-pill:hover{background:rgba(212,137,60,.14);border-color:#d4893c;}
+  .pp-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;border:none;cursor:pointer;}
+  .pp-info{line-height:1.15;}
+  .pp-name{font-size:.76rem;font-weight:600;color:#f5ede0;}
+  .pp-sub{font-size:.62rem;color:#6e5030;}
+  .pp-arrow{color:#6e5030;font-size:.7rem;margin-left:.1rem;transition:transform .2s;}
+  .profile-pill:hover .pp-arrow{transform:translateX(3px);}
+  /* dropdown */
+  .profile-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:rgba(20,13,8,.97);border:1px solid rgba(184,148,104,.22);border-radius:14px;width:240px;box-shadow:0 16px 48px rgba(0,0,0,.7);backdrop-filter:blur(18px);overflow:visible;opacity:0;pointer-events:none;transform:translateY(-8px) scale(.97);transform-origin:top right;transition:opacity .2s,transform .2s;z-index:400;}
+  .profile-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
+  .dd-header{padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(184,148,104,.15);}
+  .dd-uname{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#f5ede0;line-height:1.2;}
+  .dd-uhandle{font-size:.68rem;color:#d4893c;margin-top:.1rem;}
+  .dd-section{padding:.35rem 0;}
+  .dd-section+.dd-section{border-top:1px solid rgba(184,148,104,.1);}
+  .dd-item{display:flex;align-items:center;gap:.65rem;width:100%;background:none;border:none;padding:.6rem 1rem;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;color:#8a7258;cursor:pointer;text-decoration:none;transition:background .15s,color .15s;text-align:left;-webkit-tap-highlight-color:transparent;}
+  .dd-item:hover{background:rgba(184,148,104,.1);color:#f5ede0;}
+  .dd-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0;}
+  .dd-item.danger{color:#e07060;}
+  .dd-item.danger:hover{background:rgba(155,63,42,.15);color:#e08070;}
+  .dd-item.highlight{color:#d4893c;}
+  .dd-item.highlight:hover{background:rgba(212,137,60,.12);color:#f0a84e;}
+  .dd-lang-row{display:flex;align-items:center;justify-content:space-between;padding:.52rem 1rem;}
+  .dd-lang-label{font-size:.78rem;color:#8a7258;display:flex;align-items:center;gap:.5rem;}
+  .dd-lang-toggle{display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:7px;overflow:hidden;}
+  .dd-lang-btn{background:none;border:none;padding:.28rem .65rem;font-family:'DM Sans',sans-serif;font-size:.72rem;font-weight:600;color:#8a7258;cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent;}
+  .dd-lang-btn.active{background:#d4893c;color:#060408;}
+  .dd-lang-btn:not(.active):hover{background:rgba(255,255,255,.08);color:#f5ede0;}
+  /* hamburger */
+  .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;cursor:pointer;background:none;border:none;padding:4px;-webkit-tap-highlight-color:transparent;}
+  .hamburger span{display:block;height:2px;background:#f5ede0;border-radius:2px;transition:transform .3s,opacity .3s;}
+  .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  /* mobile drawer */
+  .mobile-menu{position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,9,6,.98);backdrop-filter:blur(16px);z-index:250;padding:1rem 1.5rem 2rem;display:none;flex-direction:column;border-bottom:1px solid rgba(184,148,104,.2);}
+  .mobile-menu.open{display:flex;}
+  .mobile-menu a{color:#b89468;text-decoration:none;font-size:.98rem;font-weight:500;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.06);transition:color .2s;display:flex;align-items:center;gap:.6rem;}
+  .mobile-menu a:last-child{border-bottom:none;}
+  .mobile-menu a.active,.mobile-menu a:hover{color:#f0a84e;}
+  .mobile-menu-lang{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.06);}
+  .mobile-menu-lang-label{font-size:.82rem;color:#8a7258;display:flex;align-items:center;gap:.5rem;}
+  /* bottom nav */
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;height:var(--bnav-h);background:rgba(13,9,6,.97);border-top:1px solid rgba(184,148,104,.2);padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around;}
+  .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:#5a4a30;font-size:.57rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.4rem .5rem;min-width:54px;-webkit-tap-highlight-color:transparent;transition:color .2s;}
+  .bnav-icon{font-size:1.25rem;line-height:1;}
+  .bnav-item.active{color:#f0a84e;}
+  .bnav-item:hover{color:#d4893c;}
+  /* settings/signout modals */
+  .nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(6px);padding:1rem;}
+  .nav-overlay.open{display:flex;}
+  .nav-modal{background:#1e160e;border:1px solid rgba(184,148,104,.22);border-radius:18px;width:100%;max-width:400px;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.85);animation:navModalIn .24s ease;position:relative;overflow:hidden;max-height:90vh;overflow-y:auto;}
+  @keyframes navModalIn{from{transform:translateY(18px);opacity:0;}to{transform:none;opacity:1;}}
+  .nav-modal-x{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);color:#8a7258;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;}
+  .nav-modal-x:hover{background:rgba(255,255,255,.14);}
+  .nav-modal-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:#f5ede0;margin-bottom:1.3rem;display:flex;align-items:center;justify-content:space-between;}
+  .settings-sec{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#5a4a30;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid rgba(184,148,104,.15);}
+  .settings-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid rgba(184,148,104,.07);}
+  .settings-row:last-of-type{border-bottom:none;}
+  .settings-label{font-size:.82rem;color:#e8ddd0;display:flex;align-items:center;gap:.5rem;}
+  .settings-desc{font-size:.68rem;color:#8a7258;padding-left:1.5rem;margin-top:.05rem;}
+  .tog-wrap{position:relative;width:38px;height:21px;flex-shrink:0;cursor:pointer;}
+  .tog-wrap input{opacity:0;width:0;height:0;position:absolute;}
+  .tog-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid rgba(184,148,104,.2);border-radius:21px;transition:background .25s;}
+  .tog-wrap input:checked~.tog-track{background:#d4893c;}
+  .tog-thumb{position:absolute;top:2px;left:2px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .25s;pointer-events:none;}
+  .tog-wrap input:checked~.tog-thumb{transform:translateX(17px);}
+  .btn-nav-cancel{background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;color:#e8ddd0;}
+  .btn-nav-save{background:#d4893c;border:none;padding:.5rem 1.3rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:#060408;}
+  .btn-nav-signout{display:flex;align-items:center;gap:.6rem;width:100%;background:rgba(155,63,42,.1);border:1px solid rgba(155,63,42,.28);color:#e07060;padding:.62rem 1rem;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;margin-top:.5rem;-webkit-tap-highlight-color:transparent;}
+  .btn-nav-signout:hover{background:rgba(155,63,42,.2);}
+  /* sign out confirm */
+  .so-inner{text-align:center;}
+  .so-emoji{font-size:2.3rem;margin-bottom:.75rem;}
+  .so-ttl{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#f5ede0;margin-bottom:.38rem;}
+  .so-sub{font-size:.82rem;color:#8a7258;line-height:1.55;margin-bottom:1.4rem;}
+  .so-btns{display:flex;gap:.7rem;}
+  .so-cancel{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.58rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;color:#e8ddd0;}
+  .so-confirm{flex:1;background:#9b3f2a;border:none;padding:.58rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;color:#fff;}
+  /* toast */
+  .nav-toast{position:fixed;bottom:calc(var(--bnav-h) + 1rem);left:50%;transform:translateX(-50%) translateY(10px);background:#d4893c;color:#060408;border-radius:10px;padding:.52rem 1.4rem;font-size:.8rem;font-weight:700;font-family:'DM Sans',sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .28s,transform .28s;pointer-events:none;z-index:600;white-space:nowrap;}
+  .nav-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media(max-width:860px){.nav-center,.nav-search{display:none;}.hamburger{display:flex;}.pp-info,.pp-arrow{display:none;}.profile-pill{padding:.28rem;border-radius:50%;}}
+
+
+  /* ── BOOK CARDS ── */
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+  /* ── BOOK CARDS (clean) ── */
+  .book-card{flex-shrink:0;width:120px;cursor:pointer;transition:transform .22s;scroll-snap-align:start;-webkit-tap-highlight-color:transparent;}
+  .book-card:hover{transform:translateY(-5px);}
+  .book-card:active{transform:scale(.97);}
+  .book-cover{width:100%;aspect-ratio:2/3;border-radius:4px 8px 8px 4px;position:relative;overflow:hidden;box-shadow:3px 5px 16px rgba(0,0,0,.6),inset -3px 0 8px rgba(0,0,0,.35);transition:box-shadow .22s;}
+  .book-card:hover .book-cover{box-shadow:0 18px 44px rgba(0,0,0,.75),0 0 28px var(--amber-glow);}
+  .book-cover-inner{position:absolute;bottom:0;left:0;right:0;padding:.55rem .5rem;background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 100%);}
+  .book-card:hover .book-card.in-library .overlay-btn:first-child{background:var(--green) !important;}
+  .book-info{margin-top:.45rem;padding:0 .05rem;}
+
+  /* ══ PREMIUM MODAL ══ */
+  .pm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:700;backdrop-filter:blur(12px);padding:1.2rem;}
+  .pm-overlay.open{display:flex;}
+  .pm-modal{background:linear-gradient(170deg,#1e1208,#0d0906);border:1px solid rgba(212,137,60,.35);border-radius:22px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 32px 90px rgba(0,0,0,.95);animation:pmIn .3s ease;}
+  @keyframes pmIn{from{transform:translateY(22px) scale(.96);opacity:0;}to{transform:none;opacity:1;}}
+  .pm-close{position:absolute;top:.9rem;right:.9rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--text-dim);font-size:.82rem;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+  .pm-close:hover{background:rgba(255,255,255,.14);}
+  .pm-hero{background:linear-gradient(145deg,#2a1a06,#16100a);padding:1.8rem 2rem 1.4rem;text-align:center;border-bottom:1px solid rgba(212,137,60,.15);position:relative;}
+  .pm-icon{font-size:2.6rem;margin-bottom:.6rem;}
+  .pm-title{font-family:'Playfair Display',serif;font-size:1.45rem;font-weight:700;color:var(--cream);margin-bottom:.3rem;}
+  .pm-sub{font-size:.8rem;color:var(--text-dim);line-height:1.6;}
+  .pm-perks{padding:1.1rem 1.8rem;border-bottom:1px solid rgba(212,137,60,.1);display:flex;flex-direction:column;gap:.45rem;}
+  .pm-perk{display:flex;align-items:center;gap:.7rem;font-size:.8rem;color:var(--text-dim);}
+  .pm-perk strong{color:var(--cream);font-weight:600;}
+  .pm-plans{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;padding:1.1rem 1.8rem;border-bottom:1px solid rgba(212,137,60,.1);}
+  .pm-plan{border:1.5px solid var(--border);border-radius:12px;padding:.85rem .75rem;cursor:pointer;text-align:center;position:relative;transition:border-color .18s,background .18s;}
+  .pm-plan:hover{border-color:rgba(212,137,60,.5);background:rgba(212,137,60,.06);}
+  .pm-plan.sel{border-color:var(--amber);background:rgba(212,137,60,.1);}
+  .pm-plan-badge{position:absolute;top:-.55rem;left:50%;transform:translateX(-50%);background:var(--amber);color:#060408;font-size:.55rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding:.14rem .5rem;border-radius:20px;white-space:nowrap;}
+  .pm-plan-name{font-size:.68rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;}
+  .pm-plan-price{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--cream);}
+  .pm-plan-per{font-size:.63rem;color:var(--text-dim);}
+  .pm-plan-note{font-size:.6rem;color:var(--amber);margin-top:.2rem;}
+  .pm-form{padding:1.1rem 1.8rem 1.5rem;}
+  .pm-form-head{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;}
+  .pm-form-head span{color:var(--green);font-weight:600;font-size:.62rem;}
+  .pm-inp{width:100%;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:10px;padding:.58rem .88rem;font-family:'DM Sans',sans-serif;font-size:.86rem;color:var(--text);outline:none;margin-bottom:.65rem;transition:border-color .2s;}
+  .pm-inp:focus{border-color:var(--amber);background:rgba(255,255,255,.07);}
+  .pm-inp::placeholder{color:var(--text-muted);}
+  .pm-row{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;}
+  .pm-row .pm-inp{margin-bottom:0;}
+  .pm-btn{width:100%;margin-top:.8rem;background:linear-gradient(135deg,var(--amber),#c4701a);border:none;border-radius:12px;padding:.78rem;font-family:'DM Sans',sans-serif;font-size:.94rem;font-weight:700;color:#060408;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:.45rem;}
+  .pm-btn:hover{opacity:.92;}
+  .pm-fine{font-size:.62rem;color:var(--text-muted);text-align:center;margin-top:.65rem;line-height:1.5;}
+  /* Congrats overlay */
+  .pm-congrats{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:800;flex-direction:column;gap:1rem;text-align:center;padding:2rem;}
+  .pm-congrats.show{display:flex;}
+  .pm-confetti-icon{font-size:4rem;animation:bounce .6s ease infinite alternate;}
+  @keyframes bounce{from{transform:scale(1);}to{transform:scale(1.15);}}
+  .pm-congrats-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--amber-light);}
+  .pm-congrats-sub{font-size:.9rem;color:var(--text-dim);line-height:1.7;max-width:320px;}
+  .pm-congrats-btn{margin-top:.5rem;background:var(--amber);border:none;border-radius:12px;padding:.72rem 2.2rem;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;color:#060408;cursor:pointer;animation:glow 1.5s ease-in-out infinite alternate;}
+  @keyframes glow{from{box-shadow:0 0 12px rgba(212,137,60,.4);}to{box-shadow:0 0 28px rgba(212,137,60,.8);}}
+  /* Confetti particles */
+  .confetti-particle{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:900;animation:confettiFall linear forwards;}
+  @keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+
+  /* premium dropdown button */
+  .dd-premium-cta{
+    color:var(--amber-light) !important;
+    background:linear-gradient(135deg,rgba(212,137,60,.12),rgba(196,112,26,.08)) !important;
+    display:flex !important;
+  }
+  .dd-premium-cta:hover{
+    background:linear-gradient(135deg,rgba(212,137,60,.25),rgba(196,112,26,.18)) !important;
+    color:var(--amber-light) !important;
+  }
+  .dd-premium-cta.is-premium{
+    color:#7dcea0 !important;
+    background:linear-gradient(135deg,rgba(90,158,111,.12),rgba(42,110,64,.08)) !important;
+    cursor:default !important;
+  }
+
+
+  /* ── MOBILE BOTTOM NAV ── */
+  .mob-bottom-nav{
+    display:none;
+    position:fixed;bottom:0;left:0;right:0;
+    height:60px;
+    background:rgba(13,9,6,.97);
+    border-top:1px solid rgba(184,148,104,.18);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    z-index:200;
+    align-items:stretch;
+    justify-content:space-around;
+    padding:0 .5rem;
+    safe-area-inset-bottom:env(safe-area-inset-bottom);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .mob-nav-item{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;flex:1;text-decoration:none;
+    color:rgba(138,114,88,.7);font-size:.56rem;font-weight:600;
+    letter-spacing:.04em;text-transform:uppercase;
+    background:none;border:none;cursor:pointer;
+    transition:color .15s;padding:.3rem 0;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mob-nav-item.active,.mob-nav-item:hover{ color:var(--amber-light); }
+  .mob-nav-icon{ font-size:1.25rem;line-height:1; }
+  .mob-nav-label{ font-size:.55rem; }
+  .mob-nav-profile{ position:relative; }
+  .mob-profile-av{
+    width:28px;height:28px;border-radius:50%;
+    background:linear-gradient(135deg,#d4893c,#9b3f2a);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Playfair Display',serif;font-size:.8rem;color:#fff;font-weight:700;
+    overflow:hidden;border:2px solid rgba(212,137,60,.4);
+    transition:border-color .15s;
+  }
+  .mob-nav-profile:hover .mob-profile-av,
+  .mob-nav-profile.active .mob-profile-av{ border-color:var(--amber-light); }
+
+  /* dropdown opens upward on mobile */
+  @media(max-width:700px){
+    .mob-bottom-nav{ display:flex; }
+    body{ padding-bottom:60px; }
+    /* On mobile, dropdown is triggered from bottom nav profile button */
+    /* Position it above the bottom nav */
+    #_dd-wrap .profile-dropdown{
+      position:fixed !important;
+      top:auto !important;
+      bottom:70px !important;
+      right:8px !important;
+      left:8px !important;
+      width:auto !important;
+    }
+    /* hide desktop hamburger on mobile */
+    ._hbg{ display:none !important; }
+  }
+
+  /* Dropdown header with avatar */
+  .dd-header{
+    display:flex;align-items:center;gap:.7rem;
+    padding:.9rem 1rem .7rem;
+    border-bottom:1px solid rgba(184,148,104,.12);
+  }
+
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<!-- ══ NAVBAR ══ -->
+<nav class="navbar" id="_navbar">
+  <a class="nav-logo" href="index.html">Pagebound<em>Social for Readers</em></a>
+  <div class="nav-center">
+    <a href="index.html" class="active">Home</a>
+    <a href="discover.html">Discover</a>
+    <a href="clubs.html">📚 Clubs</a>
+    <a href="friends.html">👥 Friends</a>
+    <a href="seasonpass.html">⚡ Season Pass</a>
+  </div>
+  <div class="nav-right">
+    <div class="profile-dropdown-wrap" id="_dd-wrap">
+      <button class="profile-pill" id="_pp-btn" onclick="_toggleDD(event)">
+        <div class="pp-avatar" id="_pp-avatar">?</div>
+        <div class="pp-info" id="_pp-info">
+          <div class="pp-name" id="_pp-name">Loading…</div>
+          <div class="pp-sub" id="_pp-sub"></div>
+        </div>
+        <span class="pp-arrow">›</span>
+      </button>
+      <div class="profile-dropdown" id="_dd">
+        <!-- LOGGED-IN -->
+        <div id="_dd-in">
+          <div class="dd-header">
+            <div id="_dd-avatar" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff;font-weight:700;flex-shrink:0;border:2px solid rgba(212,137,60,.35);overflow:hidden;"></div>
+            <div>
+              <div class="dd-uname" id="_dd-name"></div>
+              <div class="dd-uhandle" id="_dd-handle"></div>
+            </div>
+          </div>
+          <div class="dd-section">
+            <a class="dd-item" href="bookshelf_profile.html"><span class="dd-icon">👤</span> My Profile</a>
+            <a class="dd-item" href="friends.html"><span class="dd-icon">👥</span> Find Friends</a>
+            <a class="dd-item" href="seasonpass.html"><span class="dd-icon">⚡</span> Season Pass</a>
+          </div>
+          <div class="dd-section">
+            <div class="dd-lang-row">
+              <span class="dd-lang-label">🌐 Language</span>
+              <div class="dd-lang-toggle">
+                <button class="dd-lang-btn active" id="_lang-en" onclick="_setLang('en',event)">🇬🇧 EN</button>
+                <button class="dd-lang-btn" id="_lang-es" onclick="_setLang('es',event)">🇪🇸 ES</button>
+              </div>
+            </div>
+          </div>
+          <div class="dd-section">
+            <button class="dd-item" onclick="_openSettings();_closeDD()"><span class="dd-icon">⚙️</span> Settings</button>
+            <button class="dd-item dd-premium-cta" id="_dd-premium-btn" onclick="openPremiumModal();_closeDD()"><span class="dd-icon">⚡</span> <span id="_dd-premium-label">Go Premium</span></button>
+            <button class="dd-item danger" onclick="_openSignOut();_closeDD()"><span class="dd-icon">🚪</span> Sign Out</button>
+          </div>
+        </div>
+        <!-- LOGGED-OUT -->
+        <div id="_dd-out" style="display:none">
+          <div class="dd-section">
+            <a class="dd-item highlight" href="login.html"><span class="dd-icon">🔑</span> Sign In</a>
+          </div>
+          <div class="dd-section">
+            <div class="dd-lang-row">
+              <span class="dd-lang-label">🌐 Language</span>
+              <div class="dd-lang-toggle">
+                <button class="dd-lang-btn active" id="_lang-en-lo" onclick="_setLang('en',event)">🇬🇧 EN</button>
+                <button class="dd-lang-btn" id="_lang-es-lo" onclick="_setLang('es',event)">🇪🇸 ES</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="hamburger" id="_hbg" onclick="_toggleMenu()"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-menu" id="_mob">
+  <a href="index.html" class="active">Home</a>
+  <a href="discover.html">Discover</a>
+  <a href="clubs.html">📚 Clubs</a>
+  <a href="friends.html">👥 Friends</a>
+  <a href="seasonpass.html">⚡ Season Pass</a>
+  <div class="mobile-menu-lang">
+    <span class="mobile-menu-lang-label">🌐 Language</span>
+    <div class="dd-lang-toggle">
+      <button class="dd-lang-btn active" id="_mlang-en" onclick="_setLang('en',event)">🇬🇧 EN</button>
+      <button class="dd-lang-btn" id="_mlang-es" onclick="_setLang('es',event)">🇪🇸 ES</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="nav-overlay" id="_settings-overlay" onclick="if(event.target===this)_closeSettings()">
+  <div class="nav-modal">
+    <div class="nav-modal-title">
+      ⚙️ Settings
+      <button class="nav-modal-x" onclick="_closeSettings()">✕</button>
+    </div>
+    <div class="settings-sec">Language</div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">🌐 Display Language</div>
+        <div class="settings-desc">Choose the language for the interface</div>
+      </div>
+      <div class="dd-lang-toggle">
+        <button class="dd-lang-btn active" id="_slang-en" onclick="_setLang('en',event)" style="padding:.36rem .8rem;font-size:.76rem;">🇬🇧 EN</button>
+        <button class="dd-lang-btn" id="_slang-es" onclick="_setLang('es',event)" style="padding:.36rem .8rem;font-size:.76rem;">🇪🇸 ES</button>
+      </div>
+    </div>
+    <div class="settings-sec" style="margin-top:1.2rem;">Notifications</div>
+    <div class="settings-row">
+      <div><div class="settings-label">🔔 Comments on posts</div></div>
+      <label class="tog-wrap"><input type="checkbox" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">❤️ Likes on posts</div></div>
+      <label class="tog-wrap"><input type="checkbox" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">👥 New followers</div></div>
+      <label class="tog-wrap"><input type="checkbox"><div class="tog-track"></div><div class="tog-thumb"></div></label>
+    </div>
+    <div class="settings-sec" style="margin-top:1.2rem;">Privacy</div>
+    <div class="settings-row">
+      <div><div class="settings-label">🔒 Private profile</div><div class="settings-desc">Only followers see your posts</div></div>
+      <label class="tog-wrap"><input type="checkbox"><div class="tog-track"></div><div class="tog-thumb"></div></label>
+    </div>
+    <button class="btn-nav-signout" onclick="_closeSettings();_openSignOut()">🚪 Sign Out</button>
+    <div style="display:flex;justify-content:flex-end;gap:.65rem;margin-top:1.2rem;">
+      <button class="btn-nav-cancel" onclick="_closeSettings()">Cancel</button>
+      <button class="btn-nav-save" onclick="_saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGN OUT CONFIRM -->
+<div class="nav-overlay" id="_so-overlay" onclick="if(event.target===this)_closeSignOut()">
+  <div class="nav-modal" style="max-width:360px;">
+    <div class="so-inner">
+      <div class="so-emoji">👋</div>
+      <div class="so-ttl">Sign out of Pagebound?</div>
+      <div class="so-sub">You'll need to sign back in to access your library and reading progress.</div>
+      <div class="so-btns">
+        <button class="so-cancel" onclick="_closeSignOut()">Cancel</button>
+        <button class="so-confirm" onclick="_doSignOut()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="nav-toast" id="_toast"></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="_bnav">
+  <a class="bnav-item active" href="index.html"><span class="bnav-icon">🏠</span>Home</a>
+  <a class="bnav-item " href="friends.html"><span class="bnav-icon">👥</span>Friends</a>
+  <a class="bnav-item " href="seasonpass.html"><span class="bnav-icon">⚡</span>Pass</a>
+  <a class="bnav-item " href="bookshelf_profile.html"><span class="bnav-icon">👤</span>Profile</a>
+</nav>
+
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-bg-book" onclick="openBookModal('The Name of the Rose','Umberto Eco','linear-gradient(160deg,#2a1a0a,#5c3a18)')" style="cursor:pointer;" title="The Name of the Rose — Umberto Eco">
+    <div class="hero-book-title">The Name of the Rose</div>
+    <div class="hero-book-author">Umberto Eco</div>
+  </div>
+  <div class="hero-vignette"></div>
+  <div class="hero-content">
+    <div class="hero-badge fade-up fade-up-1" id="hero-badge">📚 Book of the Week</div>
+    <h1 class="hero-title fade-up fade-up-2"><em>The Name<br>of the Rose</em></h1>
+    <div class="hero-meta fade-up fade-up-3">
+      <span class="hero-meta-tag" id="hero-genre">Historical Mystery</span>
+      <div class="hero-meta-dot"></div>
+      <span class="hero-meta-tag" id="hero-pages">502 pages</span>
+      <div class="hero-meta-dot"></div>
+      <span class="hero-stars">★★★★★</span>
+    </div>
+    <p class="hero-desc fade-up fade-up-3" id="hero-desc">A labyrinthine medieval monastery, grisly murders, and a blind monk who sees all. Eco's masterwork weaves semiotics, theology and thriller into a breathtaking whole.</p>
+    <div class="hero-btns fade-up fade-up-4">
+      <button class="btn-primary" id="hero-btn-preview" onclick="openBookModal('The Name of the Rose','Umberto Eco','linear-gradient(160deg,#2a1a0a,#5c3a18)')">▶ Read Preview</button>
+      <button class="btn-ghost" id="hero-btn-library" onclick="openBookModal('The Name of the Rose','Umberto Eco','linear-gradient(160deg,#2a1a0a,#5c3a18)')">+ Add to Library</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTIONS -->
+<div class="sections">
+
+  <div class="featured-strip fade-up">
+    <div class="feat-card">
+      <div class="feat-bg" style="background:linear-gradient(135deg,#1a2e3a,#2c4a5e,#3d6070)"></div>
+      <div class="feat-vignette"></div>
+      <div class="feat-content">
+        <div class="feat-label" id="feat1-label">🦉 Dark Academia</div>
+        <div class="feat-title" id="feat1-title">Where shadows hold secrets</div>
+        <div class="feat-sub" id="feat1-sub">Gothic campuses, doomed scholars</div>
+      </div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-bg" style="background:linear-gradient(135deg,#2e1a1a,#5e2c20,#7a3a24)"></div>
+      <div class="feat-vignette"></div>
+      <div class="feat-content">
+        <div class="feat-label" id="feat2-label">🌍 World Literature</div>
+        <div class="feat-title" id="feat2-title">Stories from every shore</div>
+        <div class="feat-sub" id="feat2-sub">Translated voices, global perspectives</div>
+      </div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-bg" style="background:linear-gradient(135deg,#1a2e1a,#2c5e2c,#3a6e3a)"></div>
+      <div class="feat-vignette"></div>
+      <div class="feat-content">
+        <div class="feat-label" id="feat3-label">✨ Magical Realism</div>
+        <div class="feat-title" id="feat3-title">Where magic breathes in the mundane</div>
+        <div class="feat-sub" id="feat3-sub">García Márquez, Borges, Allende</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="categories-section">
+    <div class="section-header" style="margin-bottom:.5rem;">
+      <div class="section-title"><span class="s-icon">🏷️</span> <span id="sec-categories">Browse by Genre</span></div>
+    </div>
+    <div class="categories-scroll" id="categories-scroll">
+      <a class="cat-pill active-cat" onclick="filterByCategory('all',this)"><span class="cat-emoji">📚</span><span class="cat-label" id="cat-all">All Books</span></a>
+      <a class="cat-pill" onclick="filterByCategory('dark-academia',this)"><span class="cat-emoji">🦉</span><span class="cat-label" id="cat-dark-academia">Dark Academia</span></a>
+      <a class="cat-pill" onclick="filterByCategory('literary-fiction',this)"><span class="cat-emoji">✒️</span><span class="cat-label" id="cat-literary-fiction">Literary Fiction</span></a>
+      <a class="cat-pill" onclick="filterByCategory('mystery',this)"><span class="cat-emoji">🔍</span><span class="cat-label" id="cat-mystery">Mystery & Thriller</span></a>
+      <a class="cat-pill" onclick="filterByCategory('magical-realism',this)"><span class="cat-emoji">✨</span><span class="cat-label" id="cat-magical-realism">Magical Realism</span></a>
+      <a class="cat-pill" onclick="filterByCategory('sci-fi',this)"><span class="cat-emoji">🚀</span><span class="cat-label" id="cat-sci-fi">Sci-Fi</span></a>
+      <a class="cat-pill" onclick="filterByCategory('fantasy',this)"><span class="cat-emoji">🐉</span><span class="cat-label" id="cat-fantasy">Fantasy</span></a>
+      <a class="cat-pill" onclick="filterByCategory('classics',this)"><span class="cat-emoji">🏛️</span><span class="cat-label" id="cat-classics-pill">Classics</span></a>
+      <a class="cat-pill" onclick="filterByCategory('romance',this)"><span class="cat-emoji">🌹</span><span class="cat-label" id="cat-romance">Romance</span></a>
+      <a class="cat-pill" onclick="filterByCategory('biography',this)"><span class="cat-emoji">🧑‍💼</span><span class="cat-label" id="cat-biography">Biography</span></a>
+      <a class="cat-pill" onclick="filterByCategory('history',this)"><span class="cat-emoji">📜</span><span class="cat-label" id="cat-history">History</span></a>
+      <a class="cat-pill" onclick="filterByCategory('poetry',this)"><span class="cat-emoji">🎭</span><span class="cat-label" id="cat-poetry">Poetry</span></a>
+      <a class="cat-pill" onclick="filterByCategory('horror',this)"><span class="cat-emoji">👁️</span><span class="cat-label" id="cat-horror">Horror</span></a>
+      <a class="cat-pill" onclick="filterByCategory('non-fiction',this)"><span class="cat-emoji">💡</span><span class="cat-label" id="cat-non-fiction">Non-Fiction</span></a>
+      <a class="cat-pill" onclick="filterByCategory('graphic-novel',this)"><span class="cat-emoji">🎨</span><span class="cat-label" id="cat-graphic-novel">Graphic Novel</span></a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="s-icon">🔥</span> <span id="sec-trending">Trending on Pagebound</span></div>
+      <a href="#" class="section-see-all" id="sa-trending">See All</a>
+    </div>
+    <div class="scroll-row-wrap">
+      <button class="scroll-btn left" onclick="scrollRow('trending',-1)">‹</button>
+      <div class="scroll-row" id="trending"></div>
+      <button class="scroll-btn right" onclick="scrollRow('trending',1)">›</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="s-icon">💡</span> <span id="sec-recommended">Because You Read</span><em id="sec-recommended-book">The Secret History</em></div>
+      <a href="#" class="section-see-all" id="sa-recommended">See All</a>
+    </div>
+    <div class="scroll-row-wrap">
+      <button class="scroll-btn left" onclick="scrollRow('recommended',-1)">‹</button>
+      <div class="scroll-row" id="recommended"></div>
+      <button class="scroll-btn right" onclick="scrollRow('recommended',1)">›</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="s-icon">🏛️</span> <span id="sec-classics">Timeless Classics</span></div>
+      <a href="#" class="section-see-all" id="sa-classics">See All</a>
+    </div>
+    <div class="scroll-row-wrap">
+      <button class="scroll-btn left" onclick="scrollRow('classics',-1)">‹</button>
+      <div class="scroll-row" id="classics"></div>
+      <button class="scroll-btn right" onclick="scrollRow('classics',1)">›</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="s-icon">👥</span> <span id="sec-friends">Friends Are Reading</span></div>
+      <a href="#" class="section-see-all" id="sa-friends">See All</a>
+    </div>
+    <div class="scroll-row-wrap">
+      <button class="scroll-btn left" onclick="scrollRow('friends',-1)">‹</button>
+      <div class="scroll-row" id="friends"></div>
+      <button class="scroll-btn right" onclick="scrollRow('friends',1)">›</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="s-icon">✨</span> <span id="sec-new">New Releases</span></div>
+      <a href="#" class="section-see-all" id="sa-new">See All</a>
+    </div>
+    <div class="scroll-row-wrap">
+      <button class="scroll-btn left" onclick="scrollRow('new',-1)">‹</button>
+      <div class="scroll-row" id="new"></div>
+      <button class="scroll-btn right" onclick="scrollRow('new',1)">›</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-logo">Pagebound</div>
+  <div class="footer-links">
+    <a href="#" id="ft-about">About</a><a href="#" id="ft-blog">Blog</a><a href="#" id="ft-clubs">Clubs</a>
+    <a href="#" id="ft-api">API</a><a href="#" id="ft-privacy">Privacy</a><a href="#" id="ft-terms">Terms</a>
+  </div>
+  <div class="footer-copy" id="ft-copy">© 2026 Pagebound · Social Reading Network</div>
+</footer>
+
+<script>
+/* ── FIREBASE INIT (needed before catalogue load) ── */
+const _FB_CONFIG = {
+  apiKey:            "AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",
+  authDomain:        "casey-80b19.firebaseapp.com",
+  databaseURL:       "https://casey-80b19-default-rtdb.firebaseio.com",
+  projectId:         "casey-80b19",
+  storageBucket:     "casey-80b19.firebasestorage.app",
+  messagingSenderId: "1084195161725",
+  appId:             "1:1084195161725:web:c4db255376c0aaf25d5314"
+};
+let _fbDb = null;
+if(typeof firebase !== 'undefined'){
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(_FB_CONFIG);
+    _fbDb = firebase.database();
+  }catch(e){ console.warn('Firebase init failed', e); }
+} else {
+  console.warn('Firebase SDK not loaded — offline mode');
+}
+
+const PALETTES=[
+  "linear-gradient(160deg,#3d2810,#6e4820)","linear-gradient(160deg,#1a2e3a,#2c4e6a)",
+  "linear-gradient(160deg,#2a1a3a,#4a2e5e)","linear-gradient(160deg,#1a3a2a,#2c5e40)",
+  "linear-gradient(160deg,#3a1a1a,#6e2c2c)","linear-gradient(160deg,#3a2e1a,#6e4c2c)",
+  "linear-gradient(160deg,#1e1e2e,#3a3a5e)","linear-gradient(160deg,#2e1a2a,#5a2e4a)",
+  "linear-gradient(160deg,#1a2e1a,#3a5e3a)","linear-gradient(160deg,#2e2410,#5e4820)",
+  "linear-gradient(160deg,#10202e,#1e3e5e)","linear-gradient(160deg,#2e1010,#5e2020)",
+];
+/* ═══════════════════════════════════════════════
+   CATALOGUE — loads from Firebase, falls back to
+   hardcoded array if offline
+═══════════════════════════════════════════════ */
+const FALLBACK_BOOKS=[
+  {title:"Babel",author:"R. F. Kuang",r:5,p:0,section:"trending"},
+  {title:"Tomorrow, and Tomorrow",author:"Gabrielle Zevin",r:5,p:1,section:"trending"},
+  {title:"The Atlas Six",author:"Olivie Blake",r:4,p:2,section:"trending"},
+  {title:"Lessons in Chemistry",author:"Bonnie Garmus",r:4,p:3,section:"trending"},
+  {title:"Fourth Wing",author:"Rebecca Yarros",r:4,p:4,section:"trending"},
+  {title:"Iron Flame",author:"Rebecca Yarros",r:4,p:5,section:"trending"},
+  {title:"Happy Place",author:"Emily Henry",r:4,p:6,section:"trending"},
+  {title:"The Covenant of Water",author:"Abraham Verghese",r:5,p:7,section:"trending"},
+  {title:"Holly",author:"Stephen King",r:4,p:8,section:"trending"},
+  {title:"All the Light We Cannot See",author:"Anthony Doerr",r:5,p:9,section:"trending"},
+  {title:"If We Were Villains",author:"M. L. Rio",r:5,p:2,section:"recommended"},
+  {title:"The Goldfinch",author:"Donna Tartt",r:5,p:0,section:"recommended"},
+  {title:"A Little Life",author:"Hanya Yanagihara",r:5,p:3,section:"recommended"},
+  {title:"Bunny",author:"Mona Awad",r:4,p:4,section:"recommended"},
+  {title:"Never Let Me Go",author:"Kazuo Ishiguro",r:5,p:1,section:"recommended"},
+  {title:"Special Topics in Calamity Physics",author:"Marisha Pessl",r:4,p:6,section:"recommended"},
+  {title:"Ninth House",author:"Leigh Bardugo",r:4,p:7,section:"recommended"},
+  {title:"Crime and Punishment",author:"Fyodor Dostoevsky",r:5,p:9,section:"classics"},
+  {title:"The Count of Monte Cristo",author:"Alexandre Dumas",r:5,p:0,section:"classics"},
+  {title:"Jane Eyre",author:"Charlotte Brontë",r:5,p:1,section:"classics"},
+  {title:"One Hundred Years of Solitude",author:"Gabriel García Márquez",r:5,p:3,section:"classics"},
+  {title:"Anna Karenina",author:"Leo Tolstoy",r:5,p:8,section:"classics"},
+  {title:"Middlemarch",author:"George Eliot",r:5,p:2,section:"classics"},
+  {title:"Wuthering Heights",author:"Emily Brontë",r:4,p:4,section:"classics"},
+  {title:"The Brothers Karamazov",author:"Fyodor Dostoevsky",r:5,p:5,section:"classics"},
+  {title:"Piranesi",author:"Susanna Clarke",r:5,p:1,section:"friends"},
+  {title:"Labyrinths",author:"Jorge Luis Borges",r:5,p:6,section:"friends"},
+  {title:"Normal People",author:"Sally Rooney",r:3,p:3,section:"friends"},
+  {title:"Cloud Atlas",author:"David Mitchell",r:5,p:7,section:"friends"},
+  {title:"The Master and Margarita",author:"Mikhail Bulgakov",r:5,p:0,section:"friends"},
+  {title:"Circe",author:"Madeline Miller",r:5,p:2,section:"friends"},
+  {title:"Rebecca",author:"Daphne du Maurier",r:5,p:8,section:"friends"},
+  {title:"James",author:"Percival Everett",r:5,p:4,section:"new"},
+  {title:"The Women",author:"Kristin Hannah",r:4,p:5,section:"new"},
+  {title:"Wind and Truth",author:"Brandon Sanderson",r:5,p:6,section:"new"},
+  {title:"All Fours",author:"Miranda July",r:4,p:9,section:"new"},
+  {title:"Intermezzo",author:"Sally Rooney",r:4,p:1,section:"new"},
+  {title:"The God of the Woods",author:"Lauren Fox",r:4,p:0,section:"new"},
+];
+
+function firebaseToCatalogueBook(fb, idx){
+  // Convert Firebase catalogue format to the {title,author,r,p,color,section} format index.html uses
+  const PALETTES_LOCAL=[
+    'linear-gradient(160deg,#3d2810,#6e4820)','linear-gradient(160deg,#1a2e3a,#2c4e6a)',
+    'linear-gradient(160deg,#2a1a3a,#4a2e5e)','linear-gradient(160deg,#1a3a2a,#2c5e40)',
+    'linear-gradient(160deg,#3a1a1a,#6e2c2c)','linear-gradient(160deg,#2a2a1a,#4e4e2c)',
+    'linear-gradient(160deg,#1a1a2a,#2c2c4e)','linear-gradient(160deg,#2a1a0a,#5c3a18)',
+    'linear-gradient(160deg,#1a2a2a,#2c4e4e)','linear-gradient(160deg,#1a2a1a,#2c5e2c)',
+  ];
+  return {
+    title:      fb.title||'',
+    author:     fb.author||'',
+    r:          fb.rating||4,
+    p:          idx % PALETTES_LOCAL.length,
+    color:      fb.color||PALETTES_LOCAL[idx % PALETTES_LOCAL.length],
+    coverImage: fb.coverImage||'',
+    section:    fb.section||'trending',
+    genre:      fb.genre||'',
+    desc:       fb.desc||'',
+    epubKey:    fb.epubKey||'',
+    hasEpub:    !!fb.epubKey,
+  };
+}
+
+let allBooks = FALLBACK_BOOKS;
+let sectionOrder = ['trending','new','recommended','friends','classics'];
+let sections = {};
+function buildSections(){
+  sections = {
+    trending:    allBooks.filter(b=>b.section==='trending'),
+    recommended: allBooks.filter(b=>b.section==='recommended'),
+    classics:    allBooks.filter(b=>b.section==='classics'),
+    friends:     allBooks.filter(b=>b.section==='friends'),
+    new:         allBooks.filter(b=>b.section==='new'),
+  };
+}
+buildSections();
+
+// Load from Firebase and refresh if available
+if(typeof _fbDb !== 'undefined' && _fbDb){
+  _fbDb.ref('pb_catalogue').once('value').then(snap=>{
+    const data = snap.val();
+    if(data && typeof data==='object'){
+      const fbBooks = Object.values(data).filter(Boolean);
+      if(fbBooks.length>0){
+        allBooks = fbBooks.map((b,i)=>firebaseToCatalogueBook(b,i));
+        sections = {
+          trending:    allBooks.filter(b=>b.section==='trending'),
+          recommended: allBooks.filter(b=>b.section==='recommended'),
+          classics:    allBooks.filter(b=>b.section==='classics'),
+          friends:     allBooks.filter(b=>b.section==='friends'),
+          new:         allBooks.filter(b=>b.section==='new'),
+        };
+        // Also update BOOK_GENRES
+        allBooks.forEach(b=>{ if(b.genre) BOOK_GENRES[b.title]=b.genre; });
+        renderAllSections();
+      }
+    }
+  }).catch(()=>{}); // silent fail — uses fallback
+
+// Load site settings (section order + book of the week)
+if(typeof _fbDb !== 'undefined' && _fbDb){
+  _fbDb.ref('pb_settings').once('value').then(snap=>{
+    const settings = snap.val()||{};
+    // Section order
+    if(settings.section_order && Array.isArray(settings.section_order)){
+      sectionOrder = settings.section_order;
+    }
+    // Book of the Week
+    if(settings.botw && settings.botw.title){
+      applyBotw(settings.botw);
+    }
+    renderAllSections();
+  }).catch(()=>{});
+}
+
+function applyBotw(b){
+  const titleEl  = document.getElementById('hero-book-title');
+  const authorEl = document.getElementById('hero-book-author');
+  const heroTitle = document.querySelector('.hero-title');
+  const heroDesc  = document.getElementById('hero-desc');
+  if(titleEl)  titleEl.textContent  = b.title||'';
+  if(authorEl) authorEl.textContent = b.author||'';
+  if(heroTitle) heroTitle.innerHTML  = `<em>${b.title||''}</em>`;
+  // Update hero background cover
+  const heroBgBook = document.querySelector('.hero-bg-book');
+  if(heroBgBook){
+    heroBgBook.style.background = b.coverImage ? '#1a1a1a' : (b.color||'linear-gradient(160deg,#2a1a0a,#5c3a18)');
+    if(b.coverImage){
+      heroBgBook.innerHTML = `<img src="${b.coverImage}" style="width:100%;height:100%;object-fit:cover;border-radius:8px 14px 14px 8px;"><div class="hero-book-title">${b.title}</div><div class="hero-book-author">${b.author}</div>`;
+    } else {
+      let inner = heroBgBook.innerHTML;
+      if(titleEl) titleEl.textContent = b.title;
+      if(authorEl) authorEl.textContent = b.author;
+    }
+    heroBgBook.onclick = ()=>openBookModal(b.title,b.author,b.color||'linear-gradient(160deg,#2a1a0a,#5c3a18)',b.epubKey||'');
+  }
+  // Hero buttons
+  const previewBtn = document.getElementById('hero-btn-preview');
+  const libBtn     = document.getElementById('hero-btn-library');
+  const color = b.color||'linear-gradient(160deg,#2a1a0a,#5c3a18)';
+  if(previewBtn) previewBtn.onclick = ()=>openBookModal(b.title,b.author,color,b.epubKey||'');
+  if(libBtn)     libBtn.onclick     = ()=>openBookModal(b.title,b.author,color,b.epubKey||'');
+}
+}
+
+/* GENRE TAGS */
+const BOOK_GENRES={'Babel':'fantasy','Tomorrow, and Tomorrow':'literary-fiction','The Atlas Six':'dark-academia','Lessons in Chemistry':'literary-fiction','Fourth Wing':'fantasy','Iron Flame':'fantasy','Happy Place':'romance','The Covenant of Water':'literary-fiction','Holly':'mystery','All the Light We Cannot See':'history','If We Were Villains':'dark-academia','The Goldfinch':'literary-fiction','A Little Life':'literary-fiction','Bunny':'dark-academia','Never Let Me Go':'sci-fi','The Virgin Suicides':'literary-fiction','Special Topics in Calamity Physics':'dark-academia','Ninth House':'dark-academia','Crime and Punishment':'classics','The Count of Monte Cristo':'classics','Jane Eyre':'classics','One Hundred Years of Solitude':'magical-realism','Anna Karenina':'classics','Middlemarch':'classics','Wuthering Heights':'classics','The Brothers Karamazov':'classics','Piranesi':'fantasy','Labyrinths':'magical-realism','Normal People':'literary-fiction','Cloud Atlas':'sci-fi','The Master and Margarita':'magical-realism','Circe':'fantasy','Rebecca':'mystery','James':'literary-fiction','The Women':'literary-fiction','Wind and Truth':'fantasy','All Fours':'literary-fiction','Intermezzo':'literary-fiction','The God of the Woods':'mystery'};
+let currentCategory='all';
+
+/* ── FIREBASE CONFIG ── */
+function _getSession(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
+function _libKey(u){ return 'pb_libraries/' + u.replace(/\./g,'_'); }
+function _lsKey(){ const s=_getSession(); return s ? 'pb_library_'+s.username : 'pb_library'; }
+
+/* LIBRARY STORAGE — localStorage + Firebase */
+function getLibrary(){try{return JSON.parse(localStorage.getItem(_lsKey())||'[]');}catch{return[];}}
+function saveLibrary(lib){
+  localStorage.setItem(_lsKey(), JSON.stringify(lib));
+  const s=_getSession();
+  if(_fbDb && s){ _fbDb.ref(_libKey(s.username)).set(lib).catch(()=>{}); }
+}
+function isInLibrary(title){return getLibrary().some(b=>b.title===title);}
+function addBookToLibrary(book){const lib=getLibrary();if(!lib.find(b=>b.title===book.title)){lib.unshift(book);saveLibrary(lib);}}
+
+// On load, pull library from Firebase to get cross-device updates
+(function syncLibraryFromFirebase(){
+  const s = _getSession();
+  if(_fbDb && s){
+    _fbDb.ref(_libKey(s.username)).once('value').then(snap=>{
+      const fbData = snap.val();
+      if(fbData && Array.isArray(fbData) && fbData.length > 0){
+        localStorage.setItem(_lsKey(), JSON.stringify(fbData));
+        renderAllSections(); // refresh + buttons
+      }
+    }).catch(()=>{});
+  }
+})();
+
+/* BOOK MODAL */
+let pendingBook=null,pendingStatus='wishlist';
+function handleBookClick(el){
+  const title  = el.dataset.title;
+  const author = el.dataset.author;
+  const color  = decodeURIComponent(el.dataset.color||'');
+  const epub   = el.dataset.epub||'';
+  openBookModal(title, author, color, epub);
+}
+
+function closeBookModal(){
+  document.getElementById('book-modal-overlay').classList.remove('open');
+  document.body.style.overflow='';
+  pendingBook=null;
+}
+
+function openBookModal(title, author, color, epubKey){
+  const sess = _getSession();
+  const uk   = sess ? sess.username.replace(/\./g,'_') : null;
+
+  // Use the global _isPremium flag (set by initPremium on page load)
+  // Fall back to localStorage check as safety net
+  let isPrem = _isPremium || (uk && localStorage.getItem('pb_premium_'+uk)==='true');
+
+  // Store pending book — resolve epubKey from arg or catalogue
+  const bk = Object.values(sections).flat().find(b=>b.title===title);
+  const resolvedEpubKey = epubKey || (bk && bk.epubKey) || '';
+  pendingBook   = { title, author, color, epubKey: resolvedEpubKey };
+  pendingStatus = 'wishlist';
+
+  // ── LEFT: cover ──
+  const coverEl = document.getElementById('bm-cover');
+  if(coverEl) coverEl.style.background = color || 'linear-gradient(160deg,#3d2810,#6e4820)';
+  const coverImg = document.getElementById('bm-cover-img');
+  if(coverImg){
+    if(bk && bk.coverImage){ coverImg.src=bk.coverImage; coverImg.style.display='block'; }
+    else coverImg.style.display='none';
+  }
+  document.getElementById('bm-cover-title').textContent  = title;
+  document.getElementById('bm-cover-author').textContent = author;
+
+  // ── RIGHT: desc / genre ──
+  document.getElementById('bm-book-title').textContent  = title;
+  document.getElementById('bm-book-author').textContent = author;
+  const descEl = document.getElementById('bm-desc');
+  if(descEl) descEl.innerHTML = (bk&&bk.desc) ? bk.desc : '<em>No description available.</em>';
+  const genreEl = document.getElementById('bm-genre-row');
+  if(genreEl){
+    const tags=[];
+    if(bk&&bk.genre) tags.push(bk.genre);
+    if(bk&&bk.section) tags.push(bk.section);
+    genreEl.innerHTML=tags.map(t=>'<span class="bm-tag">'+t+'</span>').join('');
+  }
+
+  // ── ACTIONS ──
+  const elReadNow   = document.getElementById('bm-read-now');
+  const elSubCta    = document.getElementById('bm-subscribe-cta');
+  const elFreeTrial = document.getElementById('bm-free-trial');
+  const elAddLib    = document.getElementById('bm-add-lib');
+  const elAddIcon   = document.getElementById('bm-add-lib-icon');
+  const elAddLabel  = document.getElementById('bm-add-lib-label');
+
+  function applyButtonState(premium){
+    [elReadNow,elSubCta,elFreeTrial].forEach(el=>{ if(el) el.style.display='none'; });
+    if(!resolvedEpubKey){
+      // no epub — no read option
+    } else if(!sess){
+      // not logged in
+      if(elFreeTrial) elFreeTrial.style.display='';
+    } else if(!premium){
+      // logged in, not subscribed
+      if(elSubCta) elSubCta.style.display='';
+    } else {
+      // premium
+      if(elReadNow){ elReadNow.style.display=''; elReadNow.textContent='📖 Read Now'; }
+    }
+  }
+
+  applyButtonState(isPrem);
+
+  // If not premium, check Firebase and update button live
+  if(!isPrem && sess && resolvedEpubKey && typeof _fbDb !== 'undefined' && _fbDb){
+    _fbDb.ref('pb_premium/'+uk).once('value').then(snap=>{
+      const data = snap.val();
+      if(data && data.active){
+        _isPremium = true;
+        localStorage.setItem('pb_premium_'+uk,'true');
+        applyButtonState(true);
+        _applyPremiumUI();
+      }
+    }).catch(()=>{});
+  }
+
+  // Add to library button
+  const inLib = isInLibrary(title);
+  if(elAddLib){
+    if(inLib){
+      elAddLib.classList.add('added');
+      if(elAddIcon) elAddIcon.textContent='✓';
+      if(elAddLabel) elAddLabel.textContent='In Your Library';
+    } else {
+      elAddLib.classList.remove('added');
+      if(elAddIcon) elAddIcon.textContent='＋';
+      if(elAddLabel) elAddLabel.textContent='Add to Wishlist';
+    }
+  }
+
+  document.getElementById('book-modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function bmReadNow(){
+  if(!pendingBook) { console.log('bmReadNow: no pendingBook'); return; }
+  // Resolve epubKey — from pendingBook or from catalogue
+  const bk = Object.values(sections).flat().find(b=>b.title===pendingBook.title);
+  const epubKey = pendingBook.epubKey || (bk && bk.epubKey) || '';
+  console.log('bmReadNow:', { pendingBook, bkFound: !!bk, bkEpubKey: bk&&bk.epubKey, resolvedEpubKey: epubKey });
+  if(!epubKey){
+    _showToast('No epub file uploaded for this book yet.');
+    // Still try to navigate to reader — let reader handle missing epub
+    openReader('', pendingBook.title, pendingBook.author, pendingBook.color);
+    return;
+  }
+  closeBookModal();
+  // Add to library as "reading"
+  if(!isInLibrary(pendingBook.title)){
+    addBookToLibrary({...pendingBook, epubKey, status:'reading', rating:0});
+  }
+  // Navigate to reader
+  openReader(epubKey, pendingBook.title, pendingBook.author, pendingBook.color);
+}
+
+function bmGoSubscribe(){
+  closeBookModal();
+  if(pendingBook){
+    const p = new URLSearchParams({
+      key: pendingBook.epubKey||'', title: pendingBook.title,
+      author: pendingBook.author, color: pendingBook.color||'',
+      from: window.location.href
+    });
+    window.location.href = 'subscribe.html?' + p.toString();
+  } else {
+    window.location.href = 'subscribe.html';
+  }
+}
+
+function bmGoTrial(){
+  closeBookModal();
+  if(pendingBook){
+    const p = new URLSearchParams({
+      key: pendingBook.epubKey||'', title: pendingBook.title,
+      author: pendingBook.author, color: pendingBook.color||'',
+      from: window.location.href
+    });
+    window.location.href = 'subscribe.html?' + p.toString();
+  } else {
+    window.location.href = 'subscribe.html';
+  }
+}
+
+function bmAddToLibrary(){
+  if(!pendingBook) return;
+  const inLib = isInLibrary(pendingBook.title);
+  if(inLib) return;
+  addBookToLibrary({...pendingBook, status:'wishlist', rating:0});
+  renderAllSections();
+  // Update button state
+  const elAddLib   = document.getElementById('bm-add-lib');
+  const elAddIcon  = document.getElementById('bm-add-lib-icon');
+  const elAddLabel = document.getElementById('bm-add-lib-label');
+  if(elAddLib)   elAddLib.classList.add('added');
+  if(elAddIcon)  elAddIcon.textContent = '✓';
+  if(elAddLabel) elAddLabel.textContent = 'In Your Library';
+  _showToast('📚 "'+pendingBook.title+'" added to your wishlist!');
+}
+
+
+function openReader(epubKey,title,author,color){
+  if(!epubKey){ _showToast('No epub file for this book yet.'); return; }
+  window.location.href='reader.html?key='+encodeURIComponent(epubKey)+'&title='+encodeURIComponent(title)+'&author='+encodeURIComponent(author)+'&color='+encodeURIComponent(color||'');
+}
+function filterByCategory(cat,el){
+  currentCategory=cat;
+  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active-cat'));
+  if(el)el.classList.add('active-cat');
+  renderAllSections();
+}
+function bookMatchesCategory(title, bookGenre){
+  if(currentCategory==='all') return true;
+  // Check the book's own genre field first, then the BOOK_GENRES lookup table
+  return (bookGenre && bookGenre===currentCategory) || BOOK_GENRES[title]===currentCategory;
+}
+function renderAllSections(){
+  // Render in the saved order, then reorder DOM sections accordingly
+  sectionOrder.forEach(id=>{
+    renderSection(id);
+    const sectionEl = document.querySelector(`.section [id="${id}"]`);
+    if(sectionEl){
+      const parentSection = sectionEl.closest('.section');
+      const container = document.querySelector('.sections');
+      if(parentSection && container) container.appendChild(parentSection);
+    }
+  });
+}
+
+function stars(n){return Array.from({length:5},(_,i)=>`<span style="color:${i<n?'var(--amber)':'var(--text-dim)'}">\u2605</span>`).join('');}
+function renderSection(id){
+  const container=document.getElementById(id);if(!container)return;
+  let bks=sections[id];
+  if(currentCategory!=='all')bks=bks.filter(b=>bookMatchesCategory(b.title, b.genre));
+  if(bks.length===0){container.innerHTML='<div style="padding:1.5rem 1rem;color:var(--text-dim);font-size:.84rem;font-style:italic;opacity:.7">No books in this category here yet.</div>';return;}
+  container.innerHTML=bks.map(b=>{
+    const inLib=isInLibrary(b.title);
+    const coverBg = b.color||PALETTES[b.p]||PALETTES[0];
+    const coverImg = b.coverImage||'';
+    const epubKey = b.epubKey||'';
+    const st=b.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const sa=b.author.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const ek=epubKey.replace(/'/g,"\\'");
+    return '<div class="book-card'+(inLib?' in-library':'')+'" data-title="'+st+'" data-author="'+sa+'" data-color="'+encodeURIComponent(coverBg)+'" data-epub="'+ek+'" onclick="handleBookClick(this)" style="cursor:pointer"><div class="book-cover" style="background:'+coverBg+'">'+( coverImg ? '<img src="'+coverImg+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px 8px 8px 3px;">' : '') +'<div class="book-cover-inner"><div class="bc-title">'+b.title+'</div><div class="bc-author">'+b.author+'</div></div>'+(inLib?'<div style="position:absolute;top:.4rem;right:.4rem;width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:#fff;">✓</div>':'')+'</div><div class="book-info"><div class="bi-title">'+b.title+'</div><div class="bi-author">'+b.author+'</div><div class="bi-rating">'+stars(b.r)+'</div></div></div>';
+  }).join('');
+}
+function scrollRow(id,dir){document.getElementById(id).scrollBy({left:dir*480,behavior:'smooth'});}
+
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('solid',window.scrollY>60);
+},{passive:true});
+
+function toggleMenu(){
+  const m=document.getElementById('mobile-menu');
+  const b=document.getElementById('hamburger');
+  const open=m.classList.toggle('open');
+  b.classList.toggle('open',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+function closeMenu(){
+  document.getElementById('mobile-menu').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('click',e=>{
+  const m=document.getElementById('mobile-menu');
+  const b=document.getElementById('hamburger');
+  if(m.classList.contains('open')&&!m.contains(e.target)&&!b.contains(e.target))closeMenu();
+});
+
+/* ═══════════════════════════════
+   AUTH STATE
+═══════════════════════════════ */
+let IS_LOGGED_IN = true;
+let currentLang  = 'en';
+
+const LANG_STRINGS = {
+  en:{
+    tagline:'Social for Readers', nav_home:'Home', nav_discover:'Discover',
+    nav_clubs:'Clubs', nav_bestsellers:'Bestsellers', nav_classics:'Classics',
+    nav_pass:'⚡ Season Pass', nav_search:'Search books, authors…',
+    mob_home:'Home', mob_discover:'Discover', mob_clubs:'Book Clubs',
+    mob_bestsellers:'Bestsellers', mob_classics:'Classics', mob_pass:'Season Pass',
+    mob_profile:'My Profile — Eleanor Voss', mob_search:'Search books, authors…',
+    bnav_home:'Home', bnav_search:'Search', bnav_clubs:'Clubs', bnav_profile:'Profile',
+    dd_my_profile:'My Profile', dd_season_pass:'Season Pass',
+    dd_language:'Language', dd_language_lo:'Language',
+    dd_settings:'Settings', dd_signout:'Sign Out', dd_signin:'Sign In',
+    pill_sub:'214 books read',
+    hero_badge:'📚 Book of the Week', hero_genre:'Historical Mystery', hero_pages:'502 pages',
+    hero_desc:"A labyrinthine medieval monastery, grisly murders, and a blind monk who sees all. Eco's masterwork weaves semiotics, theology and thriller into a breathtaking whole.",
+    hero_preview:'▶ Read Preview', hero_library:'+ Add to Library',
+    feat1_label:'🦉 Dark Academia', feat1_title:'Where shadows hold secrets', feat1_sub:'Gothic campuses, doomed scholars',
+    feat2_label:'🌍 World Literature', feat2_title:'Stories from every shore', feat2_sub:'Translated voices, global perspectives',
+    feat3_label:'✨ Magical Realism', feat3_title:'Where magic breathes in the mundane', feat3_sub:'García Márquez, Borges, Allende',
+    sec_trending:'Trending on Pagebound', sec_recommended:'Because You Read',
+    sec_classics:'Timeless Classics', sec_friends:'Friends Are Reading', sec_new:'New Releases',
+    see_all:'See All',
+    ft_about:'About', ft_blog:'Blog', ft_clubs:'Clubs', ft_api:'API',
+    ft_privacy:'Privacy', ft_terms:'Terms', ft_copy:'© 2026 Pagebound · Social Reading Network',
+    s_title:'Settings', s_lang_section:'Language', s_lang_label:'Display Language',
+    s_lang_desc:'Choose the language for the app interface',
+    s_notif_section:'Notifications', s_notif_comments:'Comments on my posts',
+    s_notif_clubs:'Book club updates', s_cancel:'Cancel', s_save:'Save',
+    so_title:'Sign out of Pagebound?',
+    so_sub:"You'll need to sign back in to access your library and reading progress.",
+    so_cancel:'Cancel', so_confirm:'Sign Out',
+    toast_saved:'✓ Settings saved',
+    toast_lang_en:'🇬🇧 Language: English', toast_lang_es:'🇪🇸 Idioma: Español',
+    toast_signout:'Signed out successfully',
+  },
+  es:{
+    tagline:'Social para Lectores', nav_home:'Inicio', nav_discover:'Descubrir',
+    nav_clubs:'Clubes', nav_bestsellers:'Más vendidos', nav_classics:'Clásicos',
+    nav_pass:'⚡ Pase de Temporada', nav_search:'Buscar libros, autores…',
+    mob_home:'Inicio', mob_discover:'Descubrir', mob_clubs:'Clubes de Lectura',
+    mob_bestsellers:'Más vendidos', mob_classics:'Clásicos', mob_pass:'Pase de Temporada',
+    mob_profile:'Mi Perfil — Eleanor Voss', mob_search:'Buscar libros, autores…',
+    bnav_home:'Inicio', bnav_search:'Buscar', bnav_clubs:'Clubes', bnav_profile:'Perfil',
+    dd_my_profile:'Mi Perfil', dd_season_pass:'Pase de Temporada',
+    dd_language:'Idioma', dd_language_lo:'Idioma',
+    dd_settings:'Ajustes', dd_signout:'Cerrar sesión', dd_signin:'Iniciar sesión',
+    pill_sub:'214 libros leídos',
+    hero_badge:'📚 Libro de la Semana', hero_genre:'Misterio Histórico', hero_pages:'502 páginas',
+    hero_desc:'Un laberíntico monasterio medieval, crímenes horripilantes y un monje ciego que todo lo ve. La obra maestra de Eco entrelaza semiótica, teología y thriller en un conjunto apasionante.',
+    hero_preview:'▶ Leer Vista Previa', hero_library:'+ Añadir a Biblioteca',
+    feat1_label:'🦉 Academia Oscura', feat1_title:'Donde las sombras guardan secretos', feat1_sub:'Recintos góticos, estudiosos condenados',
+    feat2_label:'🌍 Literatura Mundial', feat2_title:'Historias de todos los confines', feat2_sub:'Voces traducidas, perspectivas globales',
+    feat3_label:'✨ Realismo Mágico', feat3_title:'Donde la magia respira en lo cotidiano', feat3_sub:'García Márquez, Borges, Allende',
+    sec_trending:'Tendencias en Pagebound', sec_recommended:'Porque leíste',
+    sec_classics:'Clásicos Atemporales', sec_friends:'Tus Amigos Están Leyendo', sec_new:'Novedades',
+    see_all:'Ver Todo',
+    ft_about:'Acerca de', ft_blog:'Blog', ft_clubs:'Clubes', ft_api:'API',
+    ft_privacy:'Privacidad', ft_terms:'Términos', ft_copy:'© 2026 Pagebound · Red Social de Lectores',
+    s_title:'Ajustes', s_lang_section:'Idioma', s_lang_label:'Idioma de la aplicación',
+    s_lang_desc:'Elige el idioma para la interfaz',
+    s_notif_section:'Notificaciones', s_notif_comments:'Comentarios en mis publicaciones',
+    s_notif_clubs:'Actualizaciones del club de lectura', s_cancel:'Cancelar', s_save:'Guardar',
+    so_title:'¿Cerrar sesión de Pagebound?',
+    so_sub:'Tendrás que volver a iniciar sesión para acceder a tu biblioteca y progreso de lectura.',
+    so_cancel:'Cancelar', so_confirm:'Cerrar sesión',
+    toast_saved:'✓ Ajustes guardados',
+    toast_lang_en:'🇬🇧 Language: English', toast_lang_es:'🇪🇸 Idioma: Español',
+    toast_signout:'Sesión cerrada correctamente',
+  }
+};
+
+function setLang(lang, e) {
+  if(e) e.stopPropagation();
+  currentLang = lang;
+  applyTranslations();
+  showToast(lang === 'en' ? LANG_STRINGS.en.toast_lang_en : LANG_STRINGS.es.toast_lang_es);
+}
+
+function applyTranslations() {
+  const L = LANG_STRINGS[currentLang];
+  const s = (id, txt) => { const el=document.getElementById(id); if(el) el.textContent=txt; };
+  const p = (id, txt) => { const el=document.getElementById(id); if(el) el.placeholder=txt; };
+
+  // lang toggle buttons
+  [['dd-lang-en','dd-lang-es'],['dd-lang-en-lo','dd-lang-es-lo'],['s-lang-en','s-lang-es']].forEach(([en,es])=>{
+    const a=document.getElementById(en), b=document.getElementById(es);
+    if(a) a.classList.toggle('active', currentLang==='en');
+    if(b) b.classList.toggle('active', currentLang==='es');
+  });
+
+  // nav
+  s('nav-tagline', L.tagline); s('nav-home', L.nav_home); s('nav-discover', L.nav_discover);
+  s('nav-clubs', L.nav_clubs); s('nav-bestsellers', L.nav_bestsellers);
+  s('nav-classics', L.nav_classics); s('nav-pass', L.nav_pass);
+  p('nav-search-input', L.nav_search);
+
+  // mobile drawer
+  s('mob-home', L.mob_home); s('mob-discover', L.mob_discover);
+  s('mob-clubs', L.mob_clubs); s('mob-bestsellers', L.mob_bestsellers);
+  s('mob-classics', L.mob_classics); s('mob-pass', L.mob_pass);
+  s('mob-profile', L.mob_profile); p('mob-search-input', L.mob_search);
+
+  // bottom nav
+  s('bnav-home', L.bnav_home); s('bnav-search', L.bnav_search);
+  s('bnav-clubs', L.bnav_clubs); s('bnav-profile', L.bnav_profile);
+
+  // dropdown items
+  s('dd-my-profile', L.dd_my_profile); s('dd-season-pass', L.dd_season_pass);
+  s('dd-language', L.dd_language); s('dd-language-lo', L.dd_language_lo);
+  s('dd-settings', L.dd_settings); s('dd-signout', L.dd_signout); s('dd-signin', L.dd_signin);
+  s('pill-sub', L.pill_sub);
+
+  // hero
+  s('hero-badge', L.hero_badge); s('hero-genre', L.hero_genre);
+  s('hero-pages', L.hero_pages); s('hero-desc', L.hero_desc);
+  s('hero-btn-preview', L.hero_preview); s('hero-btn-library', L.hero_library);
+
+  // featured cards
+  s('feat1-label', L.feat1_label); s('feat1-title', L.feat1_title); s('feat1-sub', L.feat1_sub);
+  s('feat2-label', L.feat2_label); s('feat2-title', L.feat2_title); s('feat2-sub', L.feat2_sub);
+  s('feat3-label', L.feat3_label); s('feat3-title', L.feat3_title); s('feat3-sub', L.feat3_sub);
+
+  // sections
+  s('sec-trending', L.sec_trending); s('sec-recommended', L.sec_recommended);
+  s('sec-classics', L.sec_classics); s('sec-friends', L.sec_friends); s('sec-new', L.sec_new);
+  document.querySelectorAll('.section-see-all').forEach(el => el.textContent = L.see_all);
+
+  // footer
+  s('ft-about', L.ft_about); s('ft-blog', L.ft_blog); s('ft-clubs', L.ft_clubs);
+  s('ft-api', L.ft_api); s('ft-privacy', L.ft_privacy);
+  s('ft-terms', L.ft_terms); s('ft-copy', L.ft_copy);
+
+  // settings modal
+  s('s-title', L.s_title); s('s-lang-section', L.s_lang_section);
+  s('s-lang-label', L.s_lang_label); s('s-lang-desc', L.s_lang_desc);
+  s('s-notif-section', L.s_notif_section); s('s-notif-comments', L.s_notif_comments);
+  s('s-notif-clubs', L.s_notif_clubs); s('s-cancel', L.s_cancel); s('s-save', L.s_save);
+
+  // sign-out modal
+  s('so-title', L.so_title); s('so-sub', L.so_sub);
+  s('so-cancel', L.so_cancel); s('so-confirm', L.so_confirm);
+
+  document.documentElement.lang = currentLang;
+}
+
+function initAuth() {
+  const li = document.getElementById('dd-loggedin');
+  const lo = document.getElementById('dd-loggedout');
+  const pillInfo   = document.getElementById('pill-info');
+  const pillAvatar = document.getElementById('pill-avatar');
+  if(!li) return;
+
+  // Read live session
+  let SESSION = null;
+  try { SESSION = JSON.parse(localStorage.getItem('pb_session') || 'null'); } catch {}
+  IS_LOGGED_IN = !!SESSION;
+
+  if(IS_LOGGED_IN) {
+    li.style.display = ''; lo.style.display = 'none';
+    pillInfo.style.display = '';
+    const name    = SESSION.name || SESSION.username;
+    const initial = name.charAt(0).toUpperCase();
+    const handle  = '@' + SESSION.username;
+    pillAvatar.textContent = initial;
+    pillAvatar.style.cssText = 'width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--rust));display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;';
+    const nameEl = document.getElementById('pill-name');
+    const subEl  = document.getElementById('pill-sub');
+    const ddName = document.getElementById('dd-display-name');
+    if(nameEl) nameEl.textContent = name;
+    if(subEl)  subEl.textContent  = LANG_STRINGS[currentLang].pill_sub;
+    if(ddName) ddName.textContent = name;
+    // Update handle in dropdown
+    const ddHandle = document.querySelector('#dd-loggedin .dd-handle');
+    if(ddHandle) ddHandle.textContent = handle;
+  } else {
+    li.style.display = 'none'; lo.style.display = '';
+    pillInfo.style.display = 'none';
+    pillAvatar.textContent = '👤';
+    pillAvatar.style.cssText = 'width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';
+  }
+}
+
+/* DROPDOWN */
+function toggleDropdown(e) {
+  e.stopPropagation();
+  const dd  = document.getElementById('profile-dropdown');
+  const btn = document.getElementById('profile-pill-btn');
+  const open = dd.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open);
+  if(open) closeMenu();
+}
+function closeDropdown() {
+  const dd = document.getElementById('profile-dropdown');
+  if(dd) { dd.classList.remove('open'); }
+  const btn = document.getElementById('profile-pill-btn');
+  if(btn) btn.setAttribute('aria-expanded','false');
+}
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('profile-dropdown-wrap');
+  if(wrap && !wrap.contains(e.target)) closeDropdown();
+});
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeDropdown(); });
+
+/* SETTINGS */
+function openSettings() {
+  closeDropdown();
+  const ov = document.getElementById('settings-overlay');
+  ov.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  const checkboxes = ov.querySelectorAll('input[type=checkbox]');
+  wireToggle('tog1', checkboxes[0]);
+  wireToggle('tog2', checkboxes[1]);
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function saveSettings() {
+  closeSettings();
+  showToast(LANG_STRINGS[currentLang].toast_saved);
+}
+function wireToggle(prefix, checkbox) {
+  if(!checkbox) return;
+  const track = document.getElementById(prefix+'-track');
+  const thumb = document.getElementById(prefix+'-thumb');
+  function update() {
+    if(track) track.style.background = checkbox.checked ? 'var(--amber)' : 'rgba(255,255,255,.1)';
+    if(thumb) thumb.style.transform  = checkbox.checked ? 'translateX(16px)' : 'translateX(0)';
+  }
+  checkbox.addEventListener('change', update);
+  update();
+}
+
+/* SIGN OUT */
+function signOut() {
+  closeDropdown();
+  document.getElementById('signout-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeSignOut() {
+  document.getElementById('signout-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function confirmSignOut() {
+  closeSignOut();
+  try { localStorage.removeItem('pb_session'); } catch {}
+  IS_LOGGED_IN = false;
+  showToast(LANG_STRINGS[currentLang].toast_signout);
+  initAuth();
+}
+
+/* TOAST */
+function showToast(msg) {
+  const t = document.getElementById('idx-toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(t._to);
+  t._to = setTimeout(()=>{
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(10px)';
+  }, 3000);
+}
+
+// Close book modal on Escape
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeBookModal(); });
+
+initAuth();
+renderAllSections();
+
+</script>
+<!-- SETTINGS MODAL -->
+<div id="settings-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(6px);padding:1rem;" onclick="if(event.target===this)closeSettings()">
+  <div style="background:#16100a;border:1px solid rgba(184,148,104,.22);border-radius:18px;width:100%;max-width:400px;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.8);animation:ddFadeIn .22s ease;position:relative;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem;">
+      <div style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--cream);">⚙️ <span id="s-title">Settings</span></div>
+      <button onclick="closeSettings()" style="background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);color:var(--text-dim);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <!-- Language -->
+    <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);margin-bottom:.65rem;padding-bottom:.4rem;border-bottom:1px solid rgba(184,148,104,.15);" id="s-lang-section">Language</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;margin-bottom:1rem;">
+      <div>
+        <div style="font-size:.84rem;color:var(--cream);display:flex;align-items:center;gap:.5rem;"><span>🌐</span><span id="s-lang-label">Display Language</span></div>
+        <div style="font-size:.68rem;color:var(--text-dim);padding-left:1.5rem;" id="s-lang-desc">Choose the language for the app interface</div>
+      </div>
+      <div style="display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(184,148,104,.2);border-radius:8px;overflow:hidden;">
+        <button class="dd-lang-btn active" id="s-lang-en" onclick="setLang('en',event)" style="padding:.36rem .8rem;font-size:.76rem;">🇬🇧 EN</button>
+        <button class="dd-lang-btn" id="s-lang-es" onclick="setLang('es',event)" style="padding:.36rem .8rem;font-size:.76rem;">🇪🇸 ES</button>
+      </div>
+    </div>
+    <!-- Notifications -->
+    <div style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);margin-bottom:.65rem;padding-bottom:.4rem;border-bottom:1px solid rgba(184,148,104,.15);" id="s-notif-section">Notifications</div>
+    <div style="display:flex;flex-direction:column;gap:.1rem;margin-bottom:1.2rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid rgba(184,148,104,.07);">
+        <span style="font-size:.82rem;color:var(--text-dim);">🔔 <span id="s-notif-comments">Comments on my posts</span></span>
+        <label style="position:relative;width:36px;height:20px;flex-shrink:0;cursor:pointer;"><input type="checkbox" checked style="opacity:0;width:0;height:0;position:absolute;"><div style="position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid rgba(184,148,104,.2);border-radius:20px;transition:background .25s;" id="tog1-track"></div><div style="position:absolute;top:2px;left:2px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .25s;" id="tog1-thumb"></div></label>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;">
+        <span style="font-size:.82rem;color:var(--text-dim);">📚 <span id="s-notif-clubs">Book club updates</span></span>
+        <label style="position:relative;width:36px;height:20px;flex-shrink:0;cursor:pointer;"><input type="checkbox" checked style="opacity:0;width:0;height:0;position:absolute;"><div style="position:absolute;inset:0;background:rgba(255,255,255,.1);border:1px solid rgba(184,148,104,.2);border-radius:20px;transition:background .25s;" id="tog2-track"></div><div style="position:absolute;top:2px;left:2px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .25s;" id="tog2-thumb"></div></label>
+      </div>
+    </div>
+    <div style="display:flex;gap:.65rem;justify-content:flex-end;">
+      <button onclick="closeSettings()" id="s-cancel" style="background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text-dim);">Cancel</button>
+      <button onclick="saveSettings()" id="s-save" style="background:var(--amber);border:none;padding:.5rem 1.3rem;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;color:var(--bg);">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGN OUT CONFIRM -->
+<div id="signout-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(6px);padding:1rem;" onclick="if(event.target===this)closeSignOut()">
+  <div style="background:#16100a;border:1px solid rgba(184,148,104,.22);border-radius:18px;width:100%;max-width:360px;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.8);animation:ddFadeIn .22s ease;text-align:center;">
+    <div style="font-size:2.2rem;margin-bottom:.8rem;">👋</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:.4rem;" id="so-title">Sign out of Pagebound?</div>
+    <div style="font-size:.82rem;color:var(--text-dim);line-height:1.6;margin-bottom:1.4rem;" id="so-sub">You'll need to sign back in to access your library and reading progress.</div>
+    <div style="display:flex;gap:.7rem;">
+      <button onclick="closeSignOut()" id="so-cancel" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(184,148,104,.2);padding:.6rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:600;color:var(--text-dim);">Cancel</button>
+      <button onclick="confirmSignOut()" id="so-confirm" style="flex:1;background:#9b3f2a;border:none;padding:.6rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:700;color:#fff;">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="idx-toast" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--amber);color:var(--bg);border-radius:10px;padding:.52rem 1.4rem;font-size:.8rem;font-weight:700;font-family:'DM Sans',sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .28s,transform .28s;pointer-events:none;z-index:600;white-space:nowrap;"></div>
+
+<style>
+@keyframes ddFadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+/* toggle switches wired via JS */
+</style>
+<!-- BOOK-ADDED MODAL -->
+<div class="book-modal-overlay" id="book-modal-overlay" onclick="if(event.target===this)closeBookModal()">
+  <div class="book-modal" style="position:relative;">
+
+    <!-- Close button -->
+    <button class="bm-close-btn" onclick="closeBookModal()">✕</button>
+
+    <!-- LEFT: Book cover -->
+    <div class="bm-left" id="bm-cover">
+      <img class="bm-cover-img" id="bm-cover-img" src="" alt="" style="display:none;">
+      <div class="bm-cover-title" id="bm-cover-title"></div>
+      <div class="bm-cover-author" id="bm-cover-author"></div>
+    </div>
+
+    <!-- RIGHT: Details + actions -->
+    <div class="bm-right">
+      <div>
+        <div class="bm-book-title" id="bm-book-title"></div>
+        <div class="bm-book-author" id="bm-book-author"></div>
+      </div>
+      <div class="bm-genre-row" id="bm-genre-row"></div>
+      <div class="bm-desc" id="bm-desc"><em>No description available.</em></div>
+
+      <div class="bm-actions">
+        <!-- Premium user: Read Now -->
+        <button class="bm-read-now" id="bm-read-now" style="display:none" onclick="bmReadNow()">
+          📖 Read Now
+        </button>
+        <!-- Registered but not subscribed -->
+        <button class="bm-subscribe-cta" id="bm-subscribe-cta" style="display:none" onclick="bmGoSubscribe()">
+          🔒 Subscribe to Read This Book
+        </button>
+        <!-- Not registered -->
+        <button class="bm-free-trial" id="bm-free-trial" style="display:none" onclick="bmGoTrial()">
+          🎁 Free 30-Day Trial · Register Now
+        </button>
+        <!-- Add to library (wishlist) -->
+        <button class="bm-add-lib" id="bm-add-lib" onclick="bmAddToLibrary()">
+          <span id="bm-add-lib-icon">＋</span>
+          <span id="bm-add-lib-label">Add to Wishlist</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+/* ══ SHARED NAV JS ══ */
+(function(){
+  // helpers
+  function gs(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
+  function el(id){ return document.getElementById(id); }
+
+  const SESSION = gs();
+  const isLoggedIn = !!SESSION;
+  const ME = isLoggedIn ? {
+    name:    SESSION.name||SESSION.username,
+    handle:  '@'+SESSION.username,
+    initial: (SESSION.name||SESSION.username).charAt(0).toUpperCase(),
+    username: SESSION.username
+  } : null;
+
+  // Set avatar element — img if base64, else initial letter
+  function setAvatarEl(avEl, imgSrc, initial){
+    if(imgSrc){
+      avEl.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+      avEl.style.cssText='width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;border:2px solid rgba(212,137,60,.4);';
+    } else {
+      avEl.textContent=initial;
+      avEl.style.cssText='width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.95rem;color:#fff;font-weight:700;flex-shrink:0;';
+    }
+  }
+
+  // Also update the mobile bottom nav avatar
+  function setMobAvatar(imgSrc, initial){
+    const mobAv = el('_mob-profile-av');
+    if(!mobAv) return;
+    if(imgSrc){
+      mobAv.innerHTML='<img src="'+imgSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    } else {
+      mobAv.textContent=initial;
+    }
+  }
+
+  // Init avatar / pill
+  function initPill(){
+    if(isLoggedIn){
+      el('_dd-in').style.display=''; el('_dd-out').style.display='none';
+      el('_pp-info').style.display='';
+      const av=el('_pp-avatar');
+      setAvatarEl(av, null, ME.initial);
+      el('_pp-name').textContent=ME.name;
+      el('_pp-sub').textContent='';
+      el('_dd-name').textContent=ME.name;
+      el('_dd-handle').textContent=ME.handle;
+    } else {
+      el('_dd-in').style.display='none'; el('_dd-out').style.display='';
+      el('_pp-info').style.display='none';
+      const av=el('_pp-avatar');
+      av.textContent='👤';
+      av.style.cssText='width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;';
+    }
+    // Load profile from Firebase: name + avatar
+    if(isLoggedIn && typeof firebase !== 'undefined'){
+      try{
+        const fdb = firebase.database();
+        const uk = ME.username.replace(/\./g,'_');
+        fdb.ref('pb_profile/'+uk).once('value').then(s=>{
+          const p=s.val();
+          if(!p) return;
+          if(p.name){
+            el('_pp-name').textContent=p.name;
+            el('_dd-name').textContent=p.name;
+          }
+          // Load avatar image
+          if(p.avatar){
+            setAvatarEl(el('_pp-avatar'), p.avatar, ME.initial);
+            setMobAvatar(p.avatar, ME.initial);
+            // Also update the dropdown header avatar if present
+            const ddAv = el('_dd-avatar');
+            if(ddAv) setAvatarEl(ddAv, p.avatar, ME.initial);
+          }
+        }).catch(()=>{});
+        // Books read count
+        fdb.ref('pb_libraries/'+uk).once('value').then(s=>{
+          const lib=s.val(); const cnt=lib&&Array.isArray(lib)?lib.filter(b=>b.status==='read').length:0;
+          if(cnt>0) el('_pp-sub').textContent=cnt+' books read';
+        }).catch(()=>{});
+      }catch(e){}
+    }
+  }
+
+  // Dropdown
+  window._toggleDD = function(e){
+    e.stopPropagation();
+    const dd=el('_dd'); dd.classList.toggle('open');
+    _closeMob();
+  };
+  window._closeDD = function(){ el('_dd').classList.remove('open'); };
+  document.addEventListener('click',function(e){
+    const wrap=el('_dd-wrap'); if(wrap&&!wrap.contains(e.target)) _closeDD();
+  });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ _closeDD(); _closeMob(); } });
+
+  // Mobile menu
+  window._toggleMenu = function(){
+    const m=el('_mob'),b=el('_hbg');
+    const open=m.classList.toggle('open'); b.classList.toggle('open',open);
+    document.body.style.overflow=open?'hidden':'';
+    _closeDD();
+  };
+  window._closeMob = function(){
+    const m=el('_mob'),b=el('_hbg');
+    if(m){m.classList.remove('open');} if(b){b.classList.remove('open');}
+    document.body.style.overflow='';
+  };
+
+  // Language
+  let _lang = localStorage.getItem('pb_lang')||'en';
+  window._setLang = function(lang, e){
+    if(e) e.stopPropagation();
+    _lang=lang; localStorage.setItem('pb_lang',lang);
+    ['_lang-en','_lang-es','_lang-en-lo','_lang-es-lo','_slang-en','_slang-es','_mlang-en','_mlang-es'].forEach(id=>{
+      const btn=el(id); if(btn) btn.classList.toggle('active',id.endsWith(lang));
+    });
+    _showToast(lang==='es'?'🇪🇸 Idioma: Español':'🇬🇧 Language: English');
+    // Let each page know if it cares
+    if(typeof window.applyTranslations==='function') window.applyTranslations();
+  };
+  // Apply saved language on load
+  if(_lang==='es') _setLang('es',null);
+
+  // Settings
+  window._openSettings = function(){ el('_settings-overlay').classList.add('open'); document.body.style.overflow='hidden'; };
+  window._closeSettings = function(){ el('_settings-overlay').classList.remove('open'); document.body.style.overflow=''; };
+  window._saveSettings = function(){ _closeSettings(); _showToast('✓ Settings saved'); };
+
+  // Sign out
+  window._openSignOut = function(){ el('_so-overlay').classList.add('open'); document.body.style.overflow='hidden'; };
+  window._closeSignOut = function(){ el('_so-overlay').classList.remove('open'); document.body.style.overflow=''; };
+  window._doSignOut = function(){
+    localStorage.removeItem('pb_session');
+    _closeSignOut(); _showToast('Signed out…');
+    initPill();
+    setTimeout(()=>{ window.location.href='login.html'; },900);
+  };
+
+  // Toast
+  window._showToast = function(msg){
+    const t=el('_toast'); if(!t)return;
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),3000);
+  };
+
+  // Navbar scroll solidify (for index hero)
+  const nb=el('_navbar');
+  if(nb){
+    window.addEventListener('scroll',()=>nb.classList.toggle('solid',window.scrollY>60),{passive:true});
+  }
+
+  initPill();
+
+  // Highlight active mobile bottom nav item
+  (function(){
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    const map = {
+      'index.html':'_mbn-home',
+      'discover.html':'_mbn-discover',
+      'friends.html':'_mbn-friends',
+      'seasonpass.html':'_mbn-pass',
+      'bookshelf_profile.html':'_mbn-profile',
+    };
+    const activeId = map[path];
+    if(activeId){ const a=el(activeId); if(a) a.classList.add('active'); }
+    // Set initial of mob profile avatar
+    if(isLoggedIn){
+      const mobAv=el('_mob-profile-av');
+      if(mobAv) mobAv.textContent=ME.initial;
+    } else {
+      const mobAv=el('_mob-profile-av');
+      if(mobAv) mobAv.textContent='👤';
+    }
+  })();
+
+})();
+
+</script>
+
+<!-- PREMIUM MODAL -->
+<div class="pm-overlay" id="pm-overlay" onclick="if(event.target===this)closePremiumModal()">
+  <div class="pm-modal">
+    <button class="pm-close" onclick="closePremiumModal()">✕</button>
+    <div class="pm-hero">
+      <div class="pm-icon">📚</div>
+      <div class="pm-title">Pagebound Premium</div>
+      <div class="pm-sub">Unlimited access to every book in the catalogue.<br>Read anything, anytime.</div>
+    </div>
+    <div class="pm-perks">
+      <div class="pm-perk"><span>📖</span><span><strong>Full catalogue</strong> — every book, no limits</span></div>
+      <div class="pm-perk"><span>🔖</span><span><strong>Unlimited bookmarks</strong> and cross-device progress</span></div>
+      <div class="pm-perk"><span>⚡</span><span><strong>Season Pass included</strong> — all 100 levels</span></div>
+      <div class="pm-perk"><span>🌐</span><span><strong>Language editions</strong> — read in your language</span></div>
+    </div>
+    <div class="pm-plans">
+      <div class="pm-plan" id="pm-plan-monthly" onclick="pmSelectPlan('monthly')">
+        <div class="pm-plan-name">Monthly</div>
+        <div class="pm-plan-price">$4.99</div>
+        <div class="pm-plan-per">per month</div>
+      </div>
+      <div class="pm-plan sel" id="pm-plan-annual" onclick="pmSelectPlan('annual')">
+        <div class="pm-plan-badge">Best Value</div>
+        <div class="pm-plan-name">Annual</div>
+        <div class="pm-plan-price">$39.99</div>
+        <div class="pm-plan-per">per year</div>
+        <div class="pm-plan-note">Save 33%</div>
+      </div>
+    </div>
+    <div class="pm-form">
+      <div class="pm-form-head">🔒 Payment Details <span>✦ Test mode — any card works</span></div>
+      <input class="pm-inp" id="pm-name" placeholder="Name on card">
+      <input class="pm-inp" id="pm-number" placeholder="Card number" maxlength="19" oninput="pmFmtCard(this)" inputmode="numeric">
+      <div class="pm-row">
+        <input class="pm-inp" id="pm-expiry" placeholder="MM / YY" maxlength="7" oninput="pmFmtExpiry(this)" inputmode="numeric">
+        <input class="pm-inp" id="pm-cvv" placeholder="CVV" maxlength="4" inputmode="numeric">
+      </div>
+      <button class="pm-btn" onclick="pmSubmit()">⚡ Start Premium Access</button>
+      <div class="pm-fine">Demo mode · No real payment is processed · Any card details grant access</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONGRATS OVERLAY -->
+<div class="pm-congrats" id="pm-congrats">
+  <div class="pm-confetti-icon">🎉</div>
+  <div class="pm-congrats-title">You're Premium!</div>
+  <div class="pm-congrats-sub">Welcome to Pagebound Premium. The entire catalogue is now yours — every book, every language, every page.</div>
+  <button class="pm-congrats-btn" onclick="pmCloseCongrats()">📚 Explore the Catalogue</button>
+</div>
+
+
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-bottom-nav" id="_mob-bottom">
+  <a href="index.html" class="mob-nav-item" id="_mbn-home">
+    <span class="mob-nav-icon">🏠</span>
+    <span class="mob-nav-label">Home</span>
+  </a>
+  <a href="discover.html" class="mob-nav-item" id="_mbn-discover">
+    <span class="mob-nav-icon">🔍</span>
+    <span class="mob-nav-label">Discover</span>
+  </a>
+  <a href="friends.html" class="mob-nav-item" id="_mbn-friends">
+    <span class="mob-nav-icon">👥</span>
+    <span class="mob-nav-label">Friends</span>
+  </a>
+  <a href="seasonpass.html" class="mob-nav-item" id="_mbn-pass">
+    <span class="mob-nav-icon">⚡</span>
+    <span class="mob-nav-label">Pass</span>
+  </a>
+  <button class="mob-nav-item mob-nav-profile" onclick="_toggleDD(event)" id="_mbn-profile">
+    <div class="mob-profile-av" id="_mob-profile-av">?</div>
+    <span class="mob-nav-label">Profile</span>
+  </button>
+</nav>
+
+</body>
+</html>
