@@ -9,9 +9,6 @@
 /* ════════════════════════════════════════════
    PREMIUM SYSTEM
 ════════════════════════════════════════════ */
-/* _getSession must be defined first — called by initPremium on load */
-function _getSession(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
-
 let _isPremium   = false;
 let _pmPlan      = 'annual';
 
@@ -667,13 +664,16 @@ function pmFireConfetti(){
   /* dropdown opens upward on mobile */
   @media(max-width:700px){
     .mob-bottom-nav{ display:flex; }
-    /* push page content above bottom nav */
     body{ padding-bottom:60px; }
-    /* flip dropdown to open upward */
-    .profile-dropdown{
+    /* On mobile, dropdown is triggered from bottom nav profile button */
+    /* Position it above the bottom nav */
+    #_dd-wrap .profile-dropdown{
+      position:fixed !important;
       top:auto !important;
-      bottom:calc(100% + 8px) !important;
-      right:0 !important;
+      bottom:70px !important;
+      right:8px !important;
+      left:8px !important;
+      width:auto !important;
     }
     /* hide desktop hamburger on mobile */
     ._hbg{ display:none !important; }
@@ -1188,6 +1188,7 @@ const BOOK_GENRES={'Babel':'fantasy','Tomorrow, and Tomorrow':'literary-fiction'
 let currentCategory='all';
 
 /* ── FIREBASE CONFIG ── */
+function _getSession(){ try{return JSON.parse(localStorage.getItem('pb_session')||'null');}catch{return null;} }
 function _libKey(u){ return 'pb_libraries/' + u.replace(/\./g,'_'); }
 function _lsKey(){ const s=_getSession(); return s ? 'pb_library_'+s.username : 'pb_library'; }
 
@@ -1217,6 +1218,14 @@ function addBookToLibrary(book){const lib=getLibrary();if(!lib.find(b=>b.title==
 
 /* BOOK MODAL */
 let pendingBook=null,pendingStatus='wishlist';
+function handleBookClick(el){
+  const title  = el.dataset.title;
+  const author = el.dataset.author;
+  const color  = decodeURIComponent(el.dataset.color||'');
+  const epub   = el.dataset.epub||'';
+  openBookModal(title, author, color, epub);
+}
+
 function closeBookModal(){
   document.getElementById('book-modal-overlay').classList.remove('open');
   document.body.style.overflow='';
@@ -1277,22 +1286,19 @@ function openBookModal(title, author, color, epubKey){
   // Hide all first
   [elReadNow, elSubCta, elFreeTrial].forEach(el=>{ if(el) el.style.display='none'; });
 
-  // Use title as fallback reader key if no epubKey
-  const readerKey = epubKey || title;
-
-  if(!sess){
-    // Not logged in — show free trial prompt
+  if(!epubKey){
+    // No epub — just show add button, no read option
+  } else if(!sess){
+    // Not registered
     if(elFreeTrial) elFreeTrial.style.display='';
-  } else if(!isPrem && epubKey){
-    // Logged in, not premium, book requires epub (premium content)
+  } else if(!isPrem){
+    // Registered but not subscribed
     if(elSubCta) elSubCta.style.display='';
   } else {
-    // Logged in — always show Read Now (premium content uses epubKey, free uses title)
-    if(elReadNow){ elReadNow.style.display=''; elReadNow.textContent='📖 Read Now'; }
+    // Premium user
+    if(elReadNow) elReadNow.style.display='';
+    elReadNow.textContent = '📖 Read Now';
   }
-
-  // Store readerKey on pendingBook so bmReadNow can use it
-  pendingBook = { title, author, color, epubKey: readerKey };
 
   // Add to library button state
   if(elAddLib){
@@ -1312,7 +1318,7 @@ function openBookModal(title, author, color, epubKey){
 }
 
 function bmReadNow(){
-  if(!pendingBook) return;
+  if(!pendingBook || !pendingBook.epubKey) return;
   closeBookModal();
   // Add to library as "reading" then open reader
   if(!isInLibrary(pendingBook.title)){
@@ -1377,8 +1383,8 @@ function bmAddToLibrary(){
 
 
 function openReader(epubKey,title,author,color){
-  const key = epubKey || title;
-  window.location.href='reader.html?key='+encodeURIComponent(key)+'&title='+encodeURIComponent(title)+'&author='+encodeURIComponent(author)+'&color='+encodeURIComponent(color||'');
+  if(!epubKey){showToast('No epub file for this book yet.');return;}
+  window.location.href='reader.html?key='+encodeURIComponent(epubKey)+'&title='+encodeURIComponent(title)+'&author='+encodeURIComponent(author)+'&color='+encodeURIComponent(color||'');
 }
 function filterByCategory(cat,el){
   currentCategory=cat;
@@ -1418,7 +1424,7 @@ function renderSection(id){
     const st=b.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const sa=b.author.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     const ek=epubKey.replace(/'/g,"\\'");
-    return '<div class="book-card'+(inLib?' in-library':'')+'" onclick="openBookModal(\''+st+'\',\''+sa+'\',\''+coverBg+'\',\''+ek+'\')" style="cursor:pointer"><div class="book-cover" style="background:'+coverBg+'">'+( coverImg ? '<img src="'+coverImg+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px 8px 8px 3px;">' : '') +'<div class="book-cover-inner"><div class="bc-title">'+b.title+'</div><div class="bc-author">'+b.author+'</div></div>'+(inLib?'<div style="position:absolute;top:.4rem;right:.4rem;width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:#fff;">✓</div>':'')+'</div><div class="book-info"><div class="bi-title">'+b.title+'</div><div class="bi-author">'+b.author+'</div><div class="bi-rating">'+stars(b.r)+'</div></div></div>';
+    return '<div class="book-card'+(inLib?' in-library':'')+'" data-title="'+st+'" data-author="'+sa+'" data-color="'+encodeURIComponent(coverBg)+'" data-epub="'+ek+'" onclick="handleBookClick(this)" style="cursor:pointer"><div class="book-cover" style="background:'+coverBg+'">'+( coverImg ? '<img src="'+coverImg+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px 8px 8px 3px;">' : '') +'<div class="book-cover-inner"><div class="bc-title">'+b.title+'</div><div class="bc-author">'+b.author+'</div></div>'+(inLib?'<div style="position:absolute;top:.4rem;right:.4rem;width:18px;height:18px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:#fff;">✓</div>':'')+'</div><div class="book-info"><div class="bi-title">'+b.title+'</div><div class="bi-author">'+b.author+'</div><div class="bi-rating">'+stars(b.r)+'</div></div></div>';
   }).join('');
 }
 function scrollRow(id,dir){document.getElementById(id).scrollBy({left:dir*480,behavior:'smooth'});}
