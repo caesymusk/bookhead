@@ -4,19 +4,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-(function(){
-  const c={apiKey:"AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",authDomain:"casey-80b19.firebaseapp.com",
-  databaseURL:"https://casey-80b19-default-rtdb.firebaseio.com",projectId:"casey-80b19",
-  storageBucket:"casey-80b19.firebasestorage.app",messagingSenderId:"1084195161725",
-  appId:"1:1084195161725:web:c4db255376c0aaf25d5314"};
-  if(typeof firebase!=='undefined'&&!firebase.apps.length) firebase.initializeApp(c);
-})();
+const _FB_CFG = {apiKey:"AIzaSyCTfeRsHZHr8NKrZPTSoDhG0LcgxA3mtzU",authDomain:"casey-80b19.firebaseapp.com",databaseURL:"https://casey-80b19-default-rtdb.firebaseio.com",projectId:"casey-80b19",storageBucket:"casey-80b19.firebasestorage.app",messagingSenderId:"1084195161725",appId:"1:1084195161725:web:c4db255376c0aaf25d5314"};
+if(typeof firebase!=='undefined'&&!firebase.apps.length) firebase.initializeApp(_FB_CFG);
+function getDb(){ return (typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length)?firebase.database():null; }
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pagebound — Book Clubs</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -551,9 +546,7 @@ textarea.cm-input{resize:vertical;min-height:80px;line-height:1.5;}
 const GENRES = ['All','Fiction','Mystery','Sci-Fi','Fantasy','Romance','Non-Fiction','History','Thriller','Horror','Literary','Poetry'];
 const EMOJIS = ['📚','🌙','⚡','🏰','🌿','🔮','🕯️','🌊','🦋','🎭','🗺️','🌸','☕','🌌','🔬','🧩'];
 
-// Clubs are loaded from Firebase — see loadClubsCatalogue() below
 let CLUBS_DATA = [];
-
 
 /* ══════════════════════════════════════════
    STATE
@@ -578,17 +571,12 @@ function avatarColor(name){let h=0;for(let c of name)h=(h*31+c.charCodeAt(0))%AV
    RENDER
 ══════════════════════════════════════════ */
 function saveMyClubs(){
-  const arr = [...myClubs];
-  localStorage.setItem('pb_my_clubs', JSON.stringify(arr));
-  const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
+  const arr=[...myClubs];
+  localStorage.setItem('pb_my_clubs',JSON.stringify(arr));
+  const sess=JSON.parse(localStorage.getItem('pb_session')||'null');
   if(!sess) return;
-  try{
-    if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
-      const db = firebase.database();
-      const uk = sess.username.replace(/\./g,'_');
-      db.ref('pb_clubs/'+uk).set(arr).catch(()=>{});
-    }
-  }catch(e){}
+  const db=getDb(); if(!db) return;
+  db.ref('pb_clubs/'+sess.username.replace(/\./g,'_')).set(arr).catch(()=>{});
 }
 
 function buildMemberAvatars(list){
@@ -685,29 +673,29 @@ function selectGenre(g){
    JOIN / LEAVE
 ══════════════════════════════════════════ */
 function toggleJoin(id, btn){
-  const c = CLUBS_DATA.find(x=>x.id===id);
-  if(!c) return;
+  const c=CLUBS_DATA.find(x=>x.id===id); if(!c) return;
+  const db=getDb();
   if(myClubs.has(id)){
     myClubs.delete(id);
-    c.members = Math.max(0,(c.members||1)-1);
+    c.members=Math.max(0,(c.members||1)-1);
     btn.textContent='+ Join Club'; btn.className='btn-join';
     _showToast('Left '+c.name);
-    if(_db) _db.ref('pb_clubs_catalogue/'+id+'/members').set(c.members).catch(()=>{});
+    if(db) db.ref('pb_clubs_catalogue/'+id+'/members').set(c.members).catch(()=>{});
   } else {
     if(c.privacy==='invite'){
-      _showToast('📨 Request sent — waiting for approval!');
+      _showToast('📨 Request sent!');
       btn.textContent='📨 Pending'; btn.className='btn-join pending';
       return;
     }
     myClubs.add(id);
-    c.members = (c.members||0)+1;
+    c.members=(c.members||0)+1;
     btn.textContent='✓ Joined'; btn.className='btn-join joined';
     _showToast('🎉 Joined '+c.name+'!');
-    if(_db) _db.ref('pb_clubs_catalogue/'+id+'/members').set(c.members).catch(()=>{});
+    if(db) db.ref('pb_clubs_catalogue/'+id+'/members').set(c.members).catch(()=>{});
   }
-  saveMyClubs();
-  renderMine();
+  saveMyClubs(); renderMine();
 }
+
 
 function toggleJoinFromDetail(){
   if(!openClubId) return;
@@ -837,48 +825,31 @@ function createClub(){
   const tag  = document.getElementById('cm-tagline').value.trim();
   if(!name){ _showToast('⚠️ Give your club a name!'); return; }
   if(!createGenre){ _showToast('⚠️ Pick a genre!'); return; }
-
   const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
   if(!sess){ _showToast('⚠️ Sign in to create a club.'); return; }
-
-  // Get db — call firebase.database() fresh since _db IIFE may have run too early
-  let db = null;
-  try{
-    if(typeof firebase!=='undefined' && firebase.apps && firebase.apps.length)
-      db = firebase.database();
-  }catch(e){}
-
-  if(!db){ _showToast('⚠️ Not connected to database. Try refreshing.'); return; }
-
+  const db = getDb();
+  if(!db){ _showToast('⚠️ Database not ready. Try refreshing.'); return; }
   const key = name.toLowerCase().replace(/[^a-z0-9]+/g,'_').substring(0,40)+'_'+Date.now();
   const club = {
     name, emoji:createEmoji, genre:createGenre, privacy:createPrivacy,
-    tagline: tag||'A brand new reading club — first meeting coming soon!',
+    tagline: tag||'A brand new reading club.',
     members:1, booksRead:0, meetings:0, trending:false,
     color:'linear-gradient(135deg,#1e1408,#0e0c06)',
     memberList:[sess.name||sess.username],
-    createdBy: sess.username,
-    createdAt: Date.now()
+    createdBy:sess.username, createdAt:Date.now()
   };
-
   db.ref('pb_clubs_catalogue/'+key).set(club).then(()=>{
     CLUBS_DATA.push({...club, id:key});
     myClubs.add(key);
-    // Save joined clubs
-    const uk = sess.username.replace(/\./g,'_');
-    const arr = [...myClubs];
-    localStorage.setItem('pb_my_clubs', JSON.stringify(arr));
-    db.ref('pb_clubs/'+uk).set(arr).catch(()=>{});
+    saveMyClubs();
     closeCreate();
-    renderExplore();
-    renderMine();
-    document.getElementById('my-clubs-badge').textContent = arr.length;
+    renderExplore(); renderMine();
+    document.getElementById('my-clubs-badge').textContent=[...myClubs].length;
     _showToast('🎉 "'+name+'" created!');
-    setTimeout(()=>switchTab('mine'), 600);
-  }).catch(e=>{
-    _showToast('Failed to save club: '+e.message);
-  });
+    setTimeout(()=>switchTab('mine'),600);
+  }).catch(e=>_showToast('Error: '+e.message));
 }
+
 
 /* ══════════════════════════════════════════
    INIT
@@ -886,8 +857,44 @@ function createClub(){
 buildFilterChips();
 buildCreateEmojis();
 buildCreateGenres();
-// Load clubs from Firebase, then render
-loadClubsCatalogue();
+
+// Load from Firebase
+(async function(){
+  const sess=JSON.parse(localStorage.getItem('pb_session')||'null');
+  const db=getDb();
+  // Load user's joined clubs
+  if(db&&sess){
+    try{
+      const uk=sess.username.replace(/\./g,'_');
+      const snap=await db.ref('pb_clubs/'+uk).once('value');
+      const d=snap.val();
+      if(d&&Array.isArray(d)&&d.length&&typeof d[0]==='string'){
+        myClubs=new Set(d);
+        localStorage.setItem('pb_my_clubs',JSON.stringify(d));
+      }
+    }catch(e){}
+  }
+  // Load catalogue
+  if(db){
+    try{
+      const snap=await db.ref('pb_clubs_catalogue').once('value');
+      const data=snap.val();
+      if(data&&typeof data==='object'){
+        CLUBS_DATA=Object.entries(data).map(([key,c])=>({
+          id:key, name:c.name||'Unnamed', emoji:c.emoji||'📚',
+          genre:c.genre||'General', privacy:c.privacy||'open',
+          tagline:c.tagline||'', members:c.members||0,
+          booksRead:c.booksRead||0, meetings:c.meetings||0,
+          trending:c.trending||false, color:c.color||'linear-gradient(135deg,#1a1008,#0d0906)',
+          memberList:c.memberList||[], currentBook:c.currentBook||null,
+          schedule:c.schedule?(Array.isArray(c.schedule)?c.schedule:Object.values(c.schedule)):[],
+          createdBy:c.createdBy||'admin', createdAt:c.createdAt||0,
+        }));
+      }
+    }catch(e){ console.warn('Clubs load failed:',e); }
+  }
+  renderExplore(); renderMine();
+})();
 </script>
 
 <!-- ══ SHARED NAV JS (identical pattern to friends.html) ══ -->
@@ -912,6 +919,17 @@ loadClubsCatalogue();
       const av=el('_pp-avatar'); av.textContent=ME.initial;
       av.style.cssText='width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#d4893c,#9b3f2a);display:flex;align-items:center;justify-content:center;font-family:Playfair Display,serif;font-size:.9rem;color:#fff;font-weight:700;flex-shrink:0;';
       el('_pp-name').textContent=ME.name;
+      // Load avatar from Firebase
+      try{
+        const fdb=getDb();
+        if(fdb){
+          fdb.ref('pb_profile/'+ME.username.replace(/\./g,'_')+'/avatar').once('value').then(s=>{
+            const av=s.val(); if(!av) return;
+            const img='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+            ['_pp-avatar','_mob-profile-av'].forEach(id=>{const e=el(id);if(e){e.innerHTML=img;e.style.overflow='hidden';}});
+          }).catch(()=>{});
+        }
+      }catch(e){}
       el('_dd-name').textContent=ME.name;
       el('_dd-handle').textContent=ME.handle;
     } else {
@@ -975,83 +993,6 @@ loadClubsCatalogue();
 
   initPill();
 })();
-
-
-/* ════════════════════════════════════════════
-   FIREBASE CLUBS SYSTEM
-════════════════════════════════════════════ */
-const _db = (function(){
-  try{
-    if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length)
-      return firebase.database();
-  }catch(e){}
-  return null;
-})();
-
-// Load all clubs from Firebase
-async function loadClubsCatalogue(){
-  // Load user's joined clubs first
-  const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
-  if(_db && sess){
-    try{
-      const uk = sess.username.replace(/\./g,'_');
-      const snap = await _db.ref('pb_clubs/'+uk).once('value');
-      const data = snap.val();
-      // Only use if it's an array of string keys (not timestamps)
-      if(data && Array.isArray(data) && data.length > 0 && typeof data[0] === 'string'){
-        myClubs = new Set(data);
-        localStorage.setItem('pb_my_clubs', JSON.stringify(data));
-      }
-    }catch(e){}
-  }
-
-  // Load club catalogue
-  if(!_db){
-    renderExplore(); renderMine(); return;
-  }
-  try{
-    const snap = await _db.ref('pb_clubs_catalogue').once('value');
-    const data = snap.val();
-    if(data && typeof data==='object'){
-      CLUBS_DATA = Object.entries(data).map(([key,c])=>({
-        id:         key,
-        name:       c.name||'Unnamed Club',
-        emoji:      c.emoji||'📚',
-        genre:      c.genre||'General',
-        privacy:    c.privacy||'open',
-        tagline:    c.tagline||'',
-        members:    c.members||0,
-        booksRead:  c.booksRead||0,
-        meetings:   c.meetings||0,
-        trending:   c.trending||false,
-        color:      c.color||'linear-gradient(135deg,#1a1008,#0d0906)',
-        memberList: c.memberList||[],
-        currentBook:c.currentBook||null,
-        schedule:   c.schedule ? (Array.isArray(c.schedule) ? c.schedule : Object.values(c.schedule)) : [],
-        createdBy:  c.createdBy||'admin',
-        createdAt:  c.createdAt||0,
-      }));
-    }
-  }catch(e){
-    console.warn('Failed to load clubs catalogue:', e);
-  }
-  renderExplore();
-  renderMine();
-}
-
-// Save user's joined clubs to Firebase
-function saveMyClubs(){
-  const arr = [...myClubs];
-  localStorage.setItem('pb_my_clubs', JSON.stringify(arr));
-  const sess = JSON.parse(localStorage.getItem('pb_session')||'null');
-  if(sess && _db){
-    const uk = sess.username.replace(/\./g,'_');
-    _db.ref('pb_clubs/'+uk).set(arr).catch(()=>{});
-  }
-}
-
-
-
 </script>
 </body>
 </html>
